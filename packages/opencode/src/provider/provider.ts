@@ -193,7 +193,8 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
             const models: Record<string, Model> = {}
             for (const item of body.data) {
               if (!isRecord(item) || typeof item.id !== "string") continue
-              const id = item.id
+              const apiID = item.id
+              const id = apiID.startsWith("promptlab/") ? apiID.slice("promptlab/".length) : apiID
               const name = typeof item.name === "string" ? item.name : id
               models[id] = {
                 id: ModelV2.ID.make(id),
@@ -201,7 +202,7 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
                 name,
                 family: "promptlab",
                 api: {
-                  id,
+                  id: apiID,
                   url: baseURL,
                   npm: "@ai-sdk/openai-compatible",
                 },

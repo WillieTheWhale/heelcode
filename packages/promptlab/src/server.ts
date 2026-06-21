@@ -2,9 +2,12 @@ import { catalogMetrics, decodeOpenAIModelID, toOpenAIModels } from "./catalog"
 import { PromptLabClient, configFromEnv, safeLogError } from "./client"
 import {
   openAINonStreamingResponse,
+  openAIToolCallStream,
+  preflightToolCallFromRequest,
   promptLabJSONToText,
   promptLabStreamToText,
   selectionFromRequest,
+  toolInstructionFromRequest,
   transformPromptLabSSEToOpenAI,
 } from "./openai"
 import { redactJSON } from "./redact"
@@ -37,12 +40,20 @@ export function createHandler(config: PromptLabConfig = configFromEnv()): (reque
       if (request.method === "POST" && url.pathname === "/v1/chat/completions") {
         const body = (await request.json()) as OpenAIChatCompletionRequest
         const selection = selectionFromRequest(body)
+        const preflightToolCall = preflightToolCallFromRequest(body)
+        if (preflightToolCall && body.stream) {
+          return new Response(openAIToolCallStream(body.model, preflightToolCall), {
+            headers: eventStreamHeaders(),
+          })
+        }
         const response = await client.startChat(body, selection)
 
         if (response.kind === "stream") {
           if (!response.response.body) throw new Error("PromptLab returned an empty stream body")
           if (body.stream) {
-            const stream = transformPromptLabSSEToOpenAI(response.response.body, body.model)
+            const stream = transformPromptLabSSEToOpenAI(response.response.body, body.model, {
+              tools: toolInstructionFromRequest(body) ? body.tools : undefined,
+            })
             return new Response(stream, {
               headers: eventStreamHeaders(),
             })

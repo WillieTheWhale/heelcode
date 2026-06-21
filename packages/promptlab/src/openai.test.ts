@@ -1,5 +1,14 @@
 import { describe, expect, test } from "bun:test"
-import { buildPromptLabPayload, messagesToPromptText, promptLabEventToDelta } from "./openai"
+import {
+  buildPromptLabPayload,
+  messagesToPromptText,
+  preflightToolCallFromRequest,
+  promptLabEventToDelta,
+  transformPromptLabSSEToOpenAI,
+} from "./openai"
+
+const encoder = new TextEncoder()
+const decoder = new TextDecoder()
 
 describe("OpenAI to PromptLab adapter", () => {
   test("converts messages into text while preserving role context", () => {
@@ -12,22 +21,58 @@ describe("OpenAI to PromptLab adapter", () => {
   })
 
   test("builds a conservative PromptLab payload", () => {
+    const tools = [
+      {
+        type: "function",
+        function: {
+          name: "list",
+          parameters: {
+            type: "object",
+            properties: {
+              path: { type: "string" },
+            },
+          },
+        },
+      },
+    ]
     const payload = buildPromptLabPayload(
       {
         model: "promptlab/openAI/gpt-4.1",
-        messages: [{ role: "user", content: "Hello" }],
+        messages: [{ role: "user", content: "Use the list tool for the current directory." }],
         stream: true,
+        tools,
+        tool_choice: "auto",
       },
       { openAIModelID: "promptlab/openAI/gpt-4.1", endpoint: "openAI", model: "gpt-4.1" },
     )
     expect(payload).toMatchObject({
       endpoint: "openAI",
       model: "gpt-4.1",
-      text: "Hello",
-      prompt: "Hello",
       isTemporary: true,
+      tools,
+      tool_choice: "auto",
     })
+    expect(payload.text).toContain("Heelcode local tools are available")
+    expect(payload.text).toContain("Use the list tool")
+    expect(payload.prompt).toBe(payload.text)
+    expect(payload.messages[0]).toMatchObject({ role: "developer" })
     expect(typeof payload.conversationId).toBe("string")
+  })
+
+  test("does not expose synthetic tools for plain chat", () => {
+    const payload = buildPromptLabPayload(
+      {
+        model: "promptlab/openAI/gpt-4.1",
+        messages: [{ role: "user", content: "Reply with exactly: HEELCODE_OK" }],
+        stream: true,
+        tools: [{ type: "function", function: { name: "list", parameters: {} } }],
+        tool_choice: "auto",
+      },
+      { openAIModelID: "promptlab/openAI/gpt-4.1", endpoint: "openAI", model: "gpt-4.1" },
+    )
+
+    expect(payload.text).toBe("Reply with exactly: HEELCODE_OK")
+    expect(payload.messages).toEqual([{ role: "user", content: "Reply with exactly: HEELCODE_OK" }])
   })
 
   test("extracts common PromptLab stream deltas", () => {
@@ -44,4 +89,115 @@ describe("OpenAI to PromptLab adapter", () => {
     ).toEqual({ content: "hi" })
     expect(promptLabEventToDelta(JSON.stringify({ final: true }))).toEqual({ done: true })
   })
+
+  test("extracts OpenAI-compatible tool call deltas", () => {
+    expect(
+      promptLabEventToDelta(
+        JSON.stringify({
+          choices: [
+            {
+              delta: {
+                tool_calls: [
+                  {
+                    index: 0,
+                    id: "call_list",
+                    type: "function",
+                    function: { name: "list", arguments: "{\"path\":\".\"}" },
+                  },
+                ],
+              },
+            },
+          ],
+        }),
+      ),
+    ).toEqual({
+      toolCalls: [
+        {
+          index: 0,
+          id: "call_list",
+          type: "function",
+          function: { name: "list", arguments: "{\"path\":\".\"}" },
+        },
+      ],
+    })
+  })
+
+  test("extracts nested PromptLab tool use content", () => {
+    expect(
+      promptLabEventToDelta(
+        JSON.stringify({
+          event: "on_message_delta",
+          data: {
+            delta: {
+              content: [
+                {
+                  type: "tool_use",
+                  id: "call_list",
+                  name: "list",
+                  input: { path: "." },
+                },
+              ],
+            },
+          },
+        }),
+      ),
+    ).toEqual({
+      toolCalls: [
+        {
+          index: 0,
+          id: "call_list",
+          type: "function",
+          function: { name: "list", arguments: "{\"path\":\".\"}" },
+        },
+      ],
+    })
+  })
+
+  test("converts synthetic heelcode tool call text into OpenAI-compatible SSE", async () => {
+    const source = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({
+              message: '<heelcode_tool_call>{"name":"list","arguments":{"path":"."}}</heelcode_tool_call>',
+            })}\n\n`,
+          ),
+        )
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ final: true })}\n\n`))
+        controller.close()
+      },
+    })
+
+    const stream = transformPromptLabSSEToOpenAI(source, "promptlab/openAI/gpt-4.1", {
+      tools: [{ type: "function", function: { name: "list", parameters: {} } }],
+    })
+    const output = await readStream(stream)
+    expect(output).toContain('"tool_calls"')
+    expect(output).toContain('"name":"list"')
+    expect(output).toContain('"arguments":"{\\"path\\":\\".\\"}"')
+    expect(output).toContain('"finish_reason":"tool_calls"')
+    expect(output).not.toContain("heelcode_tool_call")
+  })
+
+  test("preflights explicit local tool requests", () => {
+    const call = preflightToolCallFromRequest({
+      model: "promptlab/openAI/gpt-4.1",
+      stream: true,
+      messages: [{ role: "user", content: "Use the glob tool with pattern * before answering." }],
+      tools: [{ type: "function", function: { name: "glob", parameters: {} } }],
+    })
+
+    expect(call?.function?.name).toBe("glob")
+    expect(call?.function?.arguments).toBe('{"pattern":"*"}')
+  })
 })
+
+async function readStream(stream: ReadableStream<Uint8Array>): Promise<string> {
+  const reader = stream.getReader()
+  let output = ""
+  for (;;) {
+    const { done, value } = await reader.read()
+    if (done) return output
+    output += decoder.decode(value, { stream: true })
+  }
+}

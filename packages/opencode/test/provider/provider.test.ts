@@ -145,6 +145,56 @@ it.instance(
   { config: { enabled_providers: ["anthropic"] } },
 )
 
+it.instance("PromptLab provider discovers daemon models with clean heelcode model IDs", () =>
+  Effect.gen(function* () {
+    const server = yield* Effect.acquireRelease(
+      Effect.sync(() =>
+        Bun.serve({
+          port: 0,
+          fetch(request) {
+            const url = new URL(request.url)
+            if (url.pathname !== "/v1/models") return new Response("not found", { status: 404 })
+            return Response.json({
+              data: [
+                {
+                  id: "promptlab/anthropic/claude-sonnet-4-5",
+                  object: "model",
+                  created: 0,
+                  owned_by: "promptlab",
+                  name: "claude-sonnet-4-5",
+                  endpoint: "anthropic",
+                },
+                {
+                  id: "promptlab/azureOpenAI/gpt-5.4-mini",
+                  object: "model",
+                  created: 0,
+                  owned_by: "promptlab",
+                  name: "gpt-5.4-mini",
+                  endpoint: "azureOpenAI",
+                },
+              ],
+            })
+          },
+        }),
+      ),
+      (server) => Effect.sync(() => server.stop(true)),
+    )
+
+    const baseURL = new URL("/v1", server.url).toString()
+    yield* set("HEELCODE_PROMPTLAB_URL", baseURL)
+
+    const providers = yield* list
+    expect(Object.keys(providers)).toEqual(["promptlab"])
+
+    const provider = providers[ProviderV2.ID.make("promptlab")]
+    expect(Object.keys(provider.models)).toEqual(["anthropic/claude-sonnet-4-5", "azureOpenAI/gpt-5.4-mini"])
+    expect(provider.models[ModelV2.ID.make("promptlab/anthropic/claude-sonnet-4-5")]).toBeUndefined()
+    expect(provider.models[ModelV2.ID.make("anthropic/claude-sonnet-4-5")].api.id).toBe(
+      "promptlab/anthropic/claude-sonnet-4-5",
+    )
+  }),
+)
+
 it.instance(
   "model whitelist filters models for provider",
   Effect.gen(function* () {

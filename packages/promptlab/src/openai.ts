@@ -41,12 +41,16 @@ export function buildPromptLabPayload(request: OpenAIChatCompletionRequest, sele
   const conversationID = crypto.randomUUID()
   const messageID = crypto.randomUUID()
   const parentMessageID = "00000000-0000-0000-0000-000000000000"
-  const text = lastUserText(request.messages)
+  const toolInstruction = toolInstructionFromRequest(request)
+  const text = toolInstruction
+    ? [messagesToPromptText(request.messages), toolInstruction].filter(Boolean).join("\n\n")
+    : lastUserText(request.messages)
+  const messages = toolInstruction ? insertToolInstruction(request.messages, toolInstruction) : request.messages
 
   return {
     endpoint: selection.endpoint,
     model: selection.model,
-    messages: request.messages,
+    messages,
     text,
     prompt: text,
     conversationId: conversationID,
@@ -59,6 +63,8 @@ export function buildPromptLabPayload(request: OpenAIChatCompletionRequest, sele
     max_tokens: request.max_tokens ?? request.max_completion_tokens,
     top_p: request.top_p,
     stop: request.stop,
+    tools: request.tools,
+    tool_choice: request.tool_choice,
   }
 }
 
@@ -68,6 +74,50 @@ export function selectionFromRequest(request: OpenAIChatCompletionRequest): Mode
     throw new Error(`Expected PromptLab model id in the form promptlab/<endpoint>/<model>, got ${request.model}`)
   }
   return selection
+}
+
+export function toolInstructionFromRequest(request: OpenAIChatCompletionRequest): string | undefined {
+  if (!Array.isArray(request.tools) || request.tools.length === 0) return undefined
+  if (!shouldExposeToolProtocol(request)) return undefined
+  const tools = request.tools.flatMap((tool) => normalizePromptTool(tool))
+  if (tools.length === 0) return undefined
+  return [
+    "Heelcode local tools are available, but this backend cannot call them directly.",
+    "If the user asks to inspect local files, list directories, read files, search, edit, run commands, or otherwise use the local workspace, you must call exactly one appropriate tool before answering.",
+    "Never claim that you inspected the local workspace unless you emitted a tool call.",
+    "When a tool is needed, respond with only one XML tag in this exact format:",
+    '<heelcode_tool_call>{"name":"tool_name","arguments":{}}</heelcode_tool_call>',
+    "Do not include markdown, prose, or code fences around the tag.",
+    "After a tool result is provided in the conversation, continue normally or request another tool.",
+    `Available tools: ${JSON.stringify(tools)}`,
+    request.tool_choice ? `Requested tool choice: ${JSON.stringify(request.tool_choice)}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n")
+}
+
+function insertToolInstruction(messages: OpenAIChatMessage[], instruction: string): OpenAIChatMessage[] {
+  const lastUser = messages.findLastIndex((message) => message.role === "user")
+  const toolMessage = { role: "developer" as const, content: instruction }
+  if (lastUser === -1) return [...messages, toolMessage]
+  return [...messages.slice(0, lastUser), toolMessage, ...messages.slice(lastUser)]
+}
+
+function shouldExposeToolProtocol(request: OpenAIChatCompletionRequest): boolean {
+  if (request.tool_choice === "none") return false
+  if (request.tool_choice !== undefined && request.tool_choice !== "auto") return true
+  if (request.messages.some((message) => message.role === "tool")) return true
+  return userTextLikelyNeedsLocalTool(lastUserText(request.messages))
+}
+
+function userTextLikelyNeedsLocalTool(text: string): boolean {
+  if (/\b(use|call|invoke)\b[\s\S]{0,80}\btool\b/i.test(text)) return true
+  if (/\b(glob|grep|read|bash)\b[\s\S]{0,40}\btool\b/i.test(text)) return true
+  const action = /\b(inspect|list|read|search|find|grep|glob|edit|write|run|execute|open)\b/i.test(text)
+  const target = /\b(file|files|directory|folder|repo|repository|workspace|codebase|project|shell|command|terminal|path|pattern)\b/i.test(
+    text,
+  )
+  return action && target
 }
 
 export function openAINonStreamingResponse(params: {
@@ -109,7 +159,23 @@ export function promptLabJSONToText(value: unknown): string {
   return ""
 }
 
-export function openAIChunk(params: { id: string; model: string; content?: string; finishReason?: string }) {
+export type OpenAIToolCallDelta = {
+  index: number
+  id?: string
+  type?: "function"
+  function?: {
+    name?: string
+    arguments?: string
+  }
+}
+
+export function openAIChunk(params: {
+  id: string
+  model: string
+  content?: string
+  toolCalls?: OpenAIToolCallDelta[]
+  finishReason?: string
+}) {
   return {
     id: params.id,
     object: "chat.completion.chunk",
@@ -118,17 +184,67 @@ export function openAIChunk(params: { id: string; model: string; content?: strin
     choices: [
       {
         index: 0,
-        delta: params.content === undefined ? {} : { content: params.content },
+        delta: {
+          ...(params.content === undefined ? {} : { content: params.content }),
+          ...(params.toolCalls === undefined ? {} : { tool_calls: params.toolCalls }),
+        },
         finish_reason: params.finishReason ?? null,
       },
     ],
   }
 }
 
-export function transformPromptLabSSEToOpenAI(input: ReadableStream<Uint8Array>, model: string): ReadableStream<Uint8Array> {
+export function openAIToolCallStream(model: string, toolCall: OpenAIToolCallDelta): ReadableStream<Uint8Array> {
+  const id = `chatcmpl-${crypto.randomUUID()}`
+  return new ReadableStream<Uint8Array>({
+    start(controller) {
+      controller.enqueue(sse(openAIChunk({ id, model, toolCalls: [toolCall] })))
+      controller.enqueue(sse(openAIChunk({ id, model, finishReason: "tool_calls" })))
+      controller.enqueue(encoder.encode("data: [DONE]\n\n"))
+      controller.close()
+    },
+  })
+}
+
+export function preflightToolCallFromRequest(request: OpenAIChatCompletionRequest): OpenAIToolCallDelta | undefined {
+  if (!Array.isArray(request.tools) || request.tools.length === 0) return undefined
+  if (request.messages.some((message) => message.role === "tool")) return undefined
+  const text = lastUserText(request.messages)
+  if (!/\b(use|call|invoke)\b/i.test(text)) return undefined
+  const tools = request.tools.flatMap((tool) => normalizePromptTool(tool)) as Array<{
+    name?: string
+    parameters?: { required?: string[] }
+  }>
+  for (const tool of tools) {
+    if (!tool.name) continue
+    const named = new RegExp(`\\b${escapeRegExp(tool.name)}\\b`, "i").test(text)
+    if (!named) continue
+    const args = inferToolArguments(tool.name, text)
+    if (!args) continue
+    return {
+      index: 0,
+      id: `call_${crypto.randomUUID().replaceAll("-", "").slice(0, 24)}`,
+      type: "function",
+      function: {
+        name: tool.name,
+        arguments: JSON.stringify(args),
+      },
+    }
+  }
+  return undefined
+}
+
+export function transformPromptLabSSEToOpenAI(
+  input: ReadableStream<Uint8Array>,
+  model: string,
+  options: { tools?: unknown[] } = {},
+): ReadableStream<Uint8Array> {
   const id = `chatcmpl-${crypto.randomUUID()}`
   let buffer = ""
   let closed = false
+  let sawToolCalls = false
+  let syntheticBuffer = ""
+  const useSyntheticToolProtocol = Array.isArray(options.tools) && options.tools.length > 0
 
   return new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -177,14 +293,32 @@ export function transformPromptLabSSEToOpenAI(input: ReadableStream<Uint8Array>,
       close(controller, id, model)
       return
     }
+    if (delta.toolCalls?.length) {
+      sawToolCalls = true
+      controller.enqueue(sse(openAIChunk({ id, model, toolCalls: delta.toolCalls })))
+      return
+    }
     if (!delta.content) return
+    if (useSyntheticToolProtocol) {
+      syntheticBuffer += delta.content
+      return
+    }
     controller.enqueue(sse(openAIChunk({ id, model, content: delta.content })))
   }
 
   function close(controller: ReadableStreamDefaultController<Uint8Array>, id: string, model: string) {
     if (closed) return
     closed = true
-    controller.enqueue(sse(openAIChunk({ id, model, finishReason: "stop" })))
+    if (useSyntheticToolProtocol && !sawToolCalls) {
+      const toolCall = syntheticToolCallFromText(syntheticBuffer)
+      if (toolCall) {
+        sawToolCalls = true
+        controller.enqueue(sse(openAIChunk({ id, model, toolCalls: [toolCall] })))
+      } else if (syntheticBuffer) {
+        controller.enqueue(sse(openAIChunk({ id, model, content: syntheticBuffer })))
+      }
+    }
+    controller.enqueue(sse(openAIChunk({ id, model, finishReason: sawToolCalls ? "tool_calls" : "stop" })))
     controller.enqueue(encoder.encode("data: [DONE]\n\n"))
     controller.close()
   }
@@ -225,7 +359,11 @@ export async function promptLabStreamToText(input: ReadableStream<Uint8Array>): 
   }
 }
 
-export function promptLabEventToDelta(data: string): { content?: string; done?: boolean } {
+export function promptLabEventToDelta(data: string): {
+  content?: string
+  toolCalls?: OpenAIToolCallDelta[]
+  done?: boolean
+} {
   const parsed = parseJSON(data)
   if (parsed === undefined) return { content: data }
   if (typeof parsed === "string") return parsed === "[DONE]" ? { done: true } : { content: parsed }
@@ -233,6 +371,8 @@ export function promptLabEventToDelta(data: string): { content?: string; done?: 
 
   if (parsed.final === true || parsed.done === true || parsed.event === "final" || parsed.type === "final") return { done: true }
   if (parsed.created === true) return {}
+  const toolCalls = promptLabToolCalls(parsed)
+  if (toolCalls.length) return { toolCalls }
   const eventDelta = promptLabNestedDelta(parsed)
   if (eventDelta) return { content: eventDelta }
   const direct =
@@ -276,6 +416,195 @@ function promptLabNestedDelta(parsed: Record<string, unknown>): string | undefin
       return stringValue(part.text) ?? ""
     })
     .join("")
+}
+
+function promptLabToolCalls(parsed: Record<string, unknown>): OpenAIToolCallDelta[] {
+  const openAI = openAIToolCallsFromRecord(parsed)
+  if (openAI.length) return openAI
+  if (!isRecord(parsed.data) || !isRecord(parsed.data.delta)) return []
+  const nested = openAIToolCallsFromRecord(parsed.data.delta)
+  if (nested.length) return nested
+  const content = parsed.data.delta.content
+  if (!Array.isArray(content)) return []
+  return content.flatMap((part, index) => toolCallFromContentPart(part, index))
+}
+
+function openAIToolCallsFromRecord(value: Record<string, unknown>): OpenAIToolCallDelta[] {
+  const direct = value.tool_calls ?? value.toolCalls
+  if (Array.isArray(direct)) return direct.flatMap((item, index) => normalizeOpenAIToolCall(item, index))
+  if (Array.isArray(value.choices)) {
+    const first = value.choices[0]
+    if (!isRecord(first) || !isRecord(first.delta)) return []
+    const calls = first.delta.tool_calls ?? first.delta.toolCalls
+    if (Array.isArray(calls)) return calls.flatMap((item, index) => normalizeOpenAIToolCall(item, index))
+  }
+  return []
+}
+
+function toolCallFromContentPart(part: unknown, index: number): OpenAIToolCallDelta[] {
+  if (!isRecord(part)) return []
+  const type = stringValue(part.type)
+  if (type !== "tool_use" && type !== "tool_call" && type !== "function_call") return []
+  return normalizeToolCall(part, index)
+}
+
+function normalizeToolCall(input: unknown, index: number): OpenAIToolCallDelta[] {
+  if (!isRecord(input)) return []
+  const fn = isRecord(input.function) ? input.function : input
+  const name =
+    stringValue(fn.name) ??
+    stringValue(input.name) ??
+    stringValue(input.tool_name) ??
+    stringValue(input.toolName) ??
+    stringValue(input.function_name) ??
+    stringValue(input.functionName)
+  if (!name) return []
+  const args = fn.arguments ?? input.arguments ?? input.input ?? input.args ?? {}
+  return [
+    {
+      index: typeof input.index === "number" ? input.index : index,
+      id: stringValue(input.id),
+      type: "function",
+      function: {
+        name,
+        arguments: typeof args === "string" ? args : JSON.stringify(args),
+      },
+    },
+  ]
+}
+
+function normalizeOpenAIToolCall(input: unknown, index: number): OpenAIToolCallDelta[] {
+  if (!isRecord(input)) return []
+  const fn = isRecord(input.function) ? input.function : undefined
+  const result: OpenAIToolCallDelta = {
+    index: typeof input.index === "number" ? input.index : index,
+    id: stringValue(input.id),
+    type: "function",
+  }
+  if (fn) {
+    result.function = {}
+    const name = stringValue(fn.name)
+    const args = stringValue(fn.arguments)
+    if (name !== undefined) result.function.name = name
+    if (args !== undefined) result.function.arguments = args
+  }
+  return [result]
+}
+
+function syntheticToolCallFromText(text: string): OpenAIToolCallDelta | undefined {
+  const raw = extractSyntheticToolCallJSON(text)
+  if (!raw) return undefined
+  const parsed = parseJSON(raw)
+  const call = Array.isArray(parsed) ? parsed[0] : parsed
+  if (!isRecord(call)) return undefined
+  const fn = isRecord(call.function) ? call.function : call
+  const name =
+    stringValue(fn.name) ?? stringValue(call.name) ?? stringValue(call.tool) ?? stringValue(call.tool_name)
+  if (!name) return undefined
+  const args = fn.arguments ?? call.arguments ?? call.input ?? call.args ?? {}
+  return {
+    index: 0,
+    id: `call_${crypto.randomUUID().replaceAll("-", "").slice(0, 24)}`,
+    type: "function",
+    function: {
+      name,
+      arguments: typeof args === "string" ? args : JSON.stringify(args),
+    },
+  }
+}
+
+function extractSyntheticToolCallJSON(text: string): string | undefined {
+  const tagged = text.match(/<heelcode_tool_call>\s*([\s\S]*?)\s*<\/heelcode_tool_call>/i)
+  if (tagged) return stripCodeFence(tagged[1].trim())
+  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)
+  if (fenced) return stripCodeFence(fenced[1].trim())
+  const trimmed = text.trim()
+  if (trimmed.startsWith("{") || trimmed.startsWith("[")) return trimmed
+  return undefined
+}
+
+function stripCodeFence(text: string): string {
+  return text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim()
+}
+
+function normalizePromptTool(input: unknown): unknown[] {
+  if (!isRecord(input)) return []
+  const fn = isRecord(input.function) ? input.function : input
+  const name = stringValue(fn.name) ?? stringValue(input.name)
+  if (!name) return []
+  return [
+    {
+      name,
+      description: truncateToolText(stringValue(fn.description) ?? stringValue(input.description) ?? "", 260),
+      parameters: summarizeParameters(fn.parameters ?? input.parameters ?? {}),
+    },
+  ]
+}
+
+function inferToolArguments(name: string, text: string): Record<string, unknown> | undefined {
+  if (name === "glob") {
+    const pattern = matchValue(text, "pattern") ?? (/\bcurrent directory\b/i.test(text) ? "*" : undefined)
+    if (pattern) return { pattern }
+  }
+  if (name === "grep") {
+    const pattern = matchValue(text, "pattern") ?? matchValue(text, "search")
+    if (pattern) return { pattern }
+  }
+  if (name === "read") {
+    const filePath = matchValue(text, "file") ?? matchValue(text, "path")
+    if (filePath) return { filePath }
+  }
+  if (name === "bash") {
+    const command = matchQuotedAfter(text, "command")
+    if (command) return { command, description: "Runs requested shell command" }
+  }
+  return undefined
+}
+
+function matchValue(text: string, label: string): string | undefined {
+  return (
+    matchQuotedAfter(text, label) ??
+    text.match(new RegExp(`\\b${escapeRegExp(label)}\\s+(?:is\\s+)?([^\\s,.]+)`, "i"))?.[1]
+  )
+}
+
+function matchQuotedAfter(text: string, label: string): string | undefined {
+  const match = text.match(new RegExp(`\\b${escapeRegExp(label)}\\s+(?:is\\s+)?["'\`]([^"'\`]+)["'\`]`, "i"))
+  return match?.[1]
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
+function summarizeParameters(input: unknown): unknown {
+  if (!isRecord(input)) return {}
+  const properties = isRecord(input.properties) ? input.properties : {}
+  const required = Array.isArray(input.required) ? input.required.filter((item) => typeof item === "string") : []
+  return {
+    type: stringValue(input.type) ?? "object",
+    properties: Object.fromEntries(
+      Object.entries(properties).flatMap(([key, value]) => {
+        if (!isRecord(value)) return [[key, {}]]
+        return [
+          [
+            key,
+            {
+              type: stringValue(value.type) ?? "string",
+              description: truncateToolText(stringValue(value.description) ?? "", 180),
+            },
+          ],
+        ]
+      }),
+    ),
+    required,
+  }
+}
+
+function truncateToolText(input: string, max: number): string {
+  const text = input.replace(/\s+/g, " ").trim()
+  if (text.length <= max) return text
+  return `${text.slice(0, max - 3)}...`
 }
 
 function sse(value: unknown): Uint8Array {
