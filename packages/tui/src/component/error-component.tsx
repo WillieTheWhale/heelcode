@@ -18,7 +18,7 @@ export function ErrorComponent(props: { error: Error; reset: () => void; mode?: 
   })
   const [copied, setCopied] = createSignal(false)
 
-  const issueURL = new URL("https://github.com/anomalyco/opencode/issues/new?template=bug-report.yml")
+  const issueURL = new URL("https://github.com/WillieTheWhale/heelcode/issues/new")
 
   // Choose safe fallback colors per mode since theme context may not be available
   const isLight = props.mode === "light"
@@ -30,7 +30,7 @@ export function ErrorComponent(props: { error: Error; reset: () => void; mode?: 
   }
 
   if (props.error.message) {
-    issueURL.searchParams.set("title", `opentui: fatal: ${props.error.message}`)
+    issueURL.searchParams.set("title", `heelcode: fatal: ${props.error.message}`)
   }
 
   if (props.error.stack) {
@@ -40,7 +40,7 @@ export function ErrorComponent(props: { error: Error; reset: () => void; mode?: 
     )
   }
 
-  issueURL.searchParams.set("opencode-version", InstallationVersion)
+  issueURL.searchParams.set("heelcode-version", InstallationVersion)
 
   const copyIssueURL = () => {
     void clipboard.write?.(issueURL.toString()).then(() => {

@@ -79,12 +79,16 @@ export function selectionFromRequest(request: OpenAIChatCompletionRequest): Mode
 export function toolInstructionFromRequest(request: OpenAIChatCompletionRequest): string | undefined {
   if (!Array.isArray(request.tools) || request.tools.length === 0) return undefined
   if (!shouldExposeToolProtocol(request)) return undefined
+  const hasToolResult = request.messages.some((message) => message.role === "tool")
   const tools = request.tools.flatMap((tool) => normalizePromptTool(tool))
   if (tools.length === 0) return undefined
   return [
     "Heelcode local tools are available, but this backend cannot call them directly.",
     "If the user asks to inspect local files, list directories, read files, search, edit, run commands, or otherwise use the local workspace, you must call exactly one appropriate tool before answering.",
     "Never claim that you inspected the local workspace unless you emitted a tool call.",
+    hasToolResult
+      ? "The conversation already includes local tool results. Use those results to answer the user's request now. Do not call another tool unless the result is insufficient."
+      : "",
     "When a tool is needed, respond with only one XML tag in this exact format:",
     '<heelcode_tool_call>{"name":"tool_name","arguments":{}}</heelcode_tool_call>',
     "Do not include markdown, prose, or code fences around the tag.",
@@ -117,7 +121,7 @@ function userTextLikelyNeedsLocalTool(text: string): boolean {
   const target = /\b(file|files|directory|folder|repo|repository|workspace|codebase|project|shell|command|terminal|path|pattern)\b/i.test(
     text,
   )
-  return action && target
+  return action && (target || matchFilePath(text) !== undefined)
 }
 
 export function openAINonStreamingResponse(params: {
@@ -210,7 +214,8 @@ export function preflightToolCallFromRequest(request: OpenAIChatCompletionReques
   if (!Array.isArray(request.tools) || request.tools.length === 0) return undefined
   if (request.messages.some((message) => message.role === "tool")) return undefined
   const text = lastUserText(request.messages)
-  if (!/\b(use|call|invoke)\b/i.test(text)) return undefined
+  const explicitToolRequest = /\b(use|call|invoke)\b/i.test(text)
+  if (!explicitToolRequest && !userTextLikelyNeedsLocalTool(text)) return undefined
   const tools = request.tools.flatMap((tool) => normalizePromptTool(tool)) as Array<{
     name?: string
     parameters?: { required?: string[] }
@@ -218,7 +223,7 @@ export function preflightToolCallFromRequest(request: OpenAIChatCompletionReques
   for (const tool of tools) {
     if (!tool.name) continue
     const named = new RegExp(`\\b${escapeRegExp(tool.name)}\\b`, "i").test(text)
-    if (!named) continue
+    if (explicitToolRequest && !named) continue
     const args = inferToolArguments(tool.name, text)
     if (!args) continue
     return {
@@ -543,15 +548,21 @@ function normalizePromptTool(input: unknown): unknown[] {
 
 function inferToolArguments(name: string, text: string): Record<string, unknown> | undefined {
   if (name === "glob") {
-    const pattern = matchValue(text, "pattern") ?? (/\bcurrent directory\b/i.test(text) ? "*" : undefined)
+    const pattern =
+      matchValue(text, "pattern") ??
+      (/\b(list|inspect|show|find)\b[\s\S]{0,80}\b(files?|directories|folders?|entries|repo|repository|workspace|project|current directory|top[- ]level)\b/i.test(
+        text,
+      )
+        ? "*"
+        : undefined)
     if (pattern) return { pattern }
   }
   if (name === "grep") {
-    const pattern = matchValue(text, "pattern") ?? matchValue(text, "search")
+    const pattern = matchValue(text, "pattern") ?? matchValue(text, "search") ?? matchSearchTerm(text)
     if (pattern) return { pattern }
   }
   if (name === "read") {
-    const filePath = matchValue(text, "file") ?? matchValue(text, "path")
+    const filePath = matchValue(text, "file") ?? matchValue(text, "path") ?? matchFilePath(text)
     if (filePath) return { filePath }
   }
   if (name === "bash") {
@@ -571,6 +582,17 @@ function matchValue(text: string, label: string): string | undefined {
 function matchQuotedAfter(text: string, label: string): string | undefined {
   const match = text.match(new RegExp(`\\b${escapeRegExp(label)}\\s+(?:is\\s+)?["'\`]([^"'\`]+)["'\`]`, "i"))
   return match?.[1]
+}
+
+function matchSearchTerm(text: string): string | undefined {
+  return (
+    matchQuotedAfter(text, "for") ??
+    text.match(/\b(?:search|grep|find)\s+(?:for\s+)?([^.,\s][^,.]*)/i)?.[1]?.trim()
+  )
+}
+
+function matchFilePath(text: string): string | undefined {
+  return text.match(/\b(?:[\w.-]+\/)*[\w.-]+\.[A-Za-z0-9]{1,12}\b/)?.[0]
 }
 
 function escapeRegExp(value: string): string {

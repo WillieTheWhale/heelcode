@@ -190,6 +190,41 @@ describe("OpenAI to PromptLab adapter", () => {
     expect(call?.function?.name).toBe("glob")
     expect(call?.function?.arguments).toBe('{"pattern":"*"}')
   })
+
+  test("preflights natural workspace inspection requests", () => {
+    const call = preflightToolCallFromRequest({
+      model: "promptlab/openAI/gpt-4.1",
+      stream: true,
+      messages: [{ role: "user", content: "List the top-level files in the current directory before answering." }],
+      tools: [{ type: "function", function: { name: "glob", parameters: {} } }],
+    })
+
+    expect(call?.function?.name).toBe("glob")
+    expect(call?.function?.arguments).toBe('{"pattern":"*"}')
+  })
+
+  test("preflights natural file read requests", () => {
+    const call = preflightToolCallFromRequest({
+      model: "promptlab/openAI/gpt-4.1",
+      stream: true,
+      messages: [{ role: "user", content: "Read package.json before answering." }],
+      tools: [{ type: "function", function: { name: "read", parameters: {} } }],
+    })
+
+    expect(call?.function?.name).toBe("read")
+    expect(call?.function?.arguments).toBe('{"filePath":"package.json"}')
+  })
+
+  test("does not preflight plain chat requests", () => {
+    const call = preflightToolCallFromRequest({
+      model: "promptlab/openAI/gpt-4.1",
+      stream: true,
+      messages: [{ role: "user", content: "Reply with exactly: HEELCODE_OK" }],
+      tools: [{ type: "function", function: { name: "glob", parameters: {} } }],
+    })
+
+    expect(call).toBeUndefined()
+  })
 })
 
 async function readStream(stream: ReadableStream<Uint8Array>): Promise<string> {
