@@ -195,6 +195,62 @@ it.instance("PromptLab provider discovers daemon models with clean heelcode mode
   }),
 )
 
+it.instance("PromptLab aliases upstream-looking model IDs to configured daemon models", () =>
+  Effect.gen(function* () {
+    const server = yield* Effect.acquireRelease(
+      Effect.sync(() =>
+        Bun.serve({
+          port: 0,
+          fetch(request) {
+            const url = new URL(request.url)
+            if (url.pathname !== "/v1/models") return new Response("not found", { status: 404 })
+            return Response.json({
+              data: [
+                {
+                  id: "promptlab/bedrock/us.anthropic.claude-sonnet-4-6",
+                  object: "model",
+                  created: 0,
+                  owned_by: "promptlab",
+                  name: "claude-sonnet-4-6",
+                  endpoint: "bedrock",
+                },
+                {
+                  id: "promptlab/azureOpenAI/gpt-4.1",
+                  object: "model",
+                  created: 0,
+                  owned_by: "promptlab",
+                  name: "gpt-4.1",
+                  endpoint: "azureOpenAI",
+                },
+              ],
+            })
+          },
+        }),
+      ),
+      (server) => Effect.sync(() => server.stop(true)),
+    )
+
+    const baseURL = new URL("/v1", server.url).toString()
+    yield* set("HEELCODE_PROMPTLAB_URL", baseURL)
+
+    const claude = yield* Provider.use.getModel(ProviderV2.ID.anthropic, ModelV2.ID.make("claude-sonnet-4-6"))
+    expect(String(claude.providerID)).toBe("promptlab")
+    expect(String(claude.id)).toBe("bedrock/us.anthropic.claude-sonnet-4-6")
+    expect(claude.api.id).toBe("promptlab/bedrock/us.anthropic.claude-sonnet-4-6")
+
+    const stalePromptLabClaude = yield* Provider.use.getModel(
+      ProviderV2.ID.make("promptlab"),
+      ModelV2.ID.make("anthropic/claude-sonnet-4-6"),
+    )
+    expect(stalePromptLabClaude.api.id).toBe("promptlab/bedrock/us.anthropic.claude-sonnet-4-6")
+
+    const gpt = yield* Provider.use.getModel(ProviderV2.ID.openai, ModelV2.ID.make("gpt-4.1"))
+    expect(String(gpt.providerID)).toBe("promptlab")
+    expect(String(gpt.id)).toBe("azureOpenAI/gpt-4.1")
+    expect(gpt.api.id).toBe("promptlab/azureOpenAI/gpt-4.1")
+  }),
+)
+
 it.instance(
   "model whitelist filters models for provider",
   Effect.gen(function* () {

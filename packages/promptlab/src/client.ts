@@ -61,7 +61,10 @@ export class PromptLabClient {
       return { kind: "stream", response }
     }
 
-    const value = await response.json().catch(() => undefined)
+    const text = await response.text().catch(() => "")
+    if (looksLikePromptLabSSE(text)) return { kind: "stream", response: textStreamResponse(text) }
+
+    const value = parseJSON(text)
     if (isRecord(value) && typeof value.streamId === "string") {
       const stream = await this.request(`/api/agents/chat/stream/${encodeURIComponent(value.streamId)}`, {
         method: "GET",
@@ -156,6 +159,26 @@ export class PromptLabClient {
     if (auth && this.token) headers.set("authorization", `Bearer ${this.token}`)
     if (this.cookie) headers.set("cookie", this.cookie)
     return headers
+  }
+}
+
+function looksLikePromptLabSSE(text: string) {
+  return /^\s*(event|data):/m.test(text)
+}
+
+function textStreamResponse(text: string) {
+  return new Response(text, {
+    headers: {
+      "content-type": "text/event-stream",
+    },
+  })
+}
+
+function parseJSON(text: string): unknown {
+  try {
+    return JSON.parse(text)
+  } catch {
+    return undefined
   }
 }
 

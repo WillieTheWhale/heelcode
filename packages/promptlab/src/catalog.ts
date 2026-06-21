@@ -37,6 +37,8 @@ export function normalizeCatalog(modelsRaw: unknown, endpointsRaw: unknown): Pro
 
   if (!endpoints.length) endpoints.push({ id: FALLBACK_ENDPOINT, name: "PromptLab" })
   const defaultEndpoint = endpoints.length === 1 ? endpoints[0].id : FALLBACK_ENDPOINT
+  const configuredEndpointIDs = new Set(endpoints.map((endpoint) => endpoint.id))
+  const restrictToConfiguredEndpoints = configuredEndpointIDs.size > 0
 
   const seen = new Set<string>()
   const normalizedModels = models
@@ -45,6 +47,7 @@ export function normalizeCatalog(modelsRaw: unknown, endpointsRaw: unknown): Pro
       endpoint: model.endpoint || defaultEndpoint,
       name: model.name || model.id,
     }))
+    .filter((model) => !restrictToConfiguredEndpoints || configuredEndpointIDs.has(model.endpoint))
     .filter((model) => {
       if (!model.id) return false
       const key = `${model.endpoint}/${model.id}`
@@ -99,7 +102,13 @@ function normalizeEndpoints(raw: unknown): PromptLabEndpoint[] {
     if (direct.length) return direct
     return Object.entries(raw).flatMap(([key, value]) => {
       if (isRecord(value)) {
-        return [{ id: stringValue(value.id) ?? stringValue(value.endpoint) ?? key, name: stringValue(value.name) ?? key, raw: value }]
+        return [
+          {
+            id: stringValue(value.id) ?? stringValue(value.endpoint) ?? key,
+            name: stringValue(value.name) ?? key,
+            raw: value,
+          },
+        ]
       }
       return [{ id: key, name: key, raw: value }]
     })

@@ -41,9 +41,12 @@ promptlab/<endpoint>/<model>
 Examples:
 
 ```text
-promptlab/openAI/gpt-4.1
-promptlab/anthropic/claude-sonnet-4-5
+promptlab/azureOpenAI/gpt-4.1
+promptlab/google/gemini-2.5-flash
+promptlab/bedrock/us.anthropic.claude-sonnet-4-6
 ```
+
+PromptLab may also return raw provider-key model groups such as `openAI` and `anthropic`. Those groups require user-provided upstream provider API keys in the PromptLab UI and are not the university-backed endpoints heelcode should select by default. The connector filters them out when `/api/endpoints` reports configured PromptLab endpoints. Claude models offered by PromptLab are selected through the configured `bedrock` endpoint.
 
 The heelcode provider discovers this catalog from:
 
@@ -183,6 +186,7 @@ PromptLab access is for eligible UNC affiliates. Do not use heelcode to publish 
 ## Known Limitations
 
 - The observed chat payload shape is implemented conservatively; a sanitized HAR would still be useful for edge fields, attachments, and PromptLab-native agent workflows.
+- If stale opencode state references direct `openAI` or `anthropic` model IDs, heelcode aliases those selections to matching configured PromptLab models when possible.
 - Native PromptLab tools are server-side PromptLab agent tools, not arbitrary opencode local tools.
 - Local tool execution currently works best for explicit tool requests. General autonomous tool choice still depends on PromptLab following the synthetic tool-call instruction.
 - ONYEN browser login stays in the user's normal Chrome profile, so Microsoft MFA/security-info prompts remain user-side browser steps.

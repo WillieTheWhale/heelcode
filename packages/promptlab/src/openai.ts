@@ -46,6 +46,7 @@ export function buildPromptLabPayload(request: OpenAIChatCompletionRequest, sele
     ? [messagesToPromptText(request.messages), toolInstruction].filter(Boolean).join("\n\n")
     : lastUserText(request.messages)
   const messages = toolInstruction ? insertToolInstruction(request.messages, toolInstruction) : request.messages
+  const temperature = promptLabTemperature(request.temperature, selection)
 
   return {
     userMessage: text,
@@ -64,7 +65,7 @@ export function buildPromptLabPayload(request: OpenAIChatCompletionRequest, sele
     isContinued: false,
     ephemeralAgent: false,
     manualSkills: [],
-    temperature: request.temperature,
+    temperature,
     max_tokens: request.max_tokens ?? request.max_completion_tokens,
     top_p: request.top_p,
     stop: request.stop,
@@ -180,6 +181,25 @@ export type OpenAIToolCallDelta = {
   }
 }
 
+type PromptLabDelta = {
+  content?: string
+  toolCalls?: OpenAIToolCallDelta[]
+  done?: boolean
+  error?: string
+}
+
+function promptLabTemperature(temperature: number | undefined, selection: ModelSelection): number | undefined {
+  if (
+    temperature !== undefined &&
+    temperature !== 1 &&
+    selection.endpoint === "bedrock" &&
+    selection.model.toLowerCase().includes("anthropic.claude")
+  ) {
+    return undefined
+  }
+  return temperature
+}
+
 export function openAIChunk(params: {
   id: string
   model: string
@@ -254,6 +274,7 @@ export function transformPromptLabSSEToOpenAI(
   const id = `chatcmpl-${crypto.randomUUID()}`
   let buffer = ""
   let closed = false
+  let sawContent = false
   let sawToolCalls = false
   let syntheticBuffer = ""
   const useSyntheticToolProtocol = Array.isArray(options.tools) && options.tools.length > 0
@@ -316,21 +337,26 @@ export function transformPromptLabSSEToOpenAI(
       controller.error(new Error(`PromptLab stream error: ${delta.error}`))
       return
     }
+    if (delta.toolCalls?.length) {
+      sawToolCalls = true
+      controller.enqueue(sse(openAIChunk({ id, model, toolCalls: delta.toolCalls })))
+      if (delta.done) close(controller, id, model)
+      return
+    }
+    if (delta.content) {
+      const shouldEmitContent = !delta.done || !sawContent
+      if (shouldEmitContent) {
+        sawContent = true
+        if (useSyntheticToolProtocol) syntheticBuffer += delta.content
+        else controller.enqueue(sse(openAIChunk({ id, model, content: delta.content })))
+      }
+      if (delta.done) close(controller, id, model)
+      return
+    }
     if (delta.done) {
       close(controller, id, model)
       return
     }
-    if (delta.toolCalls?.length) {
-      sawToolCalls = true
-      controller.enqueue(sse(openAIChunk({ id, model, toolCalls: delta.toolCalls })))
-      return
-    }
-    if (!delta.content) return
-    if (useSyntheticToolProtocol) {
-      syntheticBuffer += delta.content
-      return
-    }
-    controller.enqueue(sse(openAIChunk({ id, model, content: delta.content })))
   }
 
   function close(controller: ReadableStreamDefaultController<Uint8Array>, id: string, model: string) {
@@ -355,6 +381,7 @@ export async function promptLabStreamToText(input: ReadableStream<Uint8Array>): 
   const reader = input.getReader()
   let buffer = ""
   let output = ""
+  let sawText = false
   try {
     for (;;) {
       const { done, value } = await reader.read()
@@ -384,17 +411,20 @@ export async function promptLabStreamToText(input: ReadableStream<Uint8Array>): 
       text += eventText(event)
     }
   }
+
+  function eventText(event: string) {
+    const data = eventData(event)
+    if (!data || data === "[DONE]") return ""
+    const delta = promptLabEventToDelta(data, eventName(event))
+    if (delta.error) throw new Error(`PromptLab stream error: ${delta.error}`)
+    if (!delta.content) return ""
+    if (delta.done && sawText) return ""
+    sawText = true
+    return delta.content
+  }
 }
 
-export function promptLabEventToDelta(
-  data: string,
-  event?: string,
-): {
-  content?: string
-  toolCalls?: OpenAIToolCallDelta[]
-  done?: boolean
-  error?: string
-} {
+export function promptLabEventToDelta(data: string, event?: string): PromptLabDelta {
   const parsed = parseJSON(data)
   if (parsed === undefined) return { content: data }
   if (typeof parsed === "string") return parsed === "[DONE]" ? { done: true } : { content: parsed }
@@ -403,8 +433,11 @@ export function promptLabEventToDelta(
   if (event === "error") return { error: promptLabErrorMessage(parsed) }
   const error = promptLabErrorMessage(parsed)
   if (error && ("error" in parsed || parsed.type === "error")) return { error }
-  if (parsed.final === true || parsed.done === true || parsed.event === "final" || parsed.type === "final")
+  if (parsed.final === true || parsed.done === true || parsed.event === "final" || parsed.type === "final") {
+    const final = promptLabFinalDelta(parsed)
+    if (final) return { ...final, done: true }
     return { done: true }
+  }
   if (parsed.created === true) return {}
   const toolCalls = promptLabToolCalls(parsed)
   if (toolCalls.length) return { toolCalls }
@@ -433,19 +466,33 @@ export function promptLabEventToDelta(
   return {}
 }
 
-function eventText(event: string) {
-  const data = eventData(event)
-  if (!data || data === "[DONE]") return ""
-  const delta = promptLabEventToDelta(data, eventName(event))
-  if (delta.error) throw new Error(`PromptLab stream error: ${delta.error}`)
-  return delta.content ?? ""
-}
-
 function promptLabErrorMessage(parsed: Record<string, unknown>) {
-  const direct = stringValue(parsed.error) ?? stringValue(parsed.message)
+  const direct = stringValue(parsed.error) ?? stringValue(parsed.message) ?? stringValue(parsed.text)
   if (direct) return direct
   if (isRecord(parsed.error)) return stringValue(parsed.error.message) ?? JSON.stringify(parsed.error)
   return JSON.stringify(parsed)
+}
+
+function promptLabFinalDelta(parsed: Record<string, unknown>): PromptLabDelta | undefined {
+  const message = isRecord(parsed.responseMessage)
+    ? parsed.responseMessage
+    : isRecord(parsed.message)
+      ? parsed.message
+      : undefined
+  if (!message) return undefined
+
+  const direct = stringValue(message.content) ?? stringValue(message.text) ?? stringValue(message.response)
+  if (direct) return { content: direct }
+
+  if (!Array.isArray(message.content)) return undefined
+  const content: string[] = []
+  for (const part of message.content) {
+    if (!isRecord(part)) continue
+    if (part.type === "error") return { error: promptLabErrorMessage(part) }
+    const text = stringValue(part.text) ?? stringValue(part.content) ?? stringValue(part.message)
+    if (text) content.push(text)
+  }
+  return content.length ? { content: content.join("") } : undefined
 }
 
 function promptLabNestedDelta(parsed: Record<string, unknown>): string | undefined {
@@ -614,10 +661,10 @@ function inferToolArguments(name: string, text: string): Record<string, unknown>
 }
 
 function matchValue(text: string, label: string): string | undefined {
-  return (
+  const value =
     matchQuotedAfter(text, label) ??
-    text.match(new RegExp(`\\b${escapeRegExp(label)}\\s+(?:is\\s+)?([^\\s,.]+)`, "i"))?.[1]
-  )
+    text.match(new RegExp(`\\b${escapeRegExp(label)}\\s+(?:is\\s+)?([^\\s,]+)`, "i"))?.[1]
+  return value?.replace(/[.;:]+$/, "")
 }
 
 function matchQuotedAfter(text: string, label: string): string | undefined {

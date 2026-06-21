@@ -80,6 +80,24 @@ describe("OpenAI to PromptLab adapter", () => {
     expect(payload.messages).toEqual([{ role: "user", content: "Reply with exactly: HEELCODE_OK" }])
   })
 
+  test("omits incompatible Bedrock Claude temperatures", () => {
+    const payload = buildPromptLabPayload(
+      {
+        model: "promptlab/bedrock/us.anthropic.claude-sonnet-4-6",
+        messages: [{ role: "user", content: "Hello" }],
+        stream: true,
+        temperature: 0,
+      },
+      {
+        openAIModelID: "promptlab/bedrock/us.anthropic.claude-sonnet-4-6",
+        endpoint: "bedrock",
+        model: "us.anthropic.claude-sonnet-4-6",
+      },
+    )
+
+    expect(payload.temperature).toBeUndefined()
+  })
+
   test("extracts common PromptLab stream deltas", () => {
     expect(promptLabEventToDelta(JSON.stringify({ message: "hi" }))).toEqual({ content: "hi" })
     expect(promptLabEventToDelta(JSON.stringify({ message: { content: "hi" } }))).toEqual({ content: "hi" })
@@ -100,7 +118,30 @@ describe("OpenAI to PromptLab adapter", () => {
       ),
     ).toEqual({ content: "hi" })
     expect(promptLabEventToDelta(JSON.stringify({ final: true }))).toEqual({ done: true })
+    expect(promptLabEventToDelta(JSON.stringify({ final: true, responseMessage: { text: "promptlab-ok" } }))).toEqual({
+      content: "promptlab-ok",
+      done: true,
+    })
+    expect(
+      promptLabEventToDelta(
+        JSON.stringify({
+          final: true,
+          responseMessage: { content: [{ type: "text", text: "promptlab-ok" }] },
+        }),
+      ),
+    ).toEqual({ content: "promptlab-ok", done: true })
+    expect(
+      promptLabEventToDelta(
+        JSON.stringify({
+          final: true,
+          responseMessage: { content: [{ type: "error", error: "model version has reached end of life" }] },
+        }),
+      ),
+    ).toEqual({ error: "model version has reached end of life", done: true })
     expect(promptLabEventToDelta(JSON.stringify({ error: "missing API key" }))).toEqual({ error: "missing API key" })
+    expect(promptLabEventToDelta(JSON.stringify({ error: true, text: '{"type":"ban"}' }), "error")).toEqual({
+      error: '{"type":"ban"}',
+    })
     expect(promptLabEventToDelta(JSON.stringify({ message: "Illegal request" }), "error")).toEqual({
       error: "Illegal request",
     })
@@ -205,6 +246,18 @@ describe("OpenAI to PromptLab adapter", () => {
 
     expect(call?.function?.name).toBe("glob")
     expect(call?.function?.arguments).toBe('{"pattern":"*"}')
+  })
+
+  test("preflights explicit file patterns without truncating extensions", () => {
+    const call = preflightToolCallFromRequest({
+      model: "promptlab/openAI/gpt-4.1",
+      stream: true,
+      messages: [{ role: "user", content: "Use the glob tool with pattern package.json before answering." }],
+      tools: [{ type: "function", function: { name: "glob", parameters: {} } }],
+    })
+
+    expect(call?.function?.name).toBe("glob")
+    expect(call?.function?.arguments).toBe('{"pattern":"package.json"}')
   })
 
   test("preflights natural workspace inspection requests", () => {

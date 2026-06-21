@@ -1847,6 +1847,8 @@ export const layer = Layer.effect(
       const s = yield* InstanceState.get(state)
       const provider = s.providers[providerID]
       if (!provider) {
+        const promptlab = promptLabAliasModel(s.providers, providerID, modelID)
+        if (promptlab) return promptlab
         const catalogProvider = s.catalog[providerID]
         const suggestions = catalogProvider
           ? modelSuggestions(catalogProvider, modelID, runtimeFlags.enableExperimentalModels)
@@ -1858,6 +1860,8 @@ export const layer = Layer.effect(
 
       const info = provider.models[modelID]
       if (!info) {
+        const promptlab = promptLabAliasModel(s.providers, providerID, modelID)
+        if (promptlab) return promptlab
         const current = modelSuggestions(provider, modelID, runtimeFlags.enableExperimentalModels)
         const suggestions = current.length
           ? current
@@ -2038,6 +2042,82 @@ export function sort<T extends { id: string }>(models: T[]) {
     [(model) => (model.id.includes("latest") ? 0 : 1), "asc"],
     [(model) => model.id, "desc"],
   )
+}
+
+function promptLabAliasModel(providers: Record<ProviderV2.ID, Info>, providerID: ProviderV2.ID, modelID: ModelV2.ID) {
+  const promptlab = providers[ProviderV2.ID.make("promptlab")]
+  if (!promptlab) return
+  const modelIDs = Object.keys(promptlab.models)
+  for (const alias of promptLabAliasCandidates(String(providerID), String(modelID), modelIDs)) {
+    const model = promptlab.models[alias]
+    if (model) return model
+  }
+}
+
+function promptLabAliasCandidates(providerID: string, modelID: string, available: string[]): string[] {
+  const result: string[] = []
+  const add = (value: string | undefined) => {
+    if (!value || result.includes(value)) return
+    result.push(value)
+  }
+  const addMatching = (prefix: string, needle: string) => {
+    const normalized = normalizePromptLabModelNeedle(needle)
+    const matches = available.filter(
+      (model) => model.startsWith(prefix) && normalizePromptLabModelNeedle(model).includes(normalized),
+    )
+    matches.sort(promptLabAliasSort)
+    for (const match of matches) add(match)
+  }
+
+  const provider = providerID.toLowerCase()
+  if (providerID === "promptlab") {
+    const [endpoint, ...rest] = modelID.split("/")
+    const model = rest.join("/")
+    if (endpoint === "anthropic") {
+      addMatching("bedrock/", `anthropic.${model}`)
+      addMatching("bedrock/", model)
+    }
+    if (endpoint === "openAI" || endpoint === "openai" || endpoint === "assistants" || endpoint === "azureAssistants") {
+      add(`azureOpenAI/${model}`)
+      addMatching("azureOpenAI/", model)
+    }
+    return result
+  }
+
+  if (provider === "anthropic") {
+    addMatching("bedrock/", `anthropic.${modelID}`)
+    addMatching("bedrock/", modelID)
+  }
+  if (provider === "openai" || provider === "openai-compatible") {
+    add(`azureOpenAI/${modelID}`)
+    addMatching("azureOpenAI/", modelID)
+  }
+  if (providerID === "openAI" || providerID === "azureOpenAI" || provider === "google" || provider === "bedrock") {
+    add(`${providerID}/${modelID}`)
+    addMatching(`${providerID}/`, modelID)
+  }
+  return result
+}
+
+function normalizePromptLabModelNeedle(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/^bedrock\//, "")
+    .replace(/^azureopenai\//, "")
+    .replace(/^us\./, "")
+}
+
+function promptLabAliasSort(a: string, b: string) {
+  const score = (value: string) => {
+    let result = 0
+    if (value.includes("4-6")) result += 40
+    if (value.includes("4-5")) result += 30
+    if (value.includes("3-7")) result += 20
+    if (value.includes("3-5")) result += 10
+    if (value.includes("-v1:0") || value.includes("-v1%3A0")) result -= 2
+    return result
+  }
+  return score(b) - score(a) || b.localeCompare(a)
 }
 
 export function parseModel(model: string) {

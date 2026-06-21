@@ -45,6 +45,26 @@ describe("heelcode-promptlabd handler", () => {
     expect(text).toContain("data: [DONE]")
   })
 
+  test("surfaces untyped PromptLab SSE errors instead of empty responses", async () => {
+    const handler = createHandler({
+      baseURL: "https://promptlab.example",
+      fetch: fakePromptLabFetch({ chatMode: "untyped-error-stream" }),
+    })
+    const response = await handler(
+      new Request("http://127.0.0.1/v1/chat/completions", {
+        method: "POST",
+        body: JSON.stringify({
+          model: "promptlab/openAI/gpt-4.1",
+          messages: [{ role: "user", content: "hello" }],
+        }),
+      }),
+    )
+    const text = await response.text()
+
+    expect(response.status).toBe(500)
+    expect(text).toContain("ban")
+  })
+
   test("translates PromptLab streams into OpenAI-compatible SSE", async () => {
     const handler = createHandler({ baseURL: "https://promptlab.example", fetch: fakePromptLabFetch() })
     const response = await handler(
@@ -150,7 +170,7 @@ describe("heelcode-promptlabd handler", () => {
 })
 
 type FakePromptLabOptions = {
-  chatMode?: "stream-id" | "direct-stream" | "json"
+  chatMode?: "stream-id" | "direct-stream" | "untyped-error-stream" | "json"
   calls?: Array<{ path: string; method: string; body?: unknown }>
 }
 
@@ -170,6 +190,9 @@ function fakePromptLabFetch(options: FakePromptLabOptions = {}): typeof fetch {
     if (url.pathname === "/api/agents/chat/openAI" && init?.method === "POST") {
       if (options.chatMode === "direct-stream") {
         return sse(['data: {"message":"Direct"}\n\n', 'data: {"message":" stream"}\n\n', 'data: {"final":true}\n\n'])
+      }
+      if (options.chatMode === "untyped-error-stream") {
+        return new Response('event: error\ndata: {"error":true,"final":true,"text":"{\\"type\\":\\"ban\\"}"}\n\n')
       }
       if (options.chatMode === "json") {
         return json({ message: { content: "JSON hello" } })
