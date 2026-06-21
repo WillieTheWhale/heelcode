@@ -111,6 +111,28 @@ describe("heelcode-promptlabd handler", () => {
     expect(text).toContain("ban")
   })
 
+  test("keeps streaming PromptLab SSE errors OpenAI-compatible", async () => {
+    const handler = createHandler({
+      baseURL: "https://promptlab.example",
+      fetch: fakePromptLabFetch({ chatMode: "untyped-error-stream" }),
+    })
+    const response = await handler(
+      new Request("http://127.0.0.1/v1/chat/completions", {
+        method: "POST",
+        body: JSON.stringify({
+          model: "promptlab/openAI/gpt-4.1",
+          stream: true,
+          messages: [{ role: "user", content: "hello" }],
+        }),
+      }),
+    )
+    const text = await response.text()
+
+    expect(response.status).toBe(200)
+    expect(text).toContain("PromptLab stream error")
+    expect(text).toContain("data: [DONE]")
+  })
+
   test("translates PromptLab streams into OpenAI-compatible SSE", async () => {
     const handler = createHandler({ baseURL: "https://promptlab.example", fetch: fakePromptLabFetch() })
     const response = await handler(

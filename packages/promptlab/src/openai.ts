@@ -293,7 +293,7 @@ export function transformPromptLabSSEToOpenAI(
         flushEvents(controller, id, model, true)
         close(controller, id, model)
       } catch (error) {
-        controller.error(error)
+        emitStreamError(controller, id, model, errorMessage(error))
       }
     },
   })
@@ -325,6 +325,7 @@ export function transformPromptLabSSEToOpenAI(
     model: string,
     event: string,
   ) {
+    if (closed) return
     const data = eventData(event)
     if (!data || data === "[DONE]") {
       if (data === "[DONE]") close(controller, id, model)
@@ -333,8 +334,7 @@ export function transformPromptLabSSEToOpenAI(
 
     const delta = promptLabEventToDelta(data, eventName(event))
     if (delta.error) {
-      closed = true
-      controller.error(new Error(`PromptLab stream error: ${delta.error}`))
+      emitStreamError(controller, id, model, delta.error)
       return
     }
     if (delta.toolCalls?.length) {
@@ -362,18 +362,43 @@ export function transformPromptLabSSEToOpenAI(
   function close(controller: ReadableStreamDefaultController<Uint8Array>, id: string, model: string) {
     if (closed) return
     closed = true
-    if (useSyntheticToolProtocol && !sawToolCalls) {
-      const toolCall = syntheticToolCallFromText(syntheticBuffer)
-      if (toolCall) {
-        sawToolCalls = true
-        controller.enqueue(sse(openAIChunk({ id, model, toolCalls: [toolCall] })))
-      } else if (syntheticBuffer) {
-        controller.enqueue(sse(openAIChunk({ id, model, content: syntheticBuffer })))
+    try {
+      if (useSyntheticToolProtocol && !sawToolCalls) {
+        const toolCall = syntheticToolCallFromText(syntheticBuffer)
+        if (toolCall) {
+          sawToolCalls = true
+          controller.enqueue(sse(openAIChunk({ id, model, toolCalls: [toolCall] })))
+        } else if (syntheticBuffer) {
+          controller.enqueue(sse(openAIChunk({ id, model, content: syntheticBuffer })))
+        }
+      }
+      controller.enqueue(sse(openAIChunk({ id, model, finishReason: sawToolCalls ? "tool_calls" : "stop" })))
+      controller.enqueue(encoder.encode("data: [DONE]\n\n"))
+      controller.close()
+    } catch {
+      // The downstream client may have cancelled after PromptLab finished.
+    }
+  }
+
+  function emitStreamError(
+    controller: ReadableStreamDefaultController<Uint8Array>,
+    id: string,
+    model: string,
+    error: string,
+  ) {
+    if (closed) return
+    const message = `PromptLab stream error: ${error}`
+    if (useSyntheticToolProtocol) syntheticBuffer += message
+    else {
+      sawContent = true
+      try {
+        controller.enqueue(sse(openAIChunk({ id, model, content: message })))
+      } catch {
+        closed = true
+        return
       }
     }
-    controller.enqueue(sse(openAIChunk({ id, model, finishReason: sawToolCalls ? "tool_calls" : "stop" })))
-    controller.enqueue(encoder.encode("data: [DONE]\n\n"))
-    controller.close()
+    close(controller, id, model)
   }
 }
 
@@ -751,4 +776,8 @@ function stringValue(input: unknown): string | undefined {
 
 function isRecord(input: unknown): input is Record<string, unknown> {
   return typeof input === "object" && input !== null && !Array.isArray(input)
+}
+
+function errorMessage(error: unknown) {
+  return error instanceof Error ? error.message : String(error)
 }

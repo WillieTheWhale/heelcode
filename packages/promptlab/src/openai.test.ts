@@ -236,6 +236,36 @@ describe("OpenAI to PromptLab adapter", () => {
     expect(output).not.toContain("heelcode_tool_call")
   })
 
+  test("turns PromptLab stream errors into complete OpenAI-compatible SSE", async () => {
+    const source = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(encoder.encode('event: error\ndata: {"error":true,"text":"429 too many requests"}\n\n'))
+        controller.close()
+      },
+    })
+
+    const output = await readStream(transformPromptLabSSEToOpenAI(source, "promptlab/openAI/gpt-4.1"))
+    expect(output).toContain("PromptLab stream error: 429 too many requests")
+    expect(output).toContain('"finish_reason":"stop"')
+    expect(output).toContain("data: [DONE]")
+  })
+
+  test("ignores PromptLab events after the stream is already done", async () => {
+    const source = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ message: "done" })}\n\n`))
+        controller.enqueue(encoder.encode("data: [DONE]\n\n"))
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ message: "late" })}\n\n`))
+        controller.close()
+      },
+    })
+
+    const output = await readStream(transformPromptLabSSEToOpenAI(source, "promptlab/openAI/gpt-4.1"))
+    expect(output).toContain('"content":"done"')
+    expect(output).not.toContain("late")
+    expect(output.match(/data: \[DONE\]/g)?.length).toBe(1)
+  })
+
   test("preflights explicit local tool requests", () => {
     const call = preflightToolCallFromRequest({
       model: "promptlab/openAI/gpt-4.1",
