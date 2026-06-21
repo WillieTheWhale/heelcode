@@ -31,6 +31,12 @@ import { PluginCommand } from "./cli/cmd/plug"
 import { Heap } from "./cli/heap"
 import { ensurePromptLabReady } from "./promptlab/daemon"
 
+const originalCwd = process.env.HEELCODE_ORIGINAL_CWD
+if (originalCwd) {
+  process.chdir(originalCwd)
+  delete process.env.HEELCODE_ORIGINAL_CWD
+}
+
 const args = hideBin(process.argv)
 
 function show(out: string) {

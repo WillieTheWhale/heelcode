@@ -7,10 +7,23 @@ import os from "node:os"
 import { fileURLToPath } from "node:url"
 
 const forwardedSignals = ["SIGINT", "SIGTERM", "SIGHUP"]
+const packageDir = path.dirname(path.dirname(fileURLToPath(import.meta.url)))
 
-function run(target, args = process.argv.slice(2)) {
+function getSpawnOptions() {
+  return {
+    stdio: "inherit",
+    cwd: packageDir,
+    env: {
+      ...process.env,
+      HEELCODE_ORIGINAL_CWD: process.cwd(),
+    },
+  }
+}
+
+function run(target, args = process.argv.slice(2), options = {}) {
   const child = childProcess.spawn(target, args, {
     stdio: "inherit",
+    ...options,
   })
 
   child.on("error", (error) => {
@@ -45,14 +58,13 @@ function run(target, args = process.argv.slice(2)) {
 }
 
 const envPath = process.env.OPENCODE_BIN_PATH
-
 const scriptPath = fs.realpathSync(fileURLToPath(import.meta.url))
 const scriptDir = path.dirname(scriptPath)
 const sourceEntry = path.join(scriptDir, "..", "src", "index.ts")
 
 if (!envPath && fs.existsSync(sourceEntry)) {
   const bun = process.env.BUN_BIN || "bun"
-  run(bun, ["--conditions=browser", sourceEntry, ...process.argv.slice(2)])
+  run(bun, ["--conditions=browser", sourceEntry, ...process.argv.slice(2)], getSpawnOptions())
 } else {
   run(resolveNativeBinary())
 }
