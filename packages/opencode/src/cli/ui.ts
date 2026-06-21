@@ -15,17 +15,17 @@ type LogoPalette = {
 }
 
 const UNCCyan: LogoPalette = {
-  fgStart: [21, 49, 96],
-  fgEnd: [86, 168, 225],
-  shadow: [12, 26, 58],
-  fill: [17, 29, 56],
+  fgStart: [19, 41, 75],
+  fgEnd: [75, 156, 211],
+  shadow: [9, 24, 53],
+  fill: [12, 29, 56],
 }
 
 const UNCBlue: LogoPalette = {
-  fgStart: [75, 156, 211],
-  fgEnd: [168, 218, 250],
-  shadow: [31, 76, 132],
-  fill: [22, 44, 86],
+  fgStart: [56, 118, 176],
+  fgEnd: [149, 207, 244],
+  shadow: [30, 76, 128],
+  fill: [25, 51, 96],
   dim: true,
 }
 
@@ -113,7 +113,7 @@ export function logo(pad?: string) {
     dim: true,
   }
   const gap = " "
-  const translucent: RGB = [196, 205, 219]
+  const translucent: RGB = [167, 189, 214]
   const draw = (line: string, palette: LogoPalette, rowIndex: number) => {
     const parts: string[] = []
     const width = Math.max(1, line.length - 1)
