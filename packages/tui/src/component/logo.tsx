@@ -87,6 +87,9 @@ const TAIL = 1.8
 const TRACE_IN = 200
 const GLOW_OUT = 1600
 const PEAK = RGBA.fromInts(255, 255, 255)
+const UNC_NAVY = RGBA.fromInts(19, 41, 75)
+const UNC_BLUE = RGBA.fromInts(75, 156, 211)
+const UNC_BLUE_LIGHT = RGBA.fromInts(166, 216, 248)
 
 type Ring = {
   x: number
@@ -676,6 +679,14 @@ export function Logo(props: { shape?: LogoShape; ink?: RGBA; idle?: boolean } = 
 
   const idleState = createMemo(() => (props.idle ? buildIdleState(frame().t, ctx) : undefined))
   const useSubpixelBlocks = () => renderer.capabilities?.rgb === true
+  const brandLeft = (row: number) => {
+    const depth = ctx.shape.left.length <= 1 ? 0 : row / (ctx.shape.left.length - 1)
+    return tint(theme.background, tint(UNC_NAVY, UNC_BLUE, 0.2 + depth * 0.28), 0.9)
+  }
+  const brandRight = (row: number) => {
+    const depth = ctx.shape.right.length <= 1 ? 0 : row / (ctx.shape.right.length - 1)
+    return tint(theme.background, tint(UNC_BLUE, UNC_BLUE_LIGHT, 0.16 + depth * 0.34), 0.92)
+  }
 
   const renderLine = (
     line: string,
@@ -857,13 +868,13 @@ export function Logo(props: { shape?: LogoShape; ink?: RGBA; idle?: boolean } = 
         {(line, index) => (
           <box flexDirection="row" gap={1}>
             <box flexDirection="row">
-              {renderLine(line, index(), props.ink ?? theme.textMuted, !!props.ink, 0, frame(), dusk(), idleState())}
+              {renderLine(line, index(), props.ink ?? brandLeft(index()), true, 0, frame(), dusk(), idleState())}
             </box>
             <box flexDirection="row">
               {renderLine(
                 ctx.shape.right[index()],
                 index(),
-                props.ink ?? theme.text,
+                props.ink ?? brandRight(index()),
                 true,
                 ctx.LEFT + GAP,
                 frame(),
