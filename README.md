@@ -9,9 +9,9 @@ This repository currently includes:
 - the imported opencode baseline;
 - a PromptLab-only default provider list and a `promptlab` provider that discovers models from a local daemon;
 - a new `@heelcode/promptlab` workspace package with `heelcode-promptlabd`;
-- PromptLab model normalization, OpenAI-compatible model/chat endpoints, stream translation, refresh support, redaction helpers, and focused tests;
+- PromptLab model normalization, stripped chat payloads, OpenAI-compatible model/chat endpoints, stream translation, refresh support, redaction helpers, and focused tests;
 - normal Chrome profile session capture into macOS Keychain, without blank Chrome profiles or tab shutdown;
-- synthetic local-tool call bridging for explicit tool requests through the OpenAI-compatible daemon;
+- synthetic local-tool call bridging, deterministic inspection preflights, and local `task` handoff through the OpenAI-compatible daemon;
 - UNC-blue TUI theming and visible heelcode branding.
 
 ## Local Flow

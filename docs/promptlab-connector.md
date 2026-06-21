@@ -28,7 +28,9 @@ The PromptLab client uses the observed PromptLab routes:
 - `GET /api/agents/chat/active`
 - `POST /api/agents/chat/abort`
 
-The observed PromptLab frontend starts chats by posting to `/api/agents/chat/:endpoint` with a payload that includes `userMessage`, `endpointOption`, `endpoint`, `addedConvo`, `isTemporary`, `isRegenerate`, `conversationId`, `isContinued`, `ephemeralAgent`, and `manualSkills` fields. Chat start requests must include same-origin browser headers (`Origin`, `Referer`, and fetch metadata) matching the PromptLab web app; otherwise PromptLab returns an `Illegal request` SSE error.
+The observed PromptLab frontend starts chats by posting to `/api/agents/chat/:endpoint`. heelcode intentionally strips each OpenAI-compatible request down to the smallest PromptLab-compatible chat-start payload: `text`, `messageId`, `parentMessageId`, `conversationId`, `isCreatedByUser`, `endpointOption`, `endpoint`, `model`, `addedConvo`, `isTemporary`, `isRegenerate`, `isContinued`, `ephemeralAgent`, and `manualSkills`, plus supported sampling fields when present.
+
+The daemon does not send OpenAI `messages`, `tools`, `tool_choice`, `prompt`, or `userMessage` fields to PromptLab. Those remain local compatibility state for opencode. Chat start requests must include same-origin browser headers (`Origin`, `Referer`, and fetch metadata) matching the PromptLab web app; otherwise PromptLab returns an `Illegal request` SSE error.
 
 ## Model Discovery
 
@@ -143,13 +145,17 @@ Password automation should remain explicit opt-in and local-only. The default pa
 
 ## Local Tool Calls
 
-PromptLab's web app has server-side agent tool events (`on_run_step`, `on_run_step_delta`, and `tool_calls` step details), but those are not the same as opencode local workspace tools. heelcode keeps local tool execution on the opencode side and uses two compatibility paths in the daemon:
+PromptLab's web app has server-side agent tool events (`on_run_step`, `on_run_step_delta`, and `tool_calls` step details), but those are not the same as opencode local workspace tools. heelcode keeps local tool execution on the opencode side. PromptLab receives a text prompt that includes the user's request, prior opencode-visible conversation state, and a compact synthetic tool-call instruction when tools are available.
+
+The daemon uses these compatibility paths:
 
 - pass through OpenAI-compatible `tool_calls` when PromptLab or a compatible backend returns them;
 - translate the synthetic `<heelcode_tool_call>{...}</heelcode_tool_call>` protocol into OpenAI-compatible streaming tool calls;
-- preflight explicit requests such as "use the glob tool with pattern \*" into a local tool call before contacting PromptLab.
+- infer safe inspection tool calls from PromptLab prose when a model describes the tool it should use instead of emitting the XML tag;
+- preflight explicit requests such as "use the glob tool with pattern \*" into a local tool call before contacting PromptLab;
+- preflight explicit sequenced requests, such as grep-then-read, when prior tool output contains enough concrete path information.
 
-This makes explicit local tool requests execute end to end through opencode. Follow-up answer quality after a tool result is still model-dependent and needs more iteration.
+This makes explicit local tool requests, follow-up inspection loops, and subagent handoff through the local `task` tool execute end to end through opencode. PromptLab is the remote text-generation backend; opencode remains the harness that executes tools, receives tool results, compacts context, and continues the loop.
 
 ## Testing Metrics
 
@@ -185,8 +191,8 @@ PromptLab access is for eligible UNC affiliates. Do not use heelcode to publish 
 
 ## Known Limitations
 
-- The observed chat payload shape is implemented conservatively; a sanitized HAR would still be useful for edge fields, attachments, and PromptLab-native agent workflows.
+- The observed chat payload shape is intentionally stripped to avoid PromptLab-specific prompt wrappers where possible. A sanitized HAR would still be useful for attachments and PromptLab-native assistant workflows.
 - If stale opencode state references direct `openAI` or `anthropic` model IDs, heelcode aliases those selections to matching configured PromptLab models when possible.
 - Native PromptLab tools are server-side PromptLab agent tools, not arbitrary opencode local tools.
-- Local tool execution currently works best for explicit tool requests. General autonomous tool choice still depends on PromptLab following the synthetic tool-call instruction.
+- Local tool execution is strongest for explicit tool requests and deterministic inspection sequences. General autonomous tool choice still depends on PromptLab following the synthetic tool-call instruction or producing prose that the daemon can safely infer.
 - ONYEN browser login stays in the user's normal Chrome profile, so Microsoft MFA/security-info prompts remain user-side browser steps.

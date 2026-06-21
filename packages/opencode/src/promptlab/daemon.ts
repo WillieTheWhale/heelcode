@@ -79,6 +79,7 @@ const NON_BOOTSTRAP_COMMANDS = new Set([
 async function ensurePromptLabServer() {
   if (await healthy()) return
   await access(promptlabCli)
+  const debugOutput = process.env.HEELCODE_PROMPTLAB_DEBUG_REQUESTS === "1"
   const child = Bun.spawn([bunPath(), promptlabCli, "serve"], {
     cwd: promptlabDir,
     env: {
@@ -86,8 +87,8 @@ async function ensurePromptLabServer() {
       HEELCODE_PROMPTLAB_URL: process.env.HEELCODE_PROMPTLAB_URL ?? DEFAULT_URL,
     },
     stdin: "ignore",
-    stdout: "ignore",
-    stderr: "ignore",
+    stdout: debugOutput ? "inherit" : "ignore",
+    stderr: debugOutput ? "inherit" : "ignore",
   })
   promptLabServerProcess = child
   child.unref?.()

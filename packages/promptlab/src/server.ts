@@ -1,6 +1,7 @@
 import { catalogMetrics, decodeOpenAIModelID, toOpenAIModels } from "./catalog"
 import { PromptLabClient, configFromEnv, safeLogError } from "./client"
 import {
+  lastUserText,
   openAINonStreamingResponse,
   openAIToolCallStream,
   preflightToolCallFromRequest,
@@ -55,6 +56,7 @@ export function createHandler(
 
       if (request.method === "POST" && url.pathname === "/v1/chat/completions") {
         const body = (await request.json()) as OpenAIChatCompletionRequest
+        debugChatRequest(body)
         const selection = selectionFromRequest(body)
         const preflightToolCall = preflightToolCallFromRequest(body)
         if (preflightToolCall && body.stream) {
@@ -111,6 +113,32 @@ export function createHandler(
       return json({ error: { message: safeLogError(error) } }, { status: 500 })
     }
   }
+}
+
+function debugChatRequest(body: OpenAIChatCompletionRequest) {
+  if (process.env.HEELCODE_PROMPTLAB_DEBUG_REQUESTS !== "1") return
+  const lastUser = lastUserText(body.messages ?? [])
+  const tools = Array.isArray(body.tools)
+    ? body.tools.flatMap((tool) => {
+        if (!tool || typeof tool !== "object") return []
+        const value = tool as Record<string, unknown>
+        const fn = value.function
+        if (fn && typeof fn === "object" && "name" in fn && typeof fn.name === "string") return [fn.name]
+        if ("name" in value && typeof value.name === "string") return [value.name]
+        return []
+      })
+    : []
+  console.error(
+    JSON.stringify({
+      heelcodePromptLabRequest: true,
+      model: body.model,
+      stream: body.stream,
+      toolChoice: body.tool_choice,
+      tools,
+      messageRoles: body.messages?.map((message) => message.role),
+      lastUserLength: lastUser.length,
+    }),
+  )
 }
 
 async function loadCatalog(client: PromptLabClient): Promise<CatalogResponse> {

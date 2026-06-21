@@ -5,16 +5,23 @@ const encoder = new TextEncoder()
 const decoder = new TextDecoder()
 
 export function messageContentToText(content: OpenAIChatMessage["content"]): string {
-  if (typeof content === "string") return content
+  if (typeof content === "string") return normalizePromptText(content)
   if (!content) return ""
   return content
     .map((part) => {
-      if (part.type === "text" && typeof part.text === "string") return part.text
+      if (part.type === "text" && typeof part.text === "string") return normalizePromptText(part.text)
       if (part.type === "image_url") return "[image]"
       return ""
     })
     .filter(Boolean)
     .join("\n")
+}
+
+function normalizePromptText(text: string): string {
+  const trimmed = text.trim()
+  if (!trimmed.startsWith('"') || !trimmed.endsWith('"')) return text
+  const parsed = parseJSON(trimmed)
+  return typeof parsed === "string" ? parsed : text
 }
 
 export function messagesToPromptText(messages: OpenAIChatMessage[]): string {
@@ -45,21 +52,18 @@ export function buildPromptLabPayload(request: OpenAIChatCompletionRequest, sele
   const text = toolInstruction
     ? [messagesToPromptText(request.messages), toolInstruction].filter(Boolean).join("\n\n")
     : lastUserText(request.messages)
-  const messages = toolInstruction ? insertToolInstruction(request.messages, toolInstruction) : request.messages
   const temperature = promptLabTemperature(request.temperature, selection)
 
   return {
-    userMessage: text,
+    text,
+    messageId: messageID,
+    parentMessageId: parentMessageID,
+    conversationId: conversationID,
+    isCreatedByUser: true,
     endpointOption: selection.model,
     endpoint: selection.endpoint,
     model: selection.model,
-    messages,
-    text,
-    prompt: text,
     addedConvo: [],
-    conversationId: conversationID,
-    parentMessageId: parentMessageID,
-    messageId: messageID,
     isTemporary: true,
     isRegenerate: false,
     isContinued: false,
@@ -69,8 +73,6 @@ export function buildPromptLabPayload(request: OpenAIChatCompletionRequest, sele
     max_tokens: request.max_tokens ?? request.max_completion_tokens,
     top_p: request.top_p,
     stop: request.stop,
-    tools: request.tools,
-    tool_choice: request.tool_choice,
   }
 }
 
@@ -89,16 +91,19 @@ export function toolInstructionFromRequest(request: OpenAIChatCompletionRequest)
   const tools = request.tools.flatMap((tool) => normalizePromptTool(tool))
   if (tools.length === 0) return undefined
   return [
-    "Heelcode local tools are available, but this backend cannot call them directly.",
-    "If the user asks to inspect local files, list directories, read files, search, edit, run commands, or otherwise use the local workspace, you must call exactly one appropriate tool before answering.",
+    "Heelcode local opencode tools are available. PromptLab cannot execute them directly.",
+    "When you emit the XML tool-call intent below, Heelcode converts it into an OpenAI-compatible tool_call and opencode executes the tool locally.",
+    "You are operating inside an iterative agent harness, not a one-shot chatbot.",
+    "If the task involves files, code, repositories, terminals, tests, diagnostics, edits, or delegation, you must call exactly one appropriate tool before answering.",
     "Never claim that you inspected the local workspace unless you emitted a tool call.",
     hasToolResult
-      ? "The conversation already includes local tool results. Use those results to answer the user's request now. Do not call another tool unless the result is insufficient."
-      : "",
+      ? "The conversation already includes local tool results. Use them to decide the next step. If more information or action is needed, call exactly one next tool. If the task is complete, answer concisely. Do not ask the user what to do next when you can continue with another tool."
+      : "For non-trivial software tasks, start by inspecting the workspace with glob, grep, read, task, or another suitable tool.",
+    'Subagent handoff happens through the local task tool. For task calls, include "description", "prompt", and "subagent_type".',
     "When a tool is needed, respond with only one XML tag in this exact format:",
     '<heelcode_tool_call>{"name":"tool_name","arguments":{}}</heelcode_tool_call>',
     "Do not include markdown, prose, or code fences around the tag.",
-    "After a tool result is provided in the conversation, continue normally or request another tool.",
+    "After a tool result is provided in the conversation, continue the loop by either requesting one next tool or giving the final answer.",
     `Available tools: ${JSON.stringify(tools)}`,
     request.tool_choice ? `Requested tool choice: ${JSON.stringify(request.tool_choice)}` : "",
   ]
@@ -106,18 +111,9 @@ export function toolInstructionFromRequest(request: OpenAIChatCompletionRequest)
     .join("\n")
 }
 
-function insertToolInstruction(messages: OpenAIChatMessage[], instruction: string): OpenAIChatMessage[] {
-  const lastUser = messages.findLastIndex((message) => message.role === "user")
-  const toolMessage = { role: "developer" as const, content: instruction }
-  if (lastUser === -1) return [...messages, toolMessage]
-  return [...messages.slice(0, lastUser), toolMessage, ...messages.slice(lastUser)]
-}
-
 function shouldExposeToolProtocol(request: OpenAIChatCompletionRequest): boolean {
   if (request.tool_choice === "none") return false
-  if (request.tool_choice !== undefined && request.tool_choice !== "auto") return true
-  if (request.messages.some((message) => message.role === "tool")) return true
-  return userTextLikelyNeedsLocalTool(lastUserText(request.messages))
+  return true
 }
 
 function userTextLikelyNeedsLocalTool(text: string): boolean {
@@ -239,16 +235,16 @@ export function openAIToolCallStream(model: string, toolCall: OpenAIToolCallDelt
 
 export function preflightToolCallFromRequest(request: OpenAIChatCompletionRequest): OpenAIToolCallDelta | undefined {
   if (!Array.isArray(request.tools) || request.tools.length === 0) return undefined
+  const tools = request.tools.flatMap((tool) => normalizePromptTool(tool))
+  const sequencedToolCall = preflightSequencedToolCallFromRequest(request, tools)
+  if (sequencedToolCall) return sequencedToolCall
   if (request.messages.some((message) => message.role === "tool")) return undefined
   const text = lastUserText(request.messages)
   const explicitToolRequest = /\b(use|call|invoke)\b/i.test(text)
   if (!explicitToolRequest && !userTextLikelyNeedsLocalTool(text)) return undefined
-  const tools = request.tools.flatMap((tool) => normalizePromptTool(tool)) as Array<{
-    name?: string
-    parameters?: { required?: string[] }
-  }>
-  for (const tool of tools) {
-    if (!tool.name) continue
+  const preferredTools = tools.filter((tool) => explicitlyNamesTool(text, tool.name))
+  const candidateTools = preferredTools.length ? preferredTools : tools
+  for (const tool of candidateTools) {
     const named = new RegExp(`\\b${escapeRegExp(tool.name)}\\b`, "i").test(text)
     if (explicitToolRequest && !named) continue
     const args = inferToolArguments(tool.name, text)
@@ -264,6 +260,40 @@ export function preflightToolCallFromRequest(request: OpenAIChatCompletionReques
     }
   }
   return undefined
+}
+
+function explicitlyNamesTool(text: string, name: string): boolean {
+  return (
+    new RegExp(`\\b${escapeRegExp(name)}\\s+tool\\b`, "i").test(text) ||
+    new RegExp(`\\b(use|call|invoke)\\b[\\s\\S]{0,80}\\b${escapeRegExp(name)}\\b[\\s\\S]{0,40}\\btool\\b`, "i").test(
+      text,
+    )
+  )
+}
+
+function preflightSequencedToolCallFromRequest(
+  request: OpenAIChatCompletionRequest,
+  tools: PromptToolSummary[],
+): OpenAIToolCallDelta | undefined {
+  const toolResults = request.messages.filter((message) => message.role === "tool")
+  if (toolResults.length === 0) return undefined
+  const sequence = requestedToolSequenceFromRequest(request, tools)
+  if (sequence.length < 2) return undefined
+  const nextTool = sequence[toolResults.length]
+  if (!nextTool || !tools.some((tool) => tool.name === nextTool)) return undefined
+  const args =
+    inferToolArgumentsFromConversation(nextTool, request) ??
+    inferToolArguments(nextTool, lastUserText(request.messages))
+  if (!args) return undefined
+  return {
+    index: 0,
+    id: `call_${crypto.randomUUID().replaceAll("-", "").slice(0, 24)}`,
+    type: "function",
+    function: {
+      name: nextTool,
+      arguments: JSON.stringify(args),
+    },
+  }
 }
 
 export function transformPromptLabSSEToOpenAI(
@@ -364,7 +394,7 @@ export function transformPromptLabSSEToOpenAI(
     closed = true
     try {
       if (useSyntheticToolProtocol && !sawToolCalls) {
-        const toolCall = syntheticToolCallFromText(syntheticBuffer)
+        const toolCall = syntheticToolCallFromText(syntheticBuffer, options.tools)
         if (toolCall) {
           sawToolCalls = true
           controller.enqueue(sse(openAIChunk({ id, model, toolCalls: [toolCall] })))
@@ -627,12 +657,17 @@ function normalizeOpenAIToolCall(input: unknown, index: number): OpenAIToolCallD
   return [result]
 }
 
-function syntheticToolCallFromText(text: string): OpenAIToolCallDelta | undefined {
+function syntheticToolCallFromText(text: string, toolsInput: unknown[] | undefined): OpenAIToolCallDelta | undefined {
   const raw = extractSyntheticToolCallJSON(text)
-  if (!raw) return undefined
-  const parsed = parseJSON(raw)
-  const call = Array.isArray(parsed) ? parsed[0] : parsed
-  if (!isRecord(call)) return undefined
+  if (raw) {
+    const parsed = parseJSON(raw)
+    const call = Array.isArray(parsed) ? parsed[0] : parsed
+    if (isRecord(call)) return syntheticToolCallFromRecord(call)
+  }
+  return syntheticToolCallFromProse(text, toolsInput)
+}
+
+function syntheticToolCallFromRecord(call: Record<string, unknown>): OpenAIToolCallDelta | undefined {
   const fn = isRecord(call.function) ? call.function : call
   const name = stringValue(fn.name) ?? stringValue(call.name) ?? stringValue(call.tool) ?? stringValue(call.tool_name)
   if (!name) return undefined
@@ -646,6 +681,35 @@ function syntheticToolCallFromText(text: string): OpenAIToolCallDelta | undefine
       arguments: typeof args === "string" ? args : JSON.stringify(args),
     },
   }
+}
+
+function syntheticToolCallFromProse(text: string, toolsInput: unknown[] | undefined): OpenAIToolCallDelta | undefined {
+  const tools = (toolsInput ?? []).flatMap((tool) => normalizePromptTool(tool))
+  if (!tools.length) return undefined
+  if (!/\b(use|call|invoke|run|read|search|grep|glob|list|inspect|open|locate|delegate|subagent|task)\b/i.test(text)) {
+    return undefined
+  }
+
+  if (/\b(task\s+tool|delegate|subagent|handoff)\b/i.test(text) && tools.some((tool) => tool.name === "task")) {
+    const args = inferToolArguments("task", text)
+    if (args) return syntheticToolCallFromRecord({ name: "task", arguments: args })
+  }
+
+  for (const tool of tools) {
+    if (!new RegExp(`\\b${escapeRegExp(tool.name)}\\b`, "i").test(text)) continue
+    const args = inferToolArguments(tool.name, text)
+    if (!args) continue
+    return syntheticToolCallFromRecord({ name: tool.name, arguments: args })
+  }
+
+  for (const name of ["read", "grep", "glob", "task"]) {
+    if (!tools.some((tool) => tool.name === name)) continue
+    const args = inferToolArguments(name, text)
+    if (!args) continue
+    return syntheticToolCallFromRecord({ name, arguments: args })
+  }
+
+  return undefined
 }
 
 function extractSyntheticToolCallJSON(text: string): string | undefined {
@@ -665,7 +729,13 @@ function stripCodeFence(text: string): string {
     .trim()
 }
 
-function normalizePromptTool(input: unknown): unknown[] {
+type PromptToolSummary = {
+  name: string
+  description: string
+  parameters: unknown
+}
+
+function normalizePromptTool(input: unknown): PromptToolSummary[] {
   if (!isRecord(input)) return []
   const fn = isRecord(input.function) ? input.function : input
   const name = stringValue(fn.name) ?? stringValue(input.name)
@@ -691,40 +761,200 @@ function inferToolArguments(name: string, text: string): Record<string, unknown>
     if (pattern) return { pattern }
   }
   if (name === "grep") {
-    const pattern = matchValue(text, "pattern") ?? matchValue(text, "search") ?? matchSearchTerm(text)
+    const pattern =
+      matchValue(text, "pattern") ?? matchValue(text, "search") ?? matchDefinitionTarget(text) ?? matchSearchTerm(text)
     if (pattern) return { pattern }
   }
   if (name === "read") {
-    const filePath = matchValue(text, "file") ?? matchValue(text, "path") ?? matchFilePath(text)
+    const filePath = matchPathValue(text, "file") ?? matchPathValue(text, "path") ?? matchFilePath(text)
     if (filePath) return { filePath }
   }
   if (name === "bash") {
-    const command = matchQuotedAfter(text, "command")
+    const command = matchQuotedAfter(text, "command") ?? matchBacktickedCommand(text)
     if (command) return { command, description: "Runs requested shell command" }
   }
+  if (name === "task") {
+    const args = inferTaskArguments(text)
+    if (args) return args
+  }
   return undefined
+}
+
+function inferToolArgumentsFromConversation(
+  name: string,
+  request: OpenAIChatCompletionRequest,
+): Record<string, unknown> | undefined {
+  const latestToolText = [...request.messages].reverse().find((message) => message.role === "tool")?.content
+  const text = latestToolText === undefined ? "" : messageContentToText(latestToolText)
+  if (name === "read") {
+    const target =
+      matchDefinitionTarget(lastUserText(request.messages)) ?? matchSearchTerm(lastUserText(request.messages))
+    const filePath = (target ? matchDefinitionPathInText(text, target) : undefined) ?? matchPathInText(text)
+    if (filePath) return { filePath }
+  }
+  if (name === "grep") {
+    const pattern =
+      matchDefinitionTarget(lastUserText(request.messages)) ?? matchSearchTerm(lastUserText(request.messages))
+    if (pattern) return { pattern }
+  }
+  return undefined
+}
+
+function requestedToolSequenceFromRequest(request: OpenAIChatCompletionRequest, tools: PromptToolSummary[]): string[] {
+  const text = lastUserText(request.messages)
+  const matches = tools
+    .map((tool) => ({
+      name: tool.name,
+      index: text.search(new RegExp(`\\b${escapeRegExp(tool.name)}\\b`, "i")),
+    }))
+    .filter((match) => match.index >= 0)
+    .sort((a, b) => a.index - b.index)
+
+  const seen = new Set<string>()
+  return matches.flatMap((match) => {
+    if (seen.has(match.name)) return []
+    seen.add(match.name)
+    return [match.name]
+  })
 }
 
 function matchValue(text: string, label: string): string | undefined {
   const value =
     matchQuotedAfter(text, label) ??
-    text.match(new RegExp(`\\b${escapeRegExp(label)}\\s+(?:is\\s+)?([^\\s,]+)`, "i"))?.[1]
-  return value?.replace(/[.;:]+$/, "")
+    text.match(new RegExp(`\\b${escapeRegExp(label)}\\b\\s*(?:(?:is|=|:)\\s*)?([^\\s,]+)`, "i"))?.[1]
+  return cleanScalarValue(value)
 }
 
 function matchQuotedAfter(text: string, label: string): string | undefined {
-  const match = text.match(new RegExp(`\\b${escapeRegExp(label)}\\s+(?:is\\s+)?["'\`]([^"'\`]+)["'\`]`, "i"))
+  const match = text.match(new RegExp(`\\b${escapeRegExp(label)}\\b\\s*(?:(?:is|=|:)\\s*)?["'\`]([^"'\`]+)["'\`]`, "i"))
   return match?.[1]
+}
+
+function matchBacktickedCommand(text: string): string | undefined {
+  return text.match(/\b(?:run|execute)\b[\s\S]{0,40}`([^`]+)`/i)?.[1]
+}
+
+function matchPathValue(text: string, label: string): string | undefined {
+  const quoted = matchQuotedAfter(text, label)
+  const quotedPath = cleanPathValue(quoted)
+  if (quotedPath) return quotedPath
+  const value = matchValue(text, label)
+  const path = cleanPathValue(value)
+  if (path) return path
+  return undefined
+}
+
+function inferTaskArguments(text: string): Record<string, unknown> | undefined {
+  if (!/\b(task\s+tool|delegate|subagent|handoff)\b/i.test(text)) return undefined
+  const subagent =
+    matchValue(text, "subagent_type") ??
+    matchValue(text, "subagent") ??
+    matchValue(text, "agent") ??
+    (/\bexplore\b/i.test(text) ? "explore" : undefined) ??
+    (/\bgeneral\b/i.test(text) ? "general" : undefined) ??
+    (/\bscout\b/i.test(text) ? "scout" : undefined)
+  const prompt = matchQuotedAfter(text, "prompt") ?? matchQuotedAfter(text, "task")
+  if (!subagent || !prompt) return undefined
+  return {
+    description: matchQuotedAfter(text, "description") ?? summarizeTaskPrompt(prompt),
+    prompt,
+    subagent_type: subagent,
+  }
+}
+
+function summarizeTaskPrompt(prompt: string): string {
+  return prompt.replace(/\s+/g, " ").trim().split(/\s+/).slice(0, 5).join(" ")
 }
 
 function matchSearchTerm(text: string): string | undefined {
   return (
-    matchQuotedAfter(text, "for") ?? text.match(/\b(?:search|grep|find)\s+(?:for\s+)?([^.,\s][^,.]*)/i)?.[1]?.trim()
+    matchQuotedAfter(text, "for") ??
+    cleanScalarValue(text.match(/\b(?:search|grep|find|locate)\s+(?:for\s+)?([A-Za-z_$][\w$.-]*)\b/i)?.[1])
+  )
+}
+
+function matchDefinitionTarget(text: string): string | undefined {
+  return (
+    cleanScalarValue(text.match(/\bwhere\s+([A-Za-z_$][\w$.-]*)\s+(?:is|are)\s+defined\b/i)?.[1]) ??
+    cleanScalarValue(
+      text.match(/\b(?:find|locate|search for|grep for)\s+([A-Za-z_$][\w$.-]*)\b[\s\S]{0,60}\bdefinition\b/i)?.[1],
+    ) ??
+    cleanScalarValue(text.match(/\b([A-Za-z_$][\w$.-]*)\s+(?:is|are)\s+defined\b/i)?.[1])
   )
 }
 
 function matchFilePath(text: string): string | undefined {
   return text.match(/\b(?:[\w.-]+\/)*[\w.-]+\.[A-Za-z0-9]{1,12}\b/)?.[0]
+}
+
+function matchPathInText(text: string): string | undefined {
+  return cleanPathValue(
+    text.match(/(?:\/[^\s:]+|(?:[\w.-]+\/)+[\w.-]+\.[A-Za-z0-9]{1,12}|[\w.-]+\.[A-Za-z0-9]{1,12})/)?.[0],
+  )
+}
+
+function matchDefinitionPathInText(text: string, target: string): string | undefined {
+  let currentPath: string | undefined
+  const candidates: string[] = []
+  for (const line of text.split(/\r?\n/)) {
+    const pathOnly = cleanPathValue(
+      line.match(/^\s*((?:\/[^\s:]+|(?:[\w.-]+\/)+[\w.-]+\.[A-Za-z0-9]{1,12}|[\w.-]+\.[A-Za-z0-9]{1,12})):\s*$/)?.[1],
+    )
+    if (pathOnly) {
+      currentPath = pathOnly
+      continue
+    }
+
+    const inline = line.match(
+      /^\s*((?:\/[^\s:]+|(?:[\w.-]+\/)+[\w.-]+\.[A-Za-z0-9]{1,12}|[\w.-]+\.[A-Za-z0-9]{1,12})):\s*(.*)$/,
+    )
+    const inlinePath = cleanPathValue(inline?.[1])
+    const content = inline?.[2] ?? line
+    const path = inlinePath ?? currentPath
+    if (!path) continue
+    if (!new RegExp(`\\b${escapeRegExp(target)}\\b`).test(content)) continue
+    if (!isDefinitionLineForTarget(content, target)) continue
+    candidates.push(path)
+  }
+  return candidates.find((path) => !isTestPath(path)) ?? candidates[0]
+}
+
+function isDefinitionLineForTarget(line: string, target: string): boolean {
+  const name = escapeRegExp(target)
+  return new RegExp(
+    [
+      `\\bexport\\s+(?:async\\s+)?function\\s+${name}\\b`,
+      `\\b(?:async\\s+)?function\\s+${name}\\b`,
+      `\\bexport\\s+(?:const|let|var|class|interface|type|enum)\\s+${name}\\b`,
+      `\\b(?:const|let|var|class|interface|type|enum)\\s+${name}\\b`,
+    ].join("|"),
+  ).test(line)
+}
+
+function isTestPath(path: string): boolean {
+  return /(?:^|\/)(?:__tests__|test|tests|spec)(?:\/|$)|\.(?:test|spec)\.[^/]+$/i.test(path)
+}
+
+function isLikelyPath(value: string): boolean {
+  return /^(?:\/|\.\.?\/|~\/)/.test(value) || value.includes("/") || /\.[A-Za-z0-9]{1,12}$/.test(value)
+}
+
+function cleanPathValue(value: string | undefined): string | undefined {
+  const cleaned = value
+    ?.trim()
+    .replace(/<[^>]*>.*$/, "")
+    .replace(/[),;:]+$/, "")
+  if (/[<>]/.test(cleaned ?? "")) return undefined
+  if (!cleaned || !isLikelyPath(cleaned)) return undefined
+  return cleaned
+}
+
+function cleanScalarValue(value: string | undefined): string | undefined {
+  const cleaned = value?.trim().replace(/[.;:]+$/, "")
+  if (!cleaned || /^(with|to|for|from|and|or|the|a|an|where|how|before|after|answer|answering)$/i.test(cleaned)) {
+    return undefined
+  }
+  return cleaned
 }
 
 function escapeRegExp(value: string): string {
