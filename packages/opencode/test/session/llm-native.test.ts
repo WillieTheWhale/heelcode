@@ -418,7 +418,33 @@ describe("session.llm-native.request", () => {
         provider: { ...providerInfo, id: ProviderV2.ID.make("google") },
         auth: undefined,
       }),
-    ).toEqual({ type: "unsupported", reason: "provider is not openai, opencode, or anthropic" })
+    ).toEqual({ type: "unsupported", reason: "provider is not openai, opencode, promptlab, or anthropic" })
+    expect(
+      LLMNativeRuntime.status({
+        model: {
+          ...baseModel,
+          id: ModelV2.ID.make("bedrock/us.anthropic.claude-sonnet-4-6"),
+          providerID: ProviderV2.ID.make("promptlab"),
+          api: {
+            id: "promptlab/bedrock/us.anthropic.claude-sonnet-4-6",
+            url: "http://127.0.0.1:43117/v1",
+            npm: "@ai-sdk/openai-compatible",
+          },
+        },
+        provider: {
+          ...providerInfo,
+          id: ProviderV2.ID.make("promptlab"),
+          name: "PromptLab",
+          env: ["HEELCODE_PROMPTLAB_URL", "HEELCODE_PROMPTLAB_API_KEY"],
+          options: { apiKey: "heelcode", baseURL: "http://127.0.0.1:43117/v1" },
+        },
+        auth: undefined,
+      }),
+    ).toMatchObject({
+      type: "supported",
+      apiKey: "heelcode",
+      baseURL: "http://127.0.0.1:43117/v1",
+    })
     expect(
       LLMNativeRuntime.status({
         model: baseModel,

@@ -38,7 +38,7 @@ export async function ensurePromptLabReady(args = process.argv.slice(2)): Promis
   )
 }
 
-function shouldBootstrap(args: string[]) {
+export function shouldBootstrap(args: string[]) {
   if (process.env.HEELCODE_PROMPTLAB_AUTOSTART === "0") return false
   if (args.some((arg) => arg === "--help" || arg === "-h" || arg === "--version" || arg === "-v")) return false
   const command = args.find((arg) => !arg.startsWith("-"))
@@ -46,8 +46,35 @@ function shouldBootstrap(args: string[]) {
   if (command === "run") return !args.includes("--attach")
   if (command === "models") return true
   if (command === "serve") return true
-  return false
+  if (command === "web") return true
+  if (command === "generate") return true
+  if (command === "acp") return true
+  if (NON_BOOTSTRAP_COMMANDS.has(command)) return false
+  // Unknown positionals are handled by yargs as the default TUI project path.
+  // Examples: `heelcode .`, `heelcode ~/repo`, or `heelcode -m promptlab/...`.
+  return true
 }
+
+const NON_BOOTSTRAP_COMMANDS = new Set([
+  "completion",
+  "mcp",
+  "attach",
+  "debug",
+  "providers",
+  "auth",
+  "agent",
+  "upgrade",
+  "uninstall",
+  "stats",
+  "export",
+  "import",
+  "github",
+  "pr",
+  "session",
+  "plugin",
+  "plug",
+  "db",
+])
 
 async function ensurePromptLabServer() {
   if (await healthy()) return
