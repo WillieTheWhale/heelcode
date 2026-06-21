@@ -51,7 +51,7 @@ describe("PromptLab client", () => {
     await expect(client.getModels()).resolves.toEqual({ openAI: ["gpt-4.1"] })
     expect(calls).toEqual([
       { path: "/api/models", authorization: "Bearer expired-token" },
-      { path: "/api/auth/refresh", authorization: "Bearer expired-token" },
+      { path: "/api/auth/refresh", authorization: null },
       { path: "/api/models", authorization: "Bearer fresh-token" },
     ])
   })

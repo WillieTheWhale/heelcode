@@ -18,7 +18,7 @@ import {
   type ScrollbackWriter,
 } from "@opentui/core"
 import * as Locale from "@/util/locale"
-import { go } from "@/cli/logo"
+import { go, logo } from "@/cli/logo"
 import type { RunSplashTheme } from "./theme"
 
 export const SPLASH_TITLE_LIMIT = 50
@@ -181,31 +181,38 @@ function build(input: SplashWriterInput, kind: "entry" | "exit", ctx: Scrollback
   let height = 1
 
   if (kind === "entry") {
-    const mark = go.right.slice(1)
+    const markLeft = logo.left
+    const markRight = logo.right
     const top = 1
-    const body_left = (mark[0]?.length ?? 0) + 2
+    const right_left = (markLeft[0]?.length ?? 0) + 2
 
-    for (let i = 0; i < mark.length; i += 1) {
-      draw(lines, mark[i] ?? "", {
+    for (let i = 0; i < markLeft.length; i += 1) {
+      draw(lines, markLeft[i] ?? "", {
         left: 0,
         top: top + i,
         fg: left,
         shadow: leftShadow,
       })
+      draw(lines, markRight[i] ?? "", {
+        left: right_left,
+        top: top + i,
+        fg: right,
+        shadow: input.theme.rightShadow,
+        attrs: TextAttributes.BOLD,
+      })
     }
 
-    push(lines, body_left, top, "heelcode", right, undefined, TextAttributes.BOLD)
     if (input.detail) {
       push(
         lines,
-        body_left,
-        top + 1,
-        Locale.truncateMiddle(input.detail, Math.max(1, width - body_left)),
+        0,
+        top + markLeft.length + 1,
+        Locale.truncateMiddle(input.detail, width),
         left,
         undefined,
       )
     }
-    height = top + mark.length
+    height = top + markLeft.length + (input.detail ? 2 : 0)
   }
 
   if (kind === "exit") {

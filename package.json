@@ -4,6 +4,9 @@
   "description": "UNC PromptLab-powered development tool",
   "private": true,
   "type": "module",
+  "bin": {
+    "heelcode": "./packages/opencode/bin/opencode"
+  },
   "packageManager": "bun@1.3.14",
   "scripts": {
     "dev": "bun run --cwd packages/opencode --conditions=browser src/index.ts",

@@ -48,17 +48,22 @@ export function buildPromptLabPayload(request: OpenAIChatCompletionRequest, sele
   const messages = toolInstruction ? insertToolInstruction(request.messages, toolInstruction) : request.messages
 
   return {
+    userMessage: text,
+    endpointOption: selection.model,
     endpoint: selection.endpoint,
     model: selection.model,
     messages,
     text,
     prompt: text,
+    addedConvo: [],
     conversationId: conversationID,
     parentMessageId: parentMessageID,
     messageId: messageID,
     isTemporary: true,
     isRegenerate: false,
     isContinued: false,
+    ephemeralAgent: false,
+    manualSkills: [],
     temperature: request.temperature,
     max_tokens: request.max_tokens ?? request.max_completion_tokens,
     top_p: request.top_p,
@@ -118,9 +123,10 @@ function userTextLikelyNeedsLocalTool(text: string): boolean {
   if (/\b(use|call|invoke)\b[\s\S]{0,80}\btool\b/i.test(text)) return true
   if (/\b(glob|grep|read|bash)\b[\s\S]{0,40}\btool\b/i.test(text)) return true
   const action = /\b(inspect|list|read|search|find|grep|glob|edit|write|run|execute|open)\b/i.test(text)
-  const target = /\b(file|files|directory|folder|repo|repository|workspace|codebase|project|shell|command|terminal|path|pattern)\b/i.test(
-    text,
-  )
+  const target =
+    /\b(file|files|directory|folder|repo|repository|workspace|codebase|project|shell|command|terminal|path|pattern)\b/i.test(
+      text,
+    )
   return action && (target || matchFilePath(text) !== undefined)
 }
 
@@ -151,7 +157,8 @@ export function openAINonStreamingResponse(params: {
 export function promptLabJSONToText(value: unknown): string {
   if (typeof value === "string") return value
   if (!isRecord(value)) return ""
-  const direct = stringValue(value.text) ?? stringValue(value.content) ?? stringValue(value.response) ?? stringValue(value.output)
+  const direct =
+    stringValue(value.text) ?? stringValue(value.content) ?? stringValue(value.response) ?? stringValue(value.output)
   if (direct) return direct
   if (isRecord(value.message)) {
     return stringValue(value.message.content) ?? stringValue(value.message.text) ?? ""
@@ -270,7 +277,12 @@ export function transformPromptLabSSEToOpenAI(
     },
   })
 
-  function flushEvents(controller: ReadableStreamDefaultController<Uint8Array>, id: string, model: string, flush = false) {
+  function flushEvents(
+    controller: ReadableStreamDefaultController<Uint8Array>,
+    id: string,
+    model: string,
+    flush = false,
+  ) {
     for (;;) {
       const split = buffer.search(/\r?\n\r?\n/)
       if (split === -1) {
@@ -286,14 +298,24 @@ export function transformPromptLabSSEToOpenAI(
     }
   }
 
-  function emitEvent(controller: ReadableStreamDefaultController<Uint8Array>, id: string, model: string, event: string) {
+  function emitEvent(
+    controller: ReadableStreamDefaultController<Uint8Array>,
+    id: string,
+    model: string,
+    event: string,
+  ) {
     const data = eventData(event)
     if (!data || data === "[DONE]") {
       if (data === "[DONE]") close(controller, id, model)
       return
     }
 
-    const delta = promptLabEventToDelta(data)
+    const delta = promptLabEventToDelta(data, eventName(event))
+    if (delta.error) {
+      closed = true
+      controller.error(new Error(`PromptLab stream error: ${delta.error}`))
+      return
+    }
     if (delta.done) {
       close(controller, id, model)
       return
@@ -364,17 +386,25 @@ export async function promptLabStreamToText(input: ReadableStream<Uint8Array>): 
   }
 }
 
-export function promptLabEventToDelta(data: string): {
+export function promptLabEventToDelta(
+  data: string,
+  event?: string,
+): {
   content?: string
   toolCalls?: OpenAIToolCallDelta[]
   done?: boolean
+  error?: string
 } {
   const parsed = parseJSON(data)
   if (parsed === undefined) return { content: data }
   if (typeof parsed === "string") return parsed === "[DONE]" ? { done: true } : { content: parsed }
   if (!isRecord(parsed)) return {}
 
-  if (parsed.final === true || parsed.done === true || parsed.event === "final" || parsed.type === "final") return { done: true }
+  if (event === "error") return { error: promptLabErrorMessage(parsed) }
+  const error = promptLabErrorMessage(parsed)
+  if (error && ("error" in parsed || parsed.type === "error")) return { error }
+  if (parsed.final === true || parsed.done === true || parsed.event === "final" || parsed.type === "final")
+    return { done: true }
   if (parsed.created === true) return {}
   const toolCalls = promptLabToolCalls(parsed)
   if (toolCalls.length) return { toolCalls }
@@ -406,7 +436,16 @@ export function promptLabEventToDelta(data: string): {
 function eventText(event: string) {
   const data = eventData(event)
   if (!data || data === "[DONE]") return ""
-  return promptLabEventToDelta(data).content ?? ""
+  const delta = promptLabEventToDelta(data, eventName(event))
+  if (delta.error) throw new Error(`PromptLab stream error: ${delta.error}`)
+  return delta.content ?? ""
+}
+
+function promptLabErrorMessage(parsed: Record<string, unknown>) {
+  const direct = stringValue(parsed.error) ?? stringValue(parsed.message)
+  if (direct) return direct
+  if (isRecord(parsed.error)) return stringValue(parsed.error.message) ?? JSON.stringify(parsed.error)
+  return JSON.stringify(parsed)
 }
 
 function promptLabNestedDelta(parsed: Record<string, unknown>): string | undefined {
@@ -503,8 +542,7 @@ function syntheticToolCallFromText(text: string): OpenAIToolCallDelta | undefine
   const call = Array.isArray(parsed) ? parsed[0] : parsed
   if (!isRecord(call)) return undefined
   const fn = isRecord(call.function) ? call.function : call
-  const name =
-    stringValue(fn.name) ?? stringValue(call.name) ?? stringValue(call.tool) ?? stringValue(call.tool_name)
+  const name = stringValue(fn.name) ?? stringValue(call.name) ?? stringValue(call.tool) ?? stringValue(call.tool_name)
   if (!name) return undefined
   const args = fn.arguments ?? call.arguments ?? call.input ?? call.args ?? {}
   return {
@@ -529,7 +567,10 @@ function extractSyntheticToolCallJSON(text: string): string | undefined {
 }
 
 function stripCodeFence(text: string): string {
-  return text.replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "").trim()
+  return text
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "")
+    .trim()
 }
 
 function normalizePromptTool(input: unknown): unknown[] {
@@ -586,8 +627,7 @@ function matchQuotedAfter(text: string, label: string): string | undefined {
 
 function matchSearchTerm(text: string): string | undefined {
   return (
-    matchQuotedAfter(text, "for") ??
-    text.match(/\b(?:search|grep|find)\s+(?:for\s+)?([^.,\s][^,.]*)/i)?.[1]?.trim()
+    matchQuotedAfter(text, "for") ?? text.match(/\b(?:search|grep|find)\s+(?:for\s+)?([^.,\s][^,.]*)/i)?.[1]?.trim()
   )
 }
 
@@ -639,6 +679,14 @@ function eventData(event: string) {
     .filter((line) => line.startsWith("data:"))
     .map((line) => line.slice(5).trimStart())
     .join("\n")
+    .trim()
+}
+
+function eventName(event: string) {
+  return event
+    .split(/\r?\n/)
+    .find((line) => line.startsWith("event:"))
+    ?.slice(6)
     .trim()
 }
 

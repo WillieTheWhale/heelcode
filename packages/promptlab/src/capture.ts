@@ -160,6 +160,8 @@ async function readChromeCookies(profilePath: string, secret: string): Promise<C
   const tempDB = join(tempDir, "Cookies")
   try {
     await copyFile(cookiesDB, tempDB)
+    await copyFile(`${cookiesDB}-wal`, `${tempDB}-wal`).catch(() => {})
+    await copyFile(`${cookiesDB}-shm`, `${tempDB}-shm`).catch(() => {})
     const version = await chromeCookieDBVersion(tempDB)
     const output = await sqlite(
       tempDB,
@@ -216,10 +218,13 @@ function decryptChromeCookie(hostKey: string, encryptedHex: string, secret: stri
 }
 
 async function chromeSafeStorageSecret() {
-  const result = Bun.spawn(["/usr/bin/security", "find-generic-password", "-a", "Chrome", "-s", "Chrome Safe Storage", "-w"], {
-    stdout: "pipe",
-    stderr: "pipe",
-  })
+  const result = Bun.spawn(
+    ["/usr/bin/security", "find-generic-password", "-a", "Chrome", "-s", "Chrome Safe Storage", "-w"],
+    {
+      stdout: "pipe",
+      stderr: "pipe",
+    },
+  )
   const [stdout, stderr, code] = await Promise.all([
     new Response(result.stdout).text(),
     new Response(result.stderr).text(),

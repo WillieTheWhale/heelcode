@@ -51,6 +51,12 @@ The heelcode provider discovers this catalog from:
 http://127.0.0.1:43117/v1/models
 ```
 
+The normal CLI path starts this daemon automatically:
+
+```bash
+heelcode
+```
+
 Override with:
 
 ```bash
@@ -76,7 +82,7 @@ Persistent local auth inputs:
 
 Persistent credentials and session material are stored in macOS Keychain under `heelcode-promptlabd`.
 
-The client retries a failed authenticated request once after `POST /api/auth/refresh` returns a replacement token. PromptLab bearer JWTs are short lived; when a daemon request reports expiration, refresh the stored session with `capture --store-session` from the logged-in normal Chrome profile and restart the daemon.
+The client retries a failed authenticated request once after `POST /api/auth/refresh` returns a replacement token. PromptLab bearer JWTs are short lived; when a daemon request reports expiration, running `heelcode` refreshes the stored session from the logged-in normal Chrome profile before opening the TUI. Manual `capture --store-session` remains available for debugging.
 
 To investigate the live authenticated API without committing secrets, run:
 
@@ -138,7 +144,7 @@ PromptLab's web app has server-side agent tool events (`on_run_step`, `on_run_st
 
 - pass through OpenAI-compatible `tool_calls` when PromptLab or a compatible backend returns them;
 - translate the synthetic `<heelcode_tool_call>{...}</heelcode_tool_call>` protocol into OpenAI-compatible streaming tool calls;
-- preflight explicit requests such as "use the glob tool with pattern *" into a local tool call before contacting PromptLab.
+- preflight explicit requests such as "use the glob tool with pattern \*" into a local tool call before contacting PromptLab.
 
 This makes explicit local tool requests execute end to end through opencode. Follow-up answer quality after a tool result is still model-dependent and needs more iteration.
 

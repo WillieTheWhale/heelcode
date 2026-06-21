@@ -17,7 +17,7 @@ const command = process.argv[2] ?? "serve"
 
 try {
   if (command === "serve") {
-    const server = serve({ config: await configFromEnvOrStore() })
+    const server = serve({ config: () => configFromEnvOrStore() })
     console.log(`heelcode-promptlabd listening on http://${server.hostname}:${server.port}`)
   } else if (command === "models") {
     const client = new PromptLabClient(await configFromEnvOrStore())

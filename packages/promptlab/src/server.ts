@@ -16,13 +16,14 @@ import type { OpenAIChatCompletionRequest, PromptLabConfig } from "./types"
 type ServeOptions = {
   port?: number
   hostname?: string
-  config?: PromptLabConfig
+  config?: PromptLabConfig | (() => PromptLabConfig | Promise<PromptLabConfig>)
 }
 
-export function createHandler(config: PromptLabConfig = configFromEnv()): (request: Request) => Promise<Response> {
-  const client = new PromptLabClient(config)
-
+export function createHandler(
+  config: PromptLabConfig | (() => PromptLabConfig | Promise<PromptLabConfig>) = configFromEnv(),
+): (request: Request) => Promise<Response> {
   return async function handle(request: Request): Promise<Response> {
+    const client = new PromptLabClient(await resolveConfig(config))
     const url = new URL(request.url)
     try {
       if (request.method === "OPTIONS") return empty(204)
@@ -103,6 +104,10 @@ export function serve(options: ServeOptions = {}) {
     hostname,
     fetch: handler,
   })
+}
+
+async function resolveConfig(config: PromptLabConfig | (() => PromptLabConfig | Promise<PromptLabConfig>)) {
+  return typeof config === "function" ? await config() : config
 }
 
 function json(value: unknown, init: ResponseInit = {}): Response {

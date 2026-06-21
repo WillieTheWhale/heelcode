@@ -29,6 +29,7 @@ import { DbCommand } from "./cli/cmd/db"
 import { errorMessage } from "./util/error"
 import { PluginCommand } from "./cli/cmd/plug"
 import { Heap } from "./cli/heap"
+import { ensurePromptLabReady } from "./promptlab/daemon"
 
 const args = hideBin(process.argv)
 
@@ -71,6 +72,12 @@ const cli = yargs(args)
     }
 
     Heap.start()
+    try {
+      await ensurePromptLabReady(args)
+    } catch (error) {
+      UI.error(error instanceof Error ? error.message : String(error))
+      process.exit(1)
+    }
 
     process.env.AGENT = "1"
     process.env.OPENCODE = "1"

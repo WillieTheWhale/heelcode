@@ -16,6 +16,7 @@ type RefreshResult = {
   accessToken?: string
   access_token?: string
 }
+type PromptLabRequestInit = RequestInit & { auth?: boolean }
 
 export class PromptLabClient {
   private token: string | undefined
@@ -95,6 +96,7 @@ export class PromptLabClient {
       {
         method: "POST",
         headers: { "content-type": "application/json" },
+        auth: false,
       },
       { retry: false },
     )
@@ -105,16 +107,21 @@ export class PromptLabClient {
     return true
   }
 
-  private async json(path: string, init: RequestInit & { auth?: boolean } = {}): Promise<unknown> {
+  private async json(path: string, init: PromptLabRequestInit = {}): Promise<unknown> {
     const response = await this.request(path, init)
     return response.json()
   }
 
-  private async request(path: string, init: RequestInit = {}, options: { retry?: boolean } = {}): Promise<Response> {
+  private async request(
+    path: string,
+    init: PromptLabRequestInit = {},
+    options: { retry?: boolean } = {},
+  ): Promise<Response> {
     const retry = options.retry ?? true
+    const { auth = true, ...requestInit } = init
     const response = await this.fetchImpl(new URL(path, this.config.baseURL), {
-      ...init,
-      headers: this.headers(init.headers),
+      ...requestInit,
+      headers: this.headers(requestInit.headers, auth),
     })
 
     if (response.status === 401 && retry && (await this.refresh().catch(() => false))) {
@@ -122,7 +129,12 @@ export class PromptLabClient {
     }
 
     if (!response.ok) {
-      const details = redactJSON(await response.clone().json().catch(() => undefined))
+      const details = redactJSON(
+        await response
+          .clone()
+          .json()
+          .catch(() => undefined),
+      )
       const message = `PromptLab request failed: ${response.status} ${response.statusText}`
       throw new PromptLabError(message, response.status, details)
     }
@@ -130,7 +142,7 @@ export class PromptLabClient {
     return response
   }
 
-  private headers(input?: RequestInit["headers"]): Headers {
+  private headers(input?: RequestInit["headers"], auth = true): Headers {
     const headers = new Headers(input)
     headers.set("origin", new URL(this.config.baseURL).origin)
     headers.set("referer", new URL("/c/new", this.config.baseURL).toString())
@@ -141,7 +153,7 @@ export class PromptLabClient {
     headers.set("sec-fetch-site", "same-origin")
     headers.set("sec-fetch-mode", "cors")
     headers.set("sec-fetch-dest", "empty")
-    if (this.token) headers.set("authorization", `Bearer ${this.token}`)
+    if (auth && this.token) headers.set("authorization", `Bearer ${this.token}`)
     if (this.cookie) headers.set("cookie", this.cookie)
     return headers
   }

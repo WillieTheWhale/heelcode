@@ -1,14 +1,15 @@
 #!/usr/bin/env node
 
-const childProcess = require("child_process")
-const fs = require("fs")
-const path = require("path")
-const os = require("os")
+import childProcess from "node:child_process"
+import fs from "node:fs"
+import path from "node:path"
+import os from "node:os"
+import { fileURLToPath } from "node:url"
 
 const forwardedSignals = ["SIGINT", "SIGTERM", "SIGHUP"]
 
-function run(target) {
-  const child = childProcess.spawn(target, process.argv.slice(2), {
+function run(target, args = process.argv.slice(2)) {
+  const child = childProcess.spawn(target, args, {
     stdio: "inherit",
   })
 
@@ -45,11 +46,35 @@ function run(target) {
 
 const envPath = process.env.OPENCODE_BIN_PATH
 
-const scriptPath = fs.realpathSync(__filename)
+const scriptPath = fs.realpathSync(fileURLToPath(import.meta.url))
 const scriptDir = path.dirname(scriptPath)
+const sourceEntry = path.join(scriptDir, "..", "src", "index.ts")
 
-//
-const cached = path.join(scriptDir, ".opencode")
+if (!envPath && fs.existsSync(sourceEntry)) {
+  const bun = process.env.BUN_BIN || "bun"
+  run(bun, ["--conditions=browser", sourceEntry, ...process.argv.slice(2)])
+} else {
+  run(resolveNativeBinary())
+}
+
+function resolveNativeBinary() {
+  const cached = path.join(scriptDir, ".opencode")
+  const platform = platformMap[os.platform()] ?? os.platform()
+  const arch = archMap[os.arch()] ?? os.arch()
+  const base = "opencode-" + platform + "-" + arch
+  const binary = platform === "windows" ? "opencode.exe" : "opencode"
+  const names = binaryPackageNames(platform, arch, base)
+  const resolved = envPath || (fs.existsSync(cached) ? cached : findBinary(scriptDir, names, binary))
+
+  if (resolved) return resolved
+
+  console.error(
+    "It seems that your package manager failed to install the right version of the heelcode CLI for your platform. You can try manually installing " +
+      names.map((name) => `"${name}"`).join(" or ") +
+      " package",
+  )
+  process.exit(1)
+}
 
 const platformMap = {
   darwin: "darwin",
@@ -62,18 +87,7 @@ const archMap = {
   arm: "arm",
 }
 
-let platform = platformMap[os.platform()]
-if (!platform) {
-  platform = os.platform()
-}
-let arch = archMap[os.arch()]
-if (!arch) {
-  arch = os.arch()
-}
-const base = "opencode-" + platform + "-" + arch
-const binary = platform === "windows" ? "opencode.exe" : "opencode"
-
-function supportsAvx2() {
+function supportsAvx2(platform, arch) {
   if (arch !== "x64") return false
 
   if (platform === "linux") {
@@ -123,42 +137,21 @@ function supportsAvx2() {
   return false
 }
 
-const names = (() => {
-  const avx2 = supportsAvx2()
+function binaryPackageNames(platform, arch, base) {
+  const avx2 = supportsAvx2(platform, arch)
   const baseline = arch === "x64" && !avx2
 
   if (platform === "linux") {
-    const musl = (() => {
-      try {
-        if (fs.existsSync("/etc/alpine-release")) return true
-      } catch {
-        // ignore
-      }
-
-      try {
-        const result = childProcess.spawnSync("ldd", ["--version"], { encoding: "utf8" })
-        const text = ((result.stdout || "") + (result.stderr || "")).toLowerCase()
-        if (text.includes("musl")) return true
-      } catch {
-        // ignore
-      }
-
-      return false
-    })()
-
-    if (musl) {
-      if (arch === "x64") {
+    const musl = isMusl()
+    if (arch === "x64") {
+      if (musl) {
         if (baseline) return [`${base}-baseline-musl`, `${base}-musl`, `${base}-baseline`, base]
         return [`${base}-musl`, `${base}-baseline-musl`, base, `${base}-baseline`]
       }
-      return [`${base}-musl`, base]
-    }
-
-    if (arch === "x64") {
       if (baseline) return [`${base}-baseline`, base, `${base}-baseline-musl`, `${base}-musl`]
       return [base, `${base}-baseline`, `${base}-musl`, `${base}-baseline-musl`]
     }
-    return [base, `${base}-musl`]
+    return musl ? [`${base}-musl`, base] : [base, `${base}-musl`]
   }
 
   if (arch === "x64") {
@@ -166,9 +159,27 @@ const names = (() => {
     return [base, `${base}-baseline`]
   }
   return [base]
-})()
+}
 
-function findBinary(startDir) {
+function isMusl() {
+  try {
+    if (fs.existsSync("/etc/alpine-release")) return true
+  } catch {
+    // ignore
+  }
+
+  try {
+    const result = childProcess.spawnSync("ldd", ["--version"], { encoding: "utf8" })
+    const text = ((result.stdout || "") + (result.stderr || "")).toLowerCase()
+    if (text.includes("musl")) return true
+  } catch {
+    // ignore
+  }
+
+  return false
+}
+
+function findBinary(startDir, names, binary) {
   let current = startDir
   for (;;) {
     const modules = path.join(current, "node_modules")
@@ -185,15 +196,3 @@ function findBinary(startDir) {
     current = parent
   }
 }
-
-const resolved = envPath || (fs.existsSync(cached) ? cached : findBinary(scriptDir))
-if (!resolved) {
-  console.error(
-    "It seems that your package manager failed to install the right version of the opencode CLI for your platform. You can try manually installing " +
-      names.map((n) => `\"${n}\"`).join(" or ") +
-      " package",
-  )
-  process.exit(1)
-}
-
-run(resolved)

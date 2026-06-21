@@ -46,9 +46,14 @@ describe("OpenAI to PromptLab adapter", () => {
       { openAIModelID: "promptlab/openAI/gpt-4.1", endpoint: "openAI", model: "gpt-4.1" },
     )
     expect(payload).toMatchObject({
+      userMessage: expect.stringContaining("Heelcode local tools are available"),
+      endpointOption: "gpt-4.1",
       endpoint: "openAI",
       model: "gpt-4.1",
+      addedConvo: [],
       isTemporary: true,
+      ephemeralAgent: false,
+      manualSkills: [],
       tools,
       tool_choice: "auto",
     })
@@ -83,11 +88,22 @@ describe("OpenAI to PromptLab adapter", () => {
       promptLabEventToDelta(
         JSON.stringify({
           event: "on_message_delta",
-          data: { delta: { content: [{ type: "text", text: "h" }, { type: "text", text: "i" }] } },
+          data: {
+            delta: {
+              content: [
+                { type: "text", text: "h" },
+                { type: "text", text: "i" },
+              ],
+            },
+          },
         }),
       ),
     ).toEqual({ content: "hi" })
     expect(promptLabEventToDelta(JSON.stringify({ final: true }))).toEqual({ done: true })
+    expect(promptLabEventToDelta(JSON.stringify({ error: "missing API key" }))).toEqual({ error: "missing API key" })
+    expect(promptLabEventToDelta(JSON.stringify({ message: "Illegal request" }), "error")).toEqual({
+      error: "Illegal request",
+    })
   })
 
   test("extracts OpenAI-compatible tool call deltas", () => {
@@ -102,7 +118,7 @@ describe("OpenAI to PromptLab adapter", () => {
                     index: 0,
                     id: "call_list",
                     type: "function",
-                    function: { name: "list", arguments: "{\"path\":\".\"}" },
+                    function: { name: "list", arguments: '{"path":"."}' },
                   },
                 ],
               },
@@ -116,7 +132,7 @@ describe("OpenAI to PromptLab adapter", () => {
           index: 0,
           id: "call_list",
           type: "function",
-          function: { name: "list", arguments: "{\"path\":\".\"}" },
+          function: { name: "list", arguments: '{"path":"."}' },
         },
       ],
     })
@@ -147,7 +163,7 @@ describe("OpenAI to PromptLab adapter", () => {
           index: 0,
           id: "call_list",
           type: "function",
-          function: { name: "list", arguments: "{\"path\":\".\"}" },
+          function: { name: "list", arguments: '{"path":"."}' },
         },
       ],
     })

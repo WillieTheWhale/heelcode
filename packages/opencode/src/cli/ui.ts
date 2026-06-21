@@ -2,9 +2,7 @@ import { EOL } from "os"
 import { Schema } from "effect"
 import { logo as glyphs } from "./logo"
 
-const wordmark = [
-  `heelcode`,
-]
+const wordmark = glyphs.left.map((row, index) => `${row} ${glyphs.right[index] ?? ""}`.trimEnd())
 
 export class CancelledError extends Schema.TaggedErrorClass<CancelledError>()("UICancelledError", {}) {}
 

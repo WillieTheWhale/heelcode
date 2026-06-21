@@ -16,29 +16,26 @@ This repository currently includes:
 
 ## Local Flow
 
-If your normal Chrome profile is already logged in to PromptLab, store the current PromptLab session in Keychain:
+Link the local checkout once so `heelcode` is available in your shell:
+
+```bash
+ln -sf "$(pwd)/packages/opencode/bin/opencode" "$HOME/.local/bin/heelcode"
+```
+
+Then run heelcode from any project:
+
+```bash
+heelcode
+```
+
+The CLI starts `heelcode-promptlabd` on `127.0.0.1:43117`, points the PromptLab provider at `http://127.0.0.1:43117/v1`, and checks that PromptLab models are available before the TUI opens. If the stored PromptLab session is stale, heelcode opens PromptLab in the normal Google Chrome profile and captures the refreshed session after login. It does not create blank Chrome profiles or close existing Chrome tabs.
+
+Manual fallback:
 
 ```bash
 bun run --cwd packages/promptlab capture --store-session
-```
-
-This reads PromptLab cookies from the real Chrome profile, exchanges them for PromptLab session material, and stores only the local PromptLab session in macOS Keychain. Chrome owns ONYEN, saved passwords, MFA, and security prompts.
-
-Start the PromptLab connector daemon:
-
-```bash
 bun run --cwd packages/promptlab serve
-```
-
-Point heelcode at it:
-
-```bash
 export HEELCODE_PROMPTLAB_URL=http://127.0.0.1:43117/v1
-```
-
-Run heelcode from source:
-
-```bash
 bun run --cwd packages/opencode dev
 ```
 
@@ -57,7 +54,7 @@ Do not place ONYEN passwords, bearer tokens, cookies, or HAR files in this repos
 The preferred auth path is:
 
 1. Log in to PromptLab in the normal Google Chrome profile.
-2. Run `bun run --cwd packages/promptlab capture --store-session`.
+2. Run `heelcode`; it will refresh the stored PromptLab session if needed.
 3. Let `heelcode-promptlabd` read the stored PromptLab session from macOS Keychain.
 
 Runtime environment overrides are still supported for development:
