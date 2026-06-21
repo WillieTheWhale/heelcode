@@ -387,7 +387,7 @@ export function transformPromptLabSSEToOpenAI(
     error: string,
   ) {
     if (closed) return
-    const message = `PromptLab stream error: ${error}`
+    const message = error.startsWith("PromptLab ") ? error : `PromptLab stream error: ${error}`
     if (useSyntheticToolProtocol) syntheticBuffer += message
     else {
       sawContent = true
@@ -493,9 +493,29 @@ export function promptLabEventToDelta(data: string, event?: string): PromptLabDe
 
 function promptLabErrorMessage(parsed: Record<string, unknown>) {
   const direct = stringValue(parsed.error) ?? stringValue(parsed.message) ?? stringValue(parsed.text)
-  if (direct) return direct
-  if (isRecord(parsed.error)) return stringValue(parsed.error.message) ?? JSON.stringify(parsed.error)
-  return JSON.stringify(parsed)
+  if (direct) return formatPromptLabError(direct)
+  if (isRecord(parsed.error))
+    return formatPromptLabError(stringValue(parsed.error.message) ?? JSON.stringify(parsed.error))
+  return formatPromptLabError(JSON.stringify(parsed))
+}
+
+function formatPromptLabError(message: string) {
+  const parsed = parseJSON(message)
+  if (!isRecord(parsed)) return message
+  if (parsed.type === "token_balance") {
+    const balance = numberValue(parsed.balance)
+    const tokenCost = numberValue(parsed.tokenCost)
+    const promptTokens = numberValue(parsed.promptTokens)
+    return [
+      `PromptLab token balance is ${balance ?? 0}.`,
+      tokenCost === undefined ? "" : `This metered model would cost ${formatNumber(tokenCost)} tokens.`,
+      promptTokens === undefined ? "" : `Prompt tokens: ${formatNumber(promptTokens)}.`,
+      "Switch to the unlimited PromptLab model: promptlab/azureOpenAI/gpt-5.4-mini (ChatGPT 5.4 mini), or wait for your monthly allocation to reset.",
+    ]
+      .filter(Boolean)
+      .join(" ")
+  }
+  return message
 }
 
 function promptLabFinalDelta(parsed: Record<string, unknown>): PromptLabDelta | undefined {
@@ -772,6 +792,14 @@ function parseJSON(input: string): unknown {
 
 function stringValue(input: unknown): string | undefined {
   return typeof input === "string" ? input : undefined
+}
+
+function numberValue(input: unknown): number | undefined {
+  return typeof input === "number" && Number.isFinite(input) ? input : undefined
+}
+
+function formatNumber(input: number) {
+  return Number.isInteger(input) ? String(input) : input.toFixed(2)
 }
 
 function isRecord(input: unknown): input is Record<string, unknown> {

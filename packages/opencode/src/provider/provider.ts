@@ -1989,6 +1989,15 @@ export const layer = Layer.effect(
       if (cfg.model) return parseModel(cfg.model)
 
       const s = yield* InstanceState.get(state)
+      const promptlab = s.providers[ProviderV2.ID.make("promptlab")]
+      const unlimited = promptLabUnlimitedModel(promptlab)
+      if (unlimited) {
+        return {
+          providerID: promptlab.id,
+          modelID: unlimited.id,
+        }
+      }
+
       const recent = yield* fs.readJson(path.join(Global.Path.state, "model.json")).pipe(
         Effect.map((x): { providerID: ProviderV2.ID; modelID: ModelV2.ID }[] => {
           if (!isRecord(x) || !Array.isArray(x.recent)) return []
@@ -2034,13 +2043,21 @@ export const defaultLayer = Layer.suspend(() =>
   ),
 )
 
-const priority = ["gpt-5", "claude-sonnet-4", "big-pickle", "gemini-3-pro"]
+const priority = ["gpt-5", "claude-sonnet-4", "big-pickle", "gemini-3-pro", "gpt-5.4-mini"]
 export function sort<T extends { id: string }>(models: T[]) {
   return sortBy(
     models,
     [(model) => priority.findIndex((filter) => model.id.includes(filter)), "desc"],
     [(model) => (model.id.includes("latest") ? 0 : 1), "asc"],
     [(model) => model.id, "desc"],
+  )
+}
+
+function promptLabUnlimitedModel(provider: Info | undefined) {
+  if (!provider) return
+  return (
+    provider.models[ModelV2.ID.make("azureOpenAI/gpt-5.4-mini")] ??
+    Object.values(provider.models).find((model) => model.id.includes("gpt-5.4-mini"))
   )
 }
 

@@ -142,6 +142,15 @@ describe("OpenAI to PromptLab adapter", () => {
     expect(promptLabEventToDelta(JSON.stringify({ error: true, text: '{"type":"ban"}' }), "error")).toEqual({
       error: '{"type":"ban"}',
     })
+    expect(
+      promptLabEventToDelta(
+        JSON.stringify({
+          error: true,
+          text: '{"type":"token_balance","balance":0,"tokenCost":2.4800000000000004,"promptTokens":31}',
+        }),
+        "error",
+      ).error,
+    ).toContain("Switch to the unlimited PromptLab model: promptlab/azureOpenAI/gpt-5.4-mini")
     expect(promptLabEventToDelta(JSON.stringify({ message: "Illegal request" }), "error")).toEqual({
       error: "Illegal request",
     })

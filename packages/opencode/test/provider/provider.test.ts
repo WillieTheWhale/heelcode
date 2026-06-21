@@ -192,6 +192,10 @@ it.instance("PromptLab provider discovers daemon models with clean heelcode mode
     expect(provider.models[ModelV2.ID.make("anthropic/claude-sonnet-4-5")].api.id).toBe(
       "promptlab/anthropic/claude-sonnet-4-5",
     )
+
+    const model = yield* Provider.use.defaultModel()
+    expect(String(model.providerID)).toBe("promptlab")
+    expect(String(model.modelID)).toBe("azureOpenAI/gpt-5.4-mini")
   }),
 )
 
