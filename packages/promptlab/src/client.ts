@@ -9,6 +9,7 @@ import type {
   ModelSelection,
 } from "./types"
 import { PromptLabError } from "./types"
+import { configWithStoredSession } from "./auth-store"
 
 type RefreshResult = {
   token?: string
@@ -131,6 +132,15 @@ export class PromptLabClient {
 
   private headers(input?: RequestInit["headers"]): Headers {
     const headers = new Headers(input)
+    headers.set("origin", new URL(this.config.baseURL).origin)
+    headers.set("referer", new URL("/c/new", this.config.baseURL).toString())
+    headers.set(
+      "user-agent",
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36",
+    )
+    headers.set("sec-fetch-site", "same-origin")
+    headers.set("sec-fetch-mode", "cors")
+    headers.set("sec-fetch-dest", "empty")
     if (this.token) headers.set("authorization", `Bearer ${this.token}`)
     if (this.cookie) headers.set("cookie", this.cookie)
     return headers
@@ -143,6 +153,12 @@ export function configFromEnv(env: Record<string, string | undefined> = process.
     bearerToken: env.PROMPTLAB_BEARER_TOKEN,
     cookie: env.PROMPTLAB_COOKIE,
   }
+}
+
+export async function configFromEnvOrStore(
+  env: Record<string, string | undefined> = process.env,
+): Promise<PromptLabConfig> {
+  return configWithStoredSession(env)
 }
 
 export function safeLogError(error: unknown): string {

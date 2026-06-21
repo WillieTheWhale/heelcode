@@ -1,6 +1,12 @@
 import { catalogMetrics, decodeOpenAIModelID, toOpenAIModels } from "./catalog"
 import { PromptLabClient, configFromEnv, safeLogError } from "./client"
-import { openAINonStreamingResponse, promptLabJSONToText, selectionFromRequest, transformPromptLabSSEToOpenAI } from "./openai"
+import {
+  openAINonStreamingResponse,
+  promptLabJSONToText,
+  promptLabStreamToText,
+  selectionFromRequest,
+  transformPromptLabSSEToOpenAI,
+} from "./openai"
 import { redactJSON } from "./redact"
 import type { OpenAIChatCompletionRequest, PromptLabConfig } from "./types"
 
@@ -35,10 +41,14 @@ export function createHandler(config: PromptLabConfig = configFromEnv()): (reque
 
         if (response.kind === "stream") {
           if (!response.response.body) throw new Error("PromptLab returned an empty stream body")
-          const stream = transformPromptLabSSEToOpenAI(response.response.body, body.model)
-          return new Response(stream, {
-            headers: eventStreamHeaders(),
-          })
+          if (body.stream) {
+            const stream = transformPromptLabSSEToOpenAI(response.response.body, body.model)
+            return new Response(stream, {
+              headers: eventStreamHeaders(),
+            })
+          }
+          const content = await promptLabStreamToText(response.response.body)
+          return json(openAINonStreamingResponse({ model: body.model, content }))
         }
 
         const content = promptLabJSONToText(response.value)

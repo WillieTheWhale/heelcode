@@ -33,6 +33,15 @@ describe("OpenAI to PromptLab adapter", () => {
   test("extracts common PromptLab stream deltas", () => {
     expect(promptLabEventToDelta(JSON.stringify({ message: "hi" }))).toEqual({ content: "hi" })
     expect(promptLabEventToDelta(JSON.stringify({ message: { content: "hi" } }))).toEqual({ content: "hi" })
+    expect(promptLabEventToDelta(JSON.stringify({ created: true, message: { text: "user text" } }))).toEqual({})
+    expect(
+      promptLabEventToDelta(
+        JSON.stringify({
+          event: "on_message_delta",
+          data: { delta: { content: [{ type: "text", text: "h" }, { type: "text", text: "i" }] } },
+        }),
+      ),
+    ).toEqual({ content: "hi" })
     expect(promptLabEventToDelta(JSON.stringify({ final: true }))).toEqual({ done: true })
   })
 })

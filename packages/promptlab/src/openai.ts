@@ -166,12 +166,7 @@ export function transformPromptLabSSEToOpenAI(input: ReadableStream<Uint8Array>,
   }
 
   function emitEvent(controller: ReadableStreamDefaultController<Uint8Array>, id: string, model: string, event: string) {
-    const data = event
-      .split(/\r?\n/)
-      .filter((line) => line.startsWith("data:"))
-      .map((line) => line.slice(5).trimStart())
-      .join("\n")
-      .trim()
+    const data = eventData(event)
     if (!data || data === "[DONE]") {
       if (data === "[DONE]") close(controller, id, model)
       return
@@ -195,6 +190,41 @@ export function transformPromptLabSSEToOpenAI(input: ReadableStream<Uint8Array>,
   }
 }
 
+export async function promptLabStreamToText(input: ReadableStream<Uint8Array>): Promise<string> {
+  const reader = input.getReader()
+  let buffer = ""
+  let output = ""
+  try {
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buffer += decoder.decode(value, { stream: true })
+      output += drainText()
+    }
+    buffer += decoder.decode()
+    output += drainText(true)
+    return output
+  } finally {
+    await reader.cancel().catch(() => {})
+  }
+
+  function drainText(flush = false) {
+    let text = ""
+    for (;;) {
+      const split = buffer.search(/\r?\n\r?\n/)
+      if (split === -1) {
+        if (!flush || !buffer.trim()) return text
+        const event = buffer
+        buffer = ""
+        return text + eventText(event)
+      }
+      const event = buffer.slice(0, split)
+      buffer = buffer.slice(buffer[split] === "\r" ? split + 4 : split + 2)
+      text += eventText(event)
+    }
+  }
+}
+
 export function promptLabEventToDelta(data: string): { content?: string; done?: boolean } {
   const parsed = parseJSON(data)
   if (parsed === undefined) return { content: data }
@@ -202,6 +232,9 @@ export function promptLabEventToDelta(data: string): { content?: string; done?: 
   if (!isRecord(parsed)) return {}
 
   if (parsed.final === true || parsed.done === true || parsed.event === "final" || parsed.type === "final") return { done: true }
+  if (parsed.created === true) return {}
+  const eventDelta = promptLabNestedDelta(parsed)
+  if (eventDelta) return { content: eventDelta }
   const direct =
     stringValue(parsed.delta) ??
     stringValue(parsed.content) ??
@@ -225,8 +258,37 @@ export function promptLabEventToDelta(data: string): { content?: string; done?: 
   return {}
 }
 
+function eventText(event: string) {
+  const data = eventData(event)
+  if (!data || data === "[DONE]") return ""
+  return promptLabEventToDelta(data).content ?? ""
+}
+
+function promptLabNestedDelta(parsed: Record<string, unknown>): string | undefined {
+  if (parsed.event !== "on_message_delta") return undefined
+  if (!isRecord(parsed.data)) return undefined
+  if (!isRecord(parsed.data.delta)) return undefined
+  const content = parsed.data.delta.content
+  if (!Array.isArray(content)) return undefined
+  return content
+    .map((part) => {
+      if (!isRecord(part)) return ""
+      return stringValue(part.text) ?? ""
+    })
+    .join("")
+}
+
 function sse(value: unknown): Uint8Array {
   return encoder.encode(`data: ${JSON.stringify(value)}\n\n`)
+}
+
+function eventData(event: string) {
+  return event
+    .split(/\r?\n/)
+    .filter((line) => line.startsWith("data:"))
+    .map((line) => line.slice(5).trimStart())
+    .join("\n")
+    .trim()
 }
 
 function parseJSON(input: string): unknown {

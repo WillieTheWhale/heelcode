@@ -41,6 +41,24 @@ describe("heelcode-promptlabd handler", () => {
     expect(text).toContain('"content":" world"')
     expect(text).toContain("data: [DONE]")
   })
+
+  test("buffers PromptLab streams for non-streaming OpenAI-compatible responses", async () => {
+    const handler = createHandler({ baseURL: "https://promptlab.example", fetch: fakePromptLabFetch() })
+    const response = await handler(
+      new Request("http://127.0.0.1/v1/chat/completions", {
+        method: "POST",
+        body: JSON.stringify({
+          model: "promptlab/openAI/gpt-4.1",
+          messages: [{ role: "user", content: "hello" }],
+        }),
+      }),
+    )
+    const body = (await response.json()) as { choices: Array<{ message: { content: string } }> }
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get("content-type")).toBe("application/json")
+    expect(body.choices[0].message.content).toBe("Hello world")
+  })
 })
 
 function fakePromptLabFetch(): typeof fetch {

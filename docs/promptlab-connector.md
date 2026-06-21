@@ -29,6 +29,7 @@ The PromptLab client uses the observed PromptLab routes:
 - `POST /api/agents/chat/abort`
 
 The authenticated chat payload is intentionally conservative until a sanitized HAR confirms the exact production schema.
+Chat start requests must include same-origin browser headers (`Origin`, `Referer`, and fetch metadata) matching the PromptLab web app; otherwise PromptLab returns an `Illegal request` SSE error.
 
 ## Model Discovery
 
@@ -65,15 +66,52 @@ Runtime auth inputs:
 - `PROMPTLAB_COOKIE`
 - `PROMPTLAB_BASE_URL`
 
+Persistent local auth inputs:
+
+- `heelcode-promptlabd credentials set --username <onyen>`
+- `heelcode-promptlabd credentials status`
+- `heelcode-promptlabd credentials delete`
+- `heelcode-promptlabd session set --bearer-token-stdin`
+- `heelcode-promptlabd session set --cookie-stdin`
+- `heelcode-promptlabd session delete`
+
+Persistent credentials and session material are stored in macOS Keychain under `heelcode-promptlabd`.
+
 The client retries a failed authenticated request once after `POST /api/auth/refresh` returns a replacement token.
 
 To investigate the live authenticated API without committing secrets, run:
 
 ```bash
-PROMPTLAB_ONYEN_USERNAME=<onyen-or-onyen@ad.unc.edu> bun run --cwd packages/promptlab capture
+bun run --cwd packages/promptlab capture
 ```
 
-The script reads the password from stdin with terminal echo disabled, opens Chrome, and writes only redacted status/model data to `/tmp/heelcode-promptlab-capture.json`.
+The script opens PromptLab in the normal Google Chrome profile and polls Chrome's real profile cookie store. After the user is logged in to PromptLab in Chrome, it refreshes the PromptLab bearer token from the real Chrome cookies and writes only redacted status/model data to `/tmp/heelcode-promptlab-capture.json`.
+
+To save a successful browser session into Keychain for daemon use:
+
+```bash
+bun run --cwd packages/promptlab capture --store-session
+```
+
+By default it reads Chrome profiles from:
+
+```text
+~/Library/Application Support/Google/Chrome
+```
+
+Override with:
+
+```bash
+export HEELCODE_CHROME_USER_DATA_DIR="$HOME/Library/Application Support/Google/Chrome"
+```
+
+The helper does not create a blank Chrome profile, does not close Chrome tabs, and does not drive the ONYEN form. Chrome owns the login, saved passwords, MFA, and cookies. The helper only reads PromptLab cookies from the local Chrome profile and stores the resulting PromptLab session in Keychain when `--store-session` is used.
+
+Override the cookie polling interval with:
+
+```bash
+export HEELCODE_PROMPTLAB_CAPTURE_POLL_MS=250
+```
 
 Do not commit:
 
@@ -88,11 +126,12 @@ Do not commit:
 
 Preferred login path:
 
-1. Complete ONYEN/OpenID login interactively in Chrome.
-2. Store the resulting session material in macOS Keychain or another OS credential store.
-3. Inject only the short-lived token or cookie into the daemon process at runtime.
+1. Open PromptLab in the user's normal Google Chrome profile.
+2. Let Chrome handle saved passwords, ONYEN/OpenID login, and MFA.
+3. Read the PromptLab refresh cookie from Chrome's local cookie store.
+4. Exchange it for a short-lived PromptLab bearer token and store only the PromptLab session material in macOS Keychain.
 
-Password automation should remain explicit opt-in and local-only. It should use realistic browser actions for simple automation blockers, but it must not write credentials to plaintext config, logs, fixtures, shell history, or commits.
+Password automation should remain explicit opt-in and local-only. The default path should not automate ONYEN credentials at all; it should rely on the user's real Chrome profile and saved browser session.
 
 ## Testing Metrics
 
@@ -128,5 +167,4 @@ PromptLab access is for eligible UNC affiliates. Do not use heelcode to publish 
 
 - Exact authenticated payload shape still needs confirmation from a sanitized HAR.
 - Tool-call preservation depends on PromptLab accepting and returning tool-call-compatible structures.
-- Interactive ONYEN browser login is implemented as a capture helper, but live attempts can stop on Microsoft passkey/FIDO prompts that require user-side approval.
-- The connector currently supports bearer-token/cookie runtime auth rather than persistent credential storage.
+- ONYEN browser login stays in the user's normal Chrome profile, so Microsoft MFA/security-info prompts remain user-side browser steps.
