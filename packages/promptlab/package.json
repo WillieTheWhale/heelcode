@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@heelcode/promptlab",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "private": true,
+  "bin": {
+    "heelcode-promptlabd": "./src/cli.ts"
+  },
+  "scripts": {
+    "dev": "bun run src/cli.ts serve",
+    "serve": "bun run src/cli.ts serve",
+    "models": "bun run src/cli.ts models",
+    "capture": "bun run src/capture.ts",
+    "test": "bun test --timeout 30000",
+    "typecheck": "tsgo --noEmit"
+  },
+  "devDependencies": {
+    "@tsconfig/bun": "catalog:",
+    "@types/bun": "catalog:",
+    "@playwright/test": "catalog:",
+    "@typescript/native-preview": "catalog:",
+    "typescript": "catalog:"
+  }
+}

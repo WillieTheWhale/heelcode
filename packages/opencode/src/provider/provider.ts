@@ -167,6 +167,81 @@ function selectBedrockMantleLanguageModel(sdk: BundledSDK, modelID: string) {
 
 function custom(dep: CustomDep): Record<string, CustomLoader> {
   return {
+    promptlab: Effect.fnUntraced(function* (input: Info) {
+      const env = yield* dep.env()
+      const baseURL = String(input.options?.baseURL ?? env["HEELCODE_PROMPTLAB_URL"] ?? "http://127.0.0.1:43117/v1")
+      const apiKey = String(input.options?.apiKey ?? env["HEELCODE_PROMPTLAB_API_KEY"] ?? "heelcode")
+
+      return {
+        autoload: true,
+        options: {
+          baseURL,
+          apiKey,
+        },
+        async discoverModels(): Promise<Record<string, Model>> {
+          try {
+            const url = new URL("models", baseURL.endsWith("/") ? baseURL : `${baseURL}/`)
+            const response = await fetch(url, {
+              headers: {
+                authorization: `Bearer ${apiKey}`,
+              },
+            })
+            if (!response.ok) return {}
+            const body = await response.json()
+            if (!isRecord(body) || !Array.isArray(body.data)) return {}
+
+            const models: Record<string, Model> = {}
+            for (const item of body.data) {
+              if (!isRecord(item) || typeof item.id !== "string") continue
+              const id = item.id
+              const name = typeof item.name === "string" ? item.name : id
+              models[id] = {
+                id: ModelV2.ID.make(id),
+                providerID: ProviderV2.ID.make("promptlab"),
+                name,
+                family: "promptlab",
+                api: {
+                  id,
+                  url: baseURL,
+                  npm: "@ai-sdk/openai-compatible",
+                },
+                status: "active",
+                headers: {},
+                options: {},
+                cost: { input: 0, output: 0, cache: { read: 0, write: 0 } },
+                limit: { context: 0, output: 0 },
+                capabilities: {
+                  temperature: true,
+                  reasoning: false,
+                  attachment: false,
+                  toolcall: true,
+                  input: {
+                    text: true,
+                    audio: false,
+                    image: false,
+                    video: false,
+                    pdf: false,
+                  },
+                  output: {
+                    text: true,
+                    audio: false,
+                    image: false,
+                    video: false,
+                    pdf: false,
+                  },
+                  interleaved: false,
+                },
+                release_date: "",
+                variants: {},
+              }
+            }
+            return models
+          } catch {
+            return {}
+          }
+        },
+      }
+    }),
     anthropic: () =>
       Effect.succeed({
         autoload: false,
@@ -1300,6 +1375,15 @@ export const layer = Layer.effect(
         const modelsDev = yield* modelsDevSvc.get()
         const catalog = mapValues(modelsDev, fromModelsDevProvider)
         const database = mapValues(catalog, toPublicInfo)
+        database[ProviderV2.ID.make("promptlab")] = {
+          id: ProviderV2.ID.make("promptlab"),
+          name: "PromptLab",
+          source: "custom",
+          env: ["HEELCODE_PROMPTLAB_URL", "HEELCODE_PROMPTLAB_API_KEY"],
+          key: undefined,
+          options: {},
+          models: {},
+        }
 
         const providers: Record<ProviderV2.ID, Info> = {} as Record<ProviderV2.ID, Info>
         const languages = new Map<string, LanguageModelV3>()
@@ -1339,7 +1423,7 @@ export const layer = Layer.effect(
         // now read config providers - includes any modifications from plugin config() hook
         const configProviders = Object.entries(cfg.provider ?? {})
         const disabled = new Set(cfg.disabled_providers ?? [])
-        const enabled = cfg.enabled_providers ? new Set(cfg.enabled_providers) : null
+        const enabled = cfg.enabled_providers ? new Set(cfg.enabled_providers) : new Set(["promptlab"])
 
         function isProviderAllowed(providerID: ProviderV2.ID): boolean {
           if (enabled && !enabled.has(providerID)) return false
@@ -1543,14 +1627,15 @@ export const layer = Layer.effect(
           mergeProvider(providerID, partial)
         }
 
-        const gitlab = ProviderV2.ID.make("gitlab")
-        if (discoveryLoaders[gitlab] && providers[gitlab] && isProviderAllowed(gitlab)) {
+        for (const [id, discover] of Object.entries(discoveryLoaders)) {
+          const providerID = ProviderV2.ID.make(id)
+          if (!providers[providerID] || !isProviderAllowed(providerID)) continue
           yield* Effect.promise(async () => {
             try {
-              const discovered = await discoveryLoaders[gitlab]()
+              const discovered = await discover()
               for (const [modelID, model] of Object.entries(discovered)) {
-                if (!providers[gitlab].models[modelID]) {
-                  providers[gitlab].models[modelID] = model
+                if (!providers[providerID].models[modelID]) {
+                  providers[providerID].models[modelID] = model
                 }
               }
             } catch (e) {}
