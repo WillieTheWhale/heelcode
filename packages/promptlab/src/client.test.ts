@@ -1,6 +1,20 @@
-import { describe, expect, test } from "bun:test"
+import { afterEach, describe, expect, test } from "bun:test"
 import { PromptLabClient, safeLogError } from "./client"
 import { PromptLabError } from "./types"
+
+const originalEnv = {
+  retryAttempts: process.env.HEELCODE_PROMPTLAB_RETRY_ATTEMPTS,
+  retryBaseMs: process.env.HEELCODE_PROMPTLAB_RETRY_BASE_MS,
+  retryMaxMs: process.env.HEELCODE_PROMPTLAB_RETRY_MAX_MS,
+  chatIntervalMs: process.env.HEELCODE_PROMPTLAB_CHAT_INTERVAL_MS,
+}
+
+afterEach(() => {
+  restoreEnv("HEELCODE_PROMPTLAB_RETRY_ATTEMPTS", originalEnv.retryAttempts)
+  restoreEnv("HEELCODE_PROMPTLAB_RETRY_BASE_MS", originalEnv.retryBaseMs)
+  restoreEnv("HEELCODE_PROMPTLAB_RETRY_MAX_MS", originalEnv.retryMaxMs)
+  restoreEnv("HEELCODE_PROMPTLAB_CHAT_INTERVAL_MS", originalEnv.chatIntervalMs)
+})
 
 describe("PromptLab client", () => {
   test("sends same-origin browser headers and stored session material", async () => {
@@ -56,6 +70,25 @@ describe("PromptLab client", () => {
     ])
   })
 
+  test("retries PromptLab 429 responses before surfacing rate-limit failures", async () => {
+    process.env.HEELCODE_PROMPTLAB_RETRY_ATTEMPTS = "2"
+    process.env.HEELCODE_PROMPTLAB_RETRY_BASE_MS = "0"
+    process.env.HEELCODE_PROMPTLAB_RETRY_MAX_MS = "0"
+
+    let calls = 0
+    const client = new PromptLabClient({
+      baseURL: "https://promptlab.example",
+      fetch: (async () => {
+        calls++
+        if (calls === 1) return json({ error: "slow down" }, 429, { "retry-after": "0" })
+        return json({ openAI: ["gpt-4.1"] })
+      }) as unknown as typeof fetch,
+    })
+
+    await expect(client.getModels()).resolves.toEqual({ openAI: ["gpt-4.1"] })
+    expect(calls).toBe(2)
+  })
+
   test("redacts PromptLab errors before logging", () => {
     const text = safeLogError(
       new PromptLabError("Authorization: Bearer abc.def.ghi; promptlab.sid=secret", 500, {
@@ -72,11 +105,17 @@ describe("PromptLab client", () => {
   })
 })
 
-function json(value: unknown, status = 200): Response {
+function restoreEnv(key: string, value: string | undefined) {
+  if (value === undefined) delete process.env[key]
+  else process.env[key] = value
+}
+
+function json(value: unknown, status = 200, headers: Record<string, string> = {}): Response {
   return new Response(JSON.stringify(value), {
     status,
     headers: {
       "content-type": "application/json",
+      ...headers,
     },
   })
 }

@@ -18,6 +18,9 @@ type RefreshResult = {
 }
 type PromptLabRequestInit = RequestInit & { auth?: boolean }
 
+let promptLabQueue = Promise.resolve()
+let nextPromptLabRequestAt = 0
+
 export class PromptLabClient {
   private token: string | undefined
   private cookie: string | undefined
@@ -42,7 +45,8 @@ export class PromptLabClient {
   }
 
   async getCatalog(): Promise<PromptLabCatalog> {
-    const [models, endpoints] = await Promise.all([this.getModels(), this.getEndpoints()])
+    const models = await this.getModels()
+    const endpoints = await this.getEndpoints()
     return normalizeCatalog(models, endpoints)
   }
 
@@ -122,27 +126,45 @@ export class PromptLabClient {
   ): Promise<Response> {
     const retry = options.retry ?? true
     const { auth = true, ...requestInit } = init
-    const response = await this.fetchImpl(new URL(path, this.config.baseURL), {
-      ...requestInit,
-      headers: this.headers(requestInit.headers, auth),
-    })
+    let refreshed = false
+    let rateRetries = 0
 
-    if (response.status === 401 && retry && (await this.refresh().catch(() => false))) {
-      return this.request(path, init, { retry: false })
+    while (true) {
+      const response = await this.fetchWithThrottle(path, {
+        ...requestInit,
+        headers: this.headers(requestInit.headers, auth),
+      })
+
+      if (response.status === 401 && retry && !refreshed && (await this.refresh().catch(() => false))) {
+        refreshed = true
+        continue
+      }
+
+      if (response.status === 429 && retry && rateRetries < retryAttempts()) {
+        await delay(retryDelay(response, rateRetries))
+        rateRetries++
+        continue
+      }
+
+      if (!response.ok) {
+        const details = redactJSON(
+          await response
+            .clone()
+            .json()
+            .catch(() => undefined),
+        )
+        const message = `PromptLab request failed: ${response.status} ${response.statusText}`
+        throw new PromptLabError(message, response.status, details)
+      }
+
+      return response
     }
+  }
 
-    if (!response.ok) {
-      const details = redactJSON(
-        await response
-          .clone()
-          .json()
-          .catch(() => undefined),
-      )
-      const message = `PromptLab request failed: ${response.status} ${response.statusText}`
-      throw new PromptLabError(message, response.status, details)
-    }
-
-    return response
+  private fetchWithThrottle(path: string, init: RequestInit) {
+    const task = () => this.fetchImpl(new URL(path, this.config.baseURL), init)
+    if (!shouldThrottle(path, init.method)) return task()
+    return enqueuePromptLabRequest(task)
   }
 
   private headers(input?: RequestInit["headers"], auth = true): Headers {
@@ -160,6 +182,63 @@ export class PromptLabClient {
     if (this.cookie) headers.set("cookie", this.cookie)
     return headers
   }
+}
+
+function shouldThrottle(path: string, method?: string) {
+  if ((method ?? "GET").toUpperCase() !== "POST") return false
+  return path.startsWith("/api/agents/chat/")
+}
+
+function enqueuePromptLabRequest<T>(task: () => Promise<T>): Promise<T> {
+  const run = promptLabQueue
+    .catch(() => {})
+    .then(async () => {
+      const wait = Math.max(0, nextPromptLabRequestAt - Date.now())
+      if (wait) await delay(wait)
+      nextPromptLabRequestAt = Date.now() + chatIntervalMs()
+      return task()
+    })
+  promptLabQueue = run.then(
+    () => undefined,
+    () => undefined,
+  )
+  return run
+}
+
+function retryDelay(response: Response, attempt: number) {
+  const retryAfter = response.headers.get("retry-after")
+  const parsed = retryAfter ? retryAfterMs(retryAfter) : undefined
+  if (parsed !== undefined) return parsed
+  const base = envNumber("HEELCODE_PROMPTLAB_RETRY_BASE_MS", 2000)
+  const max = envNumber("HEELCODE_PROMPTLAB_RETRY_MAX_MS", 60000)
+  return Math.min(max, base * 2 ** attempt)
+}
+
+function retryAfterMs(value: string) {
+  const seconds = Number(value)
+  if (Number.isFinite(seconds)) return Math.max(0, seconds * 1000)
+  const date = Date.parse(value)
+  if (Number.isFinite(date)) return Math.max(0, date - Date.now())
+  return undefined
+}
+
+function retryAttempts() {
+  return envNumber("HEELCODE_PROMPTLAB_RETRY_ATTEMPTS", 5)
+}
+
+function chatIntervalMs() {
+  return envNumber("HEELCODE_PROMPTLAB_CHAT_INTERVAL_MS", 1500)
+}
+
+function envNumber(key: string, fallback: number) {
+  const raw = process.env[key]
+  if (raw === undefined) return fallback
+  const parsed = Number.parseInt(raw, 10)
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback
+}
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 function looksLikePromptLabSSE(text: string) {

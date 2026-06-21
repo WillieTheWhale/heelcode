@@ -19,23 +19,38 @@ type ServeOptions = {
   config?: PromptLabConfig | (() => PromptLabConfig | Promise<PromptLabConfig>)
 }
 
+type CatalogResponse = {
+  body: ReturnType<typeof toOpenAIModels>
+  headers: Record<string, string>
+}
+
 export function createHandler(
   config: PromptLabConfig | (() => PromptLabConfig | Promise<PromptLabConfig>) = configFromEnv(),
 ): (request: Request) => Promise<Response> {
+  let catalogCache:
+    | (CatalogResponse & {
+        expiresAt: number
+      })
+    | undefined
+  let catalogInFlight: Promise<CatalogResponse> | undefined
+
   return async function handle(request: Request): Promise<Response> {
     const client = new PromptLabClient(await resolveConfig(config))
     const url = new URL(request.url)
     try {
       if (request.method === "OPTIONS") return empty(204)
-      if (request.method === "GET" && url.pathname === "/health") return json({ ok: true, service: "heelcode-promptlabd" })
+      if (request.method === "GET" && url.pathname === "/health")
+        return json({ ok: true, service: "heelcode-promptlabd" })
       if (request.method === "GET" && url.pathname === "/v1/models") {
-        const catalog = await client.getCatalog()
-        return json(toOpenAIModels(catalog), {
-          headers: {
-            "x-heelcode-endpoint-count": String(catalogMetrics(catalog).endpointCount),
-            "x-heelcode-model-count": String(catalogMetrics(catalog).modelCount),
-          },
+        if (catalogCache && catalogCache.expiresAt > Date.now())
+          return json(catalogCache.body, { headers: catalogCache.headers })
+        catalogInFlight ??= loadCatalog(client).finally(() => {
+          catalogInFlight = undefined
         })
+        const result = await catalogInFlight
+        const ttl = catalogTTL()
+        if (ttl > 0) catalogCache = { ...result, expiresAt: Date.now() + ttl }
+        return json(result.body, { headers: result.headers })
       }
 
       if (request.method === "POST" && url.pathname === "/v1/chat/completions") {
@@ -71,7 +86,11 @@ export function createHandler(
       }
 
       if (request.method === "POST" && url.pathname === "/v1/chat/abort") {
-        return json(await client.abort((await request.json().catch(() => ({}))) as { conversationID?: string; streamID?: string }))
+        return json(
+          await client.abort(
+            (await request.json().catch(() => ({}))) as { conversationID?: string; streamID?: string },
+          ),
+        )
       }
 
       if (request.method === "GET" && url.pathname.startsWith("/promptlab/status/")) {
@@ -94,6 +113,17 @@ export function createHandler(
   }
 }
 
+async function loadCatalog(client: PromptLabClient): Promise<CatalogResponse> {
+  const catalog = await client.getCatalog()
+  return {
+    body: toOpenAIModels(catalog),
+    headers: {
+      "x-heelcode-endpoint-count": String(catalogMetrics(catalog).endpointCount),
+      "x-heelcode-model-count": String(catalogMetrics(catalog).modelCount),
+    },
+  }
+}
+
 export function serve(options: ServeOptions = {}) {
   const port = options.port ?? Number(process.env.HEELCODE_PROMPTLAB_PORT ?? 43117)
   const hostname = options.hostname ?? process.env.HEELCODE_PROMPTLAB_HOST ?? "127.0.0.1"
@@ -108,6 +138,13 @@ export function serve(options: ServeOptions = {}) {
 
 async function resolveConfig(config: PromptLabConfig | (() => PromptLabConfig | Promise<PromptLabConfig>)) {
   return typeof config === "function" ? await config() : config
+}
+
+function catalogTTL() {
+  const raw = process.env.HEELCODE_PROMPTLAB_CATALOG_TTL_MS
+  if (raw === undefined) return 60000
+  const parsed = Number.parseInt(raw, 10)
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : 60000
 }
 
 function json(value: unknown, init: ResponseInit = {}): Response {

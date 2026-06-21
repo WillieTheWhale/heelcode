@@ -1,5 +1,19 @@
-import { describe, expect, test } from "bun:test"
+import { afterEach, beforeEach, describe, expect, test } from "bun:test"
 import { createHandler } from "./server"
+
+const originalEnv = {
+  catalogTTL: process.env.HEELCODE_PROMPTLAB_CATALOG_TTL_MS,
+  chatIntervalMs: process.env.HEELCODE_PROMPTLAB_CHAT_INTERVAL_MS,
+}
+
+beforeEach(() => {
+  process.env.HEELCODE_PROMPTLAB_CHAT_INTERVAL_MS = "0"
+})
+
+afterEach(() => {
+  restoreEnv("HEELCODE_PROMPTLAB_CATALOG_TTL_MS", originalEnv.catalogTTL)
+  restoreEnv("HEELCODE_PROMPTLAB_CHAT_INTERVAL_MS", originalEnv.chatIntervalMs)
+})
 
 describe("heelcode-promptlabd handler", () => {
   test("exposes PromptLab models through OpenAI-compatible /v1/models", async () => {
@@ -19,6 +33,38 @@ describe("heelcode-promptlabd handler", () => {
       },
     ])
     expect(response.headers.get("x-heelcode-model-count")).toBe("1")
+  })
+
+  test("caches PromptLab model catalog responses", async () => {
+    process.env.HEELCODE_PROMPTLAB_CATALOG_TTL_MS = "60000"
+    let models = 0
+    let endpoints = 0
+    const handler = createHandler({
+      baseURL: "https://promptlab.example",
+      fetch: (async (input: Request | URL | string) => {
+        const url = new URL(String(input))
+        if (url.pathname === "/api/models") {
+          models++
+          await delay(5)
+          return json({ openAI: [{ id: "gpt-4.1", name: "GPT-4.1" }] })
+        }
+        if (url.pathname === "/api/endpoints") {
+          endpoints++
+          await delay(5)
+          return json([{ id: "openAI", name: "OpenAI" }])
+        }
+        return json({ message: "not found" }, 404)
+      }) as typeof fetch,
+    })
+
+    await Promise.all([
+      handler(new Request("http://127.0.0.1/v1/models")),
+      handler(new Request("http://127.0.0.1/v1/models")),
+    ])
+    await handler(new Request("http://127.0.0.1/v1/models"))
+
+    expect(models).toBe(1)
+    expect(endpoints).toBe(1)
   })
 
   test("translates direct PromptLab event streams into OpenAI-compatible SSE", async () => {
@@ -214,6 +260,15 @@ function fakePromptLabFetch(options: FakePromptLabOptions = {}): typeof fetch {
     return json({ message: "not found" }, 404)
   }
   return fn as typeof fetch
+}
+
+function restoreEnv(key: string, value: string | undefined) {
+  if (value === undefined) delete process.env[key]
+  else process.env[key] = value
+}
+
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 function json(value: unknown, status = 200): Response {
