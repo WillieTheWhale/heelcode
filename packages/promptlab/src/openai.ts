@@ -27,6 +27,22 @@ function normalizePromptText(text: string): string {
 export function messagesToPromptText(messages: OpenAIChatMessage[]): string {
   return messages
     .map((message) => {
+      if (message.role === "tool") {
+        return `tool: ${messageContentToText(message.content)}`
+      }
+      if (message.role === "assistant") {
+        const toolCalls = (message as Record<string, unknown>).tool_calls
+        if (Array.isArray(toolCalls) && toolCalls.length > 0) {
+          const lines = toolCalls.flatMap((c: unknown) => {
+            if (!isRecord(c)) return []
+            const fn = isRecord(c.function) ? c.function : c
+            const name = stringValue(fn.name) ?? "unknown"
+            const args = stringValue(fn.arguments) ?? "{}"
+            return [`assistant: called ${name}(${args})`]
+          })
+          return lines.join("\n") || ""
+        }
+      }
       const text = messageContentToText(message.content)
       if (!text) return ""
       if (message.role === "user") return text
@@ -34,6 +50,62 @@ export function messagesToPromptText(messages: OpenAIChatMessage[]): string {
     })
     .filter(Boolean)
     .join("\n\n")
+}
+
+export function toolInstructionText(tools: unknown[]): string {
+  const descriptions = tools.flatMap((tool) => {
+    if (!isRecord(tool)) return []
+    const fn = isRecord(tool.function) ? tool.function : undefined
+    if (!fn) return []
+    const name = stringValue(fn.name)
+    if (!name) return []
+    const desc = stringValue(fn.description)
+    const params = fn.parameters
+    let line = `- ${name}`
+    if (desc) line += `: ${desc}`
+    if (isRecord(params) && isRecord(params.properties)) {
+      const props = Object.entries(params.properties as Record<string, unknown>)
+        .map(([k, v]) => {
+          const propType = isRecord(v) ? stringValue(v.type) : undefined
+          return propType ? `${k}: ${propType}` : k
+        })
+        .join(", ")
+      if (props) line += ` (${props})`
+    }
+    return [line]
+  })
+
+  if (descriptions.length === 0) return ""
+
+  return [
+    "## Tool Call Protocol (CRITICAL — READ THIS FIRST)",
+    "",
+    "You are running inside a special tool bridge. Native function calling is NOT available. The ONLY way to call a tool is to output this exact XML block:",
+    "<heelcode_tool_call>",
+    '{"name": "TOOL_NAME", "arguments": {"param": "value"}}',
+    "</heelcode_tool_call>",
+    "",
+    "CRITICAL RULES:",
+    "1. To READ a local file → use the 'read' tool via the XML above. NEVER use web.run, webfetch, or web search to access local files — those cannot reach local paths.",
+    "2. To SEARCH text in files → use grep. To LIST files → use glob. To RUN a command → use bash.",
+    "3. Output the XML IMMEDIATELY when you need a tool — do NOT say 'I will now...' or 'Let me...' first.",
+    "4. To call multiple tools, output multiple XML blocks one after another.",
+    "5. Only output prose when giving the FINAL answer after all tool calls are complete.",
+    "6. NEVER end a response by describing what you plan to do next — if you need a tool, OUTPUT the XML right now.",
+    "",
+    "Example — finding then reading a file:",
+    "User: Summarize config.json.",
+    "Assistant: <heelcode_tool_call>",
+    '{"name": "read", "arguments": {"filePath": "config.json"}}',
+    "</heelcode_tool_call>",
+    "Tool result: {\"port\": 3000}",
+    "Assistant: The config file sets port 3000.",
+    "",
+    "When instructions say 'make a tool call', output the XML above — NOT a JSON function call, NOT web.run, NOT a URL fetch.",
+    "",
+    "Available tools:",
+    ...descriptions,
+  ].join("\n")
 }
 
 export function lastUserText(messages: OpenAIChatMessage[]): string {
@@ -48,13 +120,22 @@ export function buildPromptLabPayload(request: OpenAIChatCompletionRequest, sele
   const conversationID = crypto.randomUUID()
   const messageID = crypto.randomUUID()
   const parentMessageID = "00000000-0000-0000-0000-000000000000"
-  const toolInstruction = toolInstructionFromRequest(request)
-  const text = toolInstruction
-    ? [messagesToPromptText(request.messages), toolInstruction].filter(Boolean).join("\n\n")
-    : lastUserText(request.messages)
+
+  // Extract system/developer message and combine with tool instructions for promptPrefix.
+  // PromptLab still injects its own system prompt, but promptPrefix adds our context on top.
+  const systemMsg = request.messages.find((m) => m.role === "system" || m.role === "developer")
+  const systemText = systemMsg ? messageContentToText(systemMsg.content) : ""
+  const toolInstruction =
+    Array.isArray(request.tools) && request.tools.length > 0 ? toolInstructionText(request.tools) : ""
+  const promptPrefix = [systemText, toolInstruction].filter(Boolean).join("\n\n")
+
+  // Build conversation text from non-system messages, including serialized tool calls and results.
+  const conversationMessages = request.messages.filter((m) => m.role !== "system" && m.role !== "developer")
+  const text = messagesToPromptText(conversationMessages) || lastUserText(request.messages)
+
   const temperature = promptLabTemperature(request.temperature, selection)
 
-  return {
+  const payload: Record<string, unknown> = {
     text,
     messageId: messageID,
     parentMessageId: parentMessageID,
@@ -69,11 +150,16 @@ export function buildPromptLabPayload(request: OpenAIChatCompletionRequest, sele
     isContinued: false,
     ephemeralAgent: false,
     manualSkills: [],
+    promptPrefix,
     temperature,
     max_tokens: request.max_tokens ?? request.max_completion_tokens,
     top_p: request.top_p,
     stop: request.stop,
   }
+
+  // Do not send native tools — PromptLab ignores them. Tool instructions are injected as text in promptPrefix.
+
+  return payload
 }
 
 export function selectionFromRequest(request: OpenAIChatCompletionRequest): ModelSelection {
@@ -82,49 +168,6 @@ export function selectionFromRequest(request: OpenAIChatCompletionRequest): Mode
     throw new Error(`Expected PromptLab model id in the form promptlab/<endpoint>/<model>, got ${request.model}`)
   }
   return selection
-}
-
-export function toolInstructionFromRequest(request: OpenAIChatCompletionRequest): string | undefined {
-  if (!Array.isArray(request.tools) || request.tools.length === 0) return undefined
-  if (!shouldExposeToolProtocol(request)) return undefined
-  const hasToolResult = request.messages.some((message) => message.role === "tool")
-  const tools = request.tools.flatMap((tool) => normalizePromptTool(tool))
-  if (tools.length === 0) return undefined
-  return [
-    "Heelcode local opencode tools are available. PromptLab cannot execute them directly.",
-    "When you emit the XML tool-call intent below, Heelcode converts it into an OpenAI-compatible tool_call and opencode executes the tool locally.",
-    "You are operating inside an iterative agent harness, not a one-shot chatbot.",
-    "If the task involves files, code, repositories, terminals, tests, diagnostics, edits, or delegation, you must call exactly one appropriate tool before answering.",
-    "Never claim that you inspected the local workspace unless you emitted a tool call.",
-    hasToolResult
-      ? "The conversation already includes local tool results. Use them to decide the next step. If more information or action is needed, call exactly one next tool. If the task is complete, answer concisely. Do not ask the user what to do next when you can continue with another tool."
-      : "For non-trivial software tasks, start by inspecting the workspace with glob, grep, read, task, or another suitable tool.",
-    'Subagent handoff happens through the local task tool. For task calls, include "description", "prompt", and "subagent_type".',
-    "When a tool is needed, respond with only one XML tag in this exact format:",
-    '<heelcode_tool_call>{"name":"tool_name","arguments":{}}</heelcode_tool_call>',
-    "Do not include markdown, prose, or code fences around the tag.",
-    "After a tool result is provided in the conversation, continue the loop by either requesting one next tool or giving the final answer.",
-    `Available tools: ${JSON.stringify(tools)}`,
-    request.tool_choice ? `Requested tool choice: ${JSON.stringify(request.tool_choice)}` : "",
-  ]
-    .filter(Boolean)
-    .join("\n")
-}
-
-function shouldExposeToolProtocol(request: OpenAIChatCompletionRequest): boolean {
-  if (request.tool_choice === "none") return false
-  return true
-}
-
-function userTextLikelyNeedsLocalTool(text: string): boolean {
-  if (/\b(use|call|invoke)\b[\s\S]{0,80}\btool\b/i.test(text)) return true
-  if (/\b(glob|grep|read|bash)\b[\s\S]{0,40}\btool\b/i.test(text)) return true
-  const action = /\b(inspect|list|read|search|find|grep|glob|edit|write|run|execute|open)\b/i.test(text)
-  const target =
-    /\b(file|files|directory|folder|repo|repository|workspace|codebase|project|shell|command|terminal|path|pattern)\b/i.test(
-      text,
-    )
-  return action && (target || matchFilePath(text) !== undefined)
 }
 
 export function openAINonStreamingResponse(params: {
@@ -149,6 +192,87 @@ export function openAINonStreamingResponse(params: {
       },
     ],
   }
+}
+
+// Collects a PromptLab stream through the full SSE transformer (including XML tool-call
+// extraction) and returns a non-streaming OpenAI response object with tool_calls if present.
+export async function promptLabStreamToOpenAINonStreaming(
+  input: ReadableStream<Uint8Array>,
+  model: string,
+): Promise<ReturnType<typeof openAINonStreamingResponse>> {
+  const transformed = transformPromptLabSSEToOpenAI(input, model)
+  const reader = transformed.getReader()
+  const dec = new TextDecoder()
+  let buf = ""
+  let content = ""
+  const toolCalls: OpenAIToolCallDelta[] = []
+  let finishReason = "stop"
+  let id: string | undefined
+
+  try {
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      buf += dec.decode(value, { stream: true })
+      for (;;) {
+        const nl = buf.search(/\r?\n\r?\n/)
+        if (nl === -1) break
+        const line = buf.slice(0, nl)
+        buf = buf.slice(buf[nl] === "\r" ? nl + 4 : nl + 2)
+        const raw = line
+          .split(/\r?\n/)
+          .filter((l) => l.startsWith("data:"))
+          .map((l) => l.slice(5).trimStart())
+          .join("")
+        if (!raw || raw === "[DONE]") continue
+        const chunk = parseJSON(raw)
+        if (!isRecord(chunk)) continue
+        if (typeof chunk.id === "string") id = chunk.id
+        const choice = Array.isArray(chunk.choices) && isRecord(chunk.choices[0]) ? chunk.choices[0] : undefined
+        if (!choice) continue
+        const delta = isRecord(choice.delta) ? choice.delta : undefined
+        if (delta) {
+          if (typeof delta.content === "string") content += delta.content
+          if (Array.isArray(delta.tool_calls)) toolCalls.push(...(delta.tool_calls as OpenAIToolCallDelta[]))
+        }
+        if (typeof choice.finish_reason === "string") finishReason = choice.finish_reason
+      }
+    }
+  } finally {
+    await reader.cancel().catch(() => {})
+  }
+
+  // emitStreamError always prefixes with "PromptLab " — propagate as an exception so the
+  // server returns a 500 rather than a 200 with error text as the message content.
+  if (!toolCalls.length && content.startsWith("PromptLab ")) {
+    throw new Error(content)
+  }
+
+  if (toolCalls.length) {
+    return {
+      id: id ?? `chatcmpl-${crypto.randomUUID()}`,
+      object: "chat.completion",
+      created: Math.floor(Date.now() / 1000),
+      model,
+      choices: [
+        {
+          index: 0,
+          message: {
+            role: "assistant",
+            content: null,
+            tool_calls: toolCalls.map((tc) => ({
+              id: tc.id,
+              type: tc.type ?? "function",
+              function: tc.function,
+            })),
+          } as Record<string, unknown>,
+          finish_reason: finishReason,
+        },
+      ],
+    } as ReturnType<typeof openAINonStreamingResponse>
+  }
+
+  return openAINonStreamingResponse({ id, model, content, finishReason })
 }
 
 export function promptLabJSONToText(value: unknown): string {
@@ -184,7 +308,7 @@ type PromptLabDelta = {
   error?: string
 }
 
-function promptLabTemperature(temperature: number | undefined, selection: ModelSelection): number | undefined {
+export function promptLabTemperature(temperature: number | undefined, selection: ModelSelection): number | undefined {
   if (
     temperature !== undefined &&
     temperature !== 1 &&
@@ -233,81 +357,23 @@ export function openAIToolCallStream(model: string, toolCall: OpenAIToolCallDelt
   })
 }
 
-export function preflightToolCallFromRequest(request: OpenAIChatCompletionRequest): OpenAIToolCallDelta | undefined {
-  if (!Array.isArray(request.tools) || request.tools.length === 0) return undefined
-  const tools = request.tools.flatMap((tool) => normalizePromptTool(tool))
-  const sequencedToolCall = preflightSequencedToolCallFromRequest(request, tools)
-  if (sequencedToolCall) return sequencedToolCall
-  if (request.messages.some((message) => message.role === "tool")) return undefined
-  const text = lastUserText(request.messages)
-  const explicitToolRequest = /\b(use|call|invoke)\b/i.test(text)
-  if (!explicitToolRequest && !userTextLikelyNeedsLocalTool(text)) return undefined
-  const preferredTools = tools.filter((tool) => explicitlyNamesTool(text, tool.name))
-  const candidateTools = preferredTools.length ? preferredTools : tools
-  for (const tool of candidateTools) {
-    const named = new RegExp(`\\b${escapeRegExp(tool.name)}\\b`, "i").test(text)
-    if (explicitToolRequest && !named) continue
-    const args = inferToolArguments(tool.name, text)
-    if (!args) continue
-    return {
-      index: 0,
-      id: `call_${crypto.randomUUID().replaceAll("-", "").slice(0, 24)}`,
-      type: "function",
-      function: {
-        name: tool.name,
-        arguments: JSON.stringify(args),
-      },
-    }
-  }
-  return undefined
-}
-
-function explicitlyNamesTool(text: string, name: string): boolean {
-  return (
-    new RegExp(`\\b${escapeRegExp(name)}\\s+tool\\b`, "i").test(text) ||
-    new RegExp(`\\b(use|call|invoke)\\b[\\s\\S]{0,80}\\b${escapeRegExp(name)}\\b[\\s\\S]{0,40}\\btool\\b`, "i").test(
-      text,
-    )
-  )
-}
-
-function preflightSequencedToolCallFromRequest(
-  request: OpenAIChatCompletionRequest,
-  tools: PromptToolSummary[],
-): OpenAIToolCallDelta | undefined {
-  const toolResults = request.messages.filter((message) => message.role === "tool")
-  if (toolResults.length === 0) return undefined
-  const sequence = requestedToolSequenceFromRequest(request, tools)
-  if (sequence.length < 2) return undefined
-  const nextTool = sequence[toolResults.length]
-  if (!nextTool || !tools.some((tool) => tool.name === nextTool)) return undefined
-  const args =
-    inferToolArgumentsFromConversation(nextTool, request) ??
-    inferToolArguments(nextTool, lastUserText(request.messages))
-  if (!args) return undefined
-  return {
-    index: 0,
-    id: `call_${crypto.randomUUID().replaceAll("-", "").slice(0, 24)}`,
-    type: "function",
-    function: {
-      name: nextTool,
-      arguments: JSON.stringify(args),
-    },
-  }
-}
-
 export function transformPromptLabSSEToOpenAI(
   input: ReadableStream<Uint8Array>,
   model: string,
-  options: { tools?: unknown[] } = {},
 ): ReadableStream<Uint8Array> {
   const id = `chatcmpl-${crypto.randomUUID()}`
-  let buffer = ""
+  let sseBuf = ""       // buffer for SSE event parsing
   let closed = false
-  let sawContent = false
-  let sawToolCalls = false
-  let syntheticBuffer = ""
-  const useSyntheticToolProtocol = Array.isArray(options.tools) && options.tools.length > 0
+  let sawContent = false   // received any content delta (used to skip re-emitted final text)
+  let sawToolCalls = false // emitted tool calls to the client
+
+  // Hybrid tool-call detection state.  We hold back up to (TOOL_OPEN.length - 1) characters
+  // of streamed text in case they are the start of a tool call XML tag.  Once the full open
+  // tag is confirmed in the buffer we stop streaming and accumulate the complete XML block.
+  const TOOL_OPEN = "<heelcode_tool_call"
+  let textPending = ""  // lookahead: might be prefix of tool call open tag
+  let inToolCall = false
+  let toolCallBuf = ""
 
   return new ReadableStream<Uint8Array>({
     async start(controller) {
@@ -316,10 +382,10 @@ export function transformPromptLabSSEToOpenAI(
         for (;;) {
           const { done, value } = await reader.read()
           if (done) break
-          buffer += decoder.decode(value, { stream: true })
+          sseBuf += decoder.decode(value, { stream: true })
           flushEvents(controller, id, model)
         }
-        buffer += decoder.decode()
+        sseBuf += decoder.decode()
         flushEvents(controller, id, model, true)
         close(controller, id, model)
       } catch (error) {
@@ -335,16 +401,16 @@ export function transformPromptLabSSEToOpenAI(
     flush = false,
   ) {
     for (;;) {
-      const split = buffer.search(/\r?\n\r?\n/)
+      const split = sseBuf.search(/\r?\n\r?\n/)
       if (split === -1) {
-        if (!flush || !buffer.trim()) return
-        const event = buffer
-        buffer = ""
+        if (!flush || !sseBuf.trim()) return
+        const event = sseBuf
+        sseBuf = ""
         emitEvent(controller, id, model, event)
         return
       }
-      const event = buffer.slice(0, split)
-      buffer = buffer.slice(buffer[split] === "\r" ? split + 4 : split + 2)
+      const event = sseBuf.slice(0, split)
+      sseBuf = sseBuf.slice(sseBuf[split] === "\r" ? split + 4 : split + 2)
       emitEvent(controller, id, model, event)
     }
   }
@@ -367,6 +433,7 @@ export function transformPromptLabSSEToOpenAI(
       emitStreamError(controller, id, model, delta.error)
       return
     }
+    // Native tool calls from the underlying model (e.g. if PromptLab ever forwards them).
     if (delta.toolCalls?.length) {
       sawToolCalls = true
       controller.enqueue(sse(openAIChunk({ id, model, toolCalls: delta.toolCalls })))
@@ -374,11 +441,11 @@ export function transformPromptLabSSEToOpenAI(
       return
     }
     if (delta.content) {
-      const shouldEmitContent = !delta.done || !sawContent
-      if (shouldEmitContent) {
+      // Skip final-event content if we already streamed it via intermediate chunks.
+      const shouldProcess = !delta.done || !sawContent
+      if (shouldProcess) {
         sawContent = true
-        if (useSyntheticToolProtocol) syntheticBuffer += delta.content
-        else controller.enqueue(sse(openAIChunk({ id, model, content: delta.content })))
+        pushContent(controller, id, model, delta.content)
       }
       if (delta.done) close(controller, id, model)
       return
@@ -389,19 +456,78 @@ export function transformPromptLabSSEToOpenAI(
     }
   }
 
+  // Push a content token through the lookahead buffer.  Emits text immediately unless
+  // the buffer ends with a prefix of the tool-call open tag (which could span chunks).
+  function pushContent(
+    controller: ReadableStreamDefaultController<Uint8Array>,
+    id: string,
+    model: string,
+    text: string,
+  ) {
+    if (inToolCall) {
+      toolCallBuf += text
+      return
+    }
+    textPending += text
+
+    // Fast path: full open tag is already in the buffer — switch to tool-call mode.
+    const tagIdx = textPending.indexOf(TOOL_OPEN)
+    if (tagIdx !== -1) {
+      const before = textPending.slice(0, tagIdx)
+      if (before) controller.enqueue(sse(openAIChunk({ id, model, content: before })))
+      toolCallBuf = textPending.slice(tagIdx)
+      textPending = ""
+      inToolCall = true
+      return
+    }
+
+    // Slow path: check if the rightmost '<' starts a prefix of TOOL_OPEN.
+    // Only hold back chars that could still become the tag; emit everything else.
+    const lastAngle = textPending.lastIndexOf("<")
+    if (lastAngle !== -1 && TOOL_OPEN.startsWith(textPending.slice(lastAngle))) {
+      if (lastAngle > 0) {
+        controller.enqueue(sse(openAIChunk({ id, model, content: textPending.slice(0, lastAngle) })))
+        textPending = textPending.slice(lastAngle)
+      }
+      return
+    }
+
+    // Nothing to hold back.
+    if (textPending) {
+      controller.enqueue(sse(openAIChunk({ id, model, content: textPending })))
+      textPending = ""
+    }
+  }
+
+  // Flush accumulated text and/or tool call XML to the client.  Called by close() before
+  // emitting the finish chunk so sawToolCalls is set before the finishReason is decided.
+  function flushTextBuffer(controller: ReadableStreamDefaultController<Uint8Array>, id: string, model: string) {
+    if (inToolCall) {
+      toolCallBuf += textPending
+      textPending = ""
+      const calls = extractToolCallsFromText(toolCallBuf)
+      if (calls.length) {
+        sawToolCalls = true
+        controller.enqueue(sse(openAIChunk({ id, model, toolCalls: calls })))
+      } else if (toolCallBuf.trim()) {
+        // Malformed XML — emit as plain text so the turn isn't silently lost.
+        controller.enqueue(sse(openAIChunk({ id, model, content: toolCallBuf })))
+      }
+      toolCallBuf = ""
+      inToolCall = false
+      return
+    }
+    if (textPending) {
+      controller.enqueue(sse(openAIChunk({ id, model, content: textPending })))
+      textPending = ""
+    }
+  }
+
   function close(controller: ReadableStreamDefaultController<Uint8Array>, id: string, model: string) {
     if (closed) return
+    flushTextBuffer(controller, id, model)
     closed = true
     try {
-      if (useSyntheticToolProtocol && !sawToolCalls) {
-        const toolCall = syntheticToolCallFromText(syntheticBuffer, options.tools)
-        if (toolCall) {
-          sawToolCalls = true
-          controller.enqueue(sse(openAIChunk({ id, model, toolCalls: [toolCall] })))
-        } else if (syntheticBuffer) {
-          controller.enqueue(sse(openAIChunk({ id, model, content: syntheticBuffer })))
-        }
-      }
       controller.enqueue(sse(openAIChunk({ id, model, finishReason: sawToolCalls ? "tool_calls" : "stop" })))
       controller.enqueue(encoder.encode("data: [DONE]\n\n"))
       controller.close()
@@ -418,15 +544,11 @@ export function transformPromptLabSSEToOpenAI(
   ) {
     if (closed) return
     const message = error.startsWith("PromptLab ") ? error : `PromptLab stream error: ${error}`
-    if (useSyntheticToolProtocol) syntheticBuffer += message
-    else {
-      sawContent = true
-      try {
-        controller.enqueue(sse(openAIChunk({ id, model, content: message })))
-      } catch {
-        closed = true
-        return
-      }
+    try {
+      controller.enqueue(sse(openAIChunk({ id, model, content: message })))
+    } catch {
+      closed = true
+      return
     }
     close(controller, id, model)
   }
@@ -657,338 +779,43 @@ function normalizeOpenAIToolCall(input: unknown, index: number): OpenAIToolCallD
   return [result]
 }
 
-function syntheticToolCallFromText(text: string, toolsInput: unknown[] | undefined): OpenAIToolCallDelta | undefined {
-  const raw = extractSyntheticToolCallJSON(text)
-  if (raw) {
-    const parsed = parseJSON(raw)
-    const call = Array.isArray(parsed) ? parsed[0] : parsed
-    if (isRecord(call)) return syntheticToolCallFromRecord(call)
+function extractToolCallsFromText(text: string): OpenAIToolCallDelta[] {
+  const results: OpenAIToolCallDelta[] = []
+  const re = /<heelcode_tool_call[^>]*>([\s\S]*?)<\/heelcode_tool_call>/g
+  let match: RegExpExecArray | null
+  let index = 0
+  while ((match = re.exec(text)) !== null) {
+    const inner = match[1].trim()
+    const parsed = parseJSONLenient(inner)
+    if (!isRecord(parsed)) continue
+    const name = stringValue(parsed.name)
+    if (!name) continue
+    const rawArgs = parsed.arguments ?? {}
+    const args = typeof rawArgs === "string" ? rawArgs : JSON.stringify(rawArgs)
+    results.push({
+      index: index++,
+      id: `call_${crypto.randomUUID().replace(/-/g, "").slice(0, 24)}`,
+      type: "function",
+      function: { name, arguments: args },
+    })
   }
-  return syntheticToolCallFromProse(text, toolsInput)
+  return results
 }
 
-function syntheticToolCallFromRecord(call: Record<string, unknown>): OpenAIToolCallDelta | undefined {
-  const fn = isRecord(call.function) ? call.function : call
-  const name = stringValue(fn.name) ?? stringValue(call.name) ?? stringValue(call.tool) ?? stringValue(call.tool_name)
-  if (!name) return undefined
-  const args = fn.arguments ?? call.arguments ?? call.input ?? call.args ?? {}
-  return {
-    index: 0,
-    id: `call_${crypto.randomUUID().replaceAll("-", "").slice(0, 24)}`,
-    type: "function",
-    function: {
-      name,
-      arguments: typeof args === "string" ? args : JSON.stringify(args),
-    },
-  }
-}
-
-function syntheticToolCallFromProse(text: string, toolsInput: unknown[] | undefined): OpenAIToolCallDelta | undefined {
-  const tools = (toolsInput ?? []).flatMap((tool) => normalizePromptTool(tool))
-  if (!tools.length) return undefined
-  if (!/\b(use|call|invoke|run|read|search|grep|glob|list|inspect|open|locate|delegate|subagent|task)\b/i.test(text)) {
-    return undefined
-  }
-
-  if (/\b(task\s+tool|delegate|subagent|handoff)\b/i.test(text) && tools.some((tool) => tool.name === "task")) {
-    const args = inferToolArguments("task", text)
-    if (args) return syntheticToolCallFromRecord({ name: "task", arguments: args })
-  }
-
-  for (const tool of tools) {
-    if (!new RegExp(`\\b${escapeRegExp(tool.name)}\\b`, "i").test(text)) continue
-    const args = inferToolArguments(tool.name, text)
-    if (!args) continue
-    return syntheticToolCallFromRecord({ name: tool.name, arguments: args })
-  }
-
-  for (const name of ["read", "grep", "glob", "task"]) {
-    if (!tools.some((tool) => tool.name === name)) continue
-    const args = inferToolArguments(name, text)
-    if (!args) continue
-    return syntheticToolCallFromRecord({ name, arguments: args })
-  }
-
-  return undefined
-}
-
-function extractSyntheticToolCallJSON(text: string): string | undefined {
-  const tagged = text.match(/<heelcode_tool_call>\s*([\s\S]*?)\s*<\/heelcode_tool_call>/i)
-  if (tagged) return stripCodeFence(tagged[1].trim())
-  const fenced = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)
-  if (fenced) return stripCodeFence(fenced[1].trim())
-  const trimmed = text.trim()
-  if (trimmed.startsWith("{") || trimmed.startsWith("[")) return trimmed
-  return undefined
-}
-
-function stripCodeFence(text: string): string {
-  return text
-    .replace(/^```(?:json)?\s*/i, "")
-    .replace(/\s*```$/, "")
-    .trim()
-}
-
-type PromptToolSummary = {
-  name: string
-  description: string
-  parameters: unknown
-}
-
-function normalizePromptTool(input: unknown): PromptToolSummary[] {
-  if (!isRecord(input)) return []
-  const fn = isRecord(input.function) ? input.function : input
-  const name = stringValue(fn.name) ?? stringValue(input.name)
-  if (!name) return []
-  return [
-    {
-      name,
-      description: truncateToolText(stringValue(fn.description) ?? stringValue(input.description) ?? "", 260),
-      parameters: summarizeParameters(fn.parameters ?? input.parameters ?? {}),
-    },
-  ]
-}
-
-function inferToolArguments(name: string, text: string): Record<string, unknown> | undefined {
-  if (name === "glob") {
-    const pattern =
-      matchValue(text, "pattern") ??
-      (/\b(list|inspect|show|find)\b[\s\S]{0,80}\b(files?|directories|folders?|entries|repo|repository|workspace|project|current directory|top[- ]level)\b/i.test(
-        text,
-      )
-        ? "*"
-        : undefined)
-    if (pattern) return { pattern }
-  }
-  if (name === "grep") {
-    const pattern =
-      matchValue(text, "pattern") ?? matchValue(text, "search") ?? matchDefinitionTarget(text) ?? matchSearchTerm(text)
-    if (pattern) return { pattern }
-  }
-  if (name === "read") {
-    const filePath = matchPathValue(text, "file") ?? matchPathValue(text, "path") ?? matchFilePath(text)
-    if (filePath) return { filePath }
-  }
-  if (name === "bash") {
-    const command = matchQuotedAfter(text, "command") ?? matchBacktickedCommand(text)
-    if (command) return { command, description: "Runs requested shell command" }
-  }
-  if (name === "task") {
-    const args = inferTaskArguments(text)
-    if (args) return args
+// Parse JSON leniently: first try strict parse, then strip trailing garbage chars one at a time.
+// Handles model output like `{"name":"foo"}}}` where extra braces are appended by mistake.
+function parseJSONLenient(input: string): unknown {
+  const strict = parseJSON(input)
+  if (strict !== undefined) return strict
+  // Walk backwards removing trailing non-whitespace chars until we get a parse.
+  let trimmed = input.trimEnd()
+  for (let i = trimmed.length - 1; i > 0; i--) {
+    const candidate = trimmed.slice(0, i).trimEnd()
+    if (!candidate.endsWith("}") && !candidate.endsWith("]")) continue
+    const result = parseJSON(candidate)
+    if (result !== undefined) return result
   }
   return undefined
-}
-
-function inferToolArgumentsFromConversation(
-  name: string,
-  request: OpenAIChatCompletionRequest,
-): Record<string, unknown> | undefined {
-  const latestToolText = [...request.messages].reverse().find((message) => message.role === "tool")?.content
-  const text = latestToolText === undefined ? "" : messageContentToText(latestToolText)
-  if (name === "read") {
-    const target =
-      matchDefinitionTarget(lastUserText(request.messages)) ?? matchSearchTerm(lastUserText(request.messages))
-    const filePath = (target ? matchDefinitionPathInText(text, target) : undefined) ?? matchPathInText(text)
-    if (filePath) return { filePath }
-  }
-  if (name === "grep") {
-    const pattern =
-      matchDefinitionTarget(lastUserText(request.messages)) ?? matchSearchTerm(lastUserText(request.messages))
-    if (pattern) return { pattern }
-  }
-  return undefined
-}
-
-function requestedToolSequenceFromRequest(request: OpenAIChatCompletionRequest, tools: PromptToolSummary[]): string[] {
-  const text = lastUserText(request.messages)
-  const matches = tools
-    .map((tool) => ({
-      name: tool.name,
-      index: text.search(new RegExp(`\\b${escapeRegExp(tool.name)}\\b`, "i")),
-    }))
-    .filter((match) => match.index >= 0)
-    .sort((a, b) => a.index - b.index)
-
-  const seen = new Set<string>()
-  return matches.flatMap((match) => {
-    if (seen.has(match.name)) return []
-    seen.add(match.name)
-    return [match.name]
-  })
-}
-
-function matchValue(text: string, label: string): string | undefined {
-  const value =
-    matchQuotedAfter(text, label) ??
-    text.match(new RegExp(`\\b${escapeRegExp(label)}\\b\\s*(?:(?:is|=|:)\\s*)?([^\\s,]+)`, "i"))?.[1]
-  return cleanScalarValue(value)
-}
-
-function matchQuotedAfter(text: string, label: string): string | undefined {
-  const match = text.match(new RegExp(`\\b${escapeRegExp(label)}\\b\\s*(?:(?:is|=|:)\\s*)?["'\`]([^"'\`]+)["'\`]`, "i"))
-  return match?.[1]
-}
-
-function matchBacktickedCommand(text: string): string | undefined {
-  return text.match(/\b(?:run|execute)\b[\s\S]{0,40}`([^`]+)`/i)?.[1]
-}
-
-function matchPathValue(text: string, label: string): string | undefined {
-  const quoted = matchQuotedAfter(text, label)
-  const quotedPath = cleanPathValue(quoted)
-  if (quotedPath) return quotedPath
-  const value = matchValue(text, label)
-  const path = cleanPathValue(value)
-  if (path) return path
-  return undefined
-}
-
-function inferTaskArguments(text: string): Record<string, unknown> | undefined {
-  if (!/\b(task\s+tool|delegate|subagent|handoff)\b/i.test(text)) return undefined
-  const subagent =
-    matchValue(text, "subagent_type") ??
-    matchValue(text, "subagent") ??
-    matchValue(text, "agent") ??
-    (/\bexplore\b/i.test(text) ? "explore" : undefined) ??
-    (/\bgeneral\b/i.test(text) ? "general" : undefined) ??
-    (/\bscout\b/i.test(text) ? "scout" : undefined)
-  const prompt = matchQuotedAfter(text, "prompt") ?? matchQuotedAfter(text, "task")
-  if (!subagent || !prompt) return undefined
-  return {
-    description: matchQuotedAfter(text, "description") ?? summarizeTaskPrompt(prompt),
-    prompt,
-    subagent_type: subagent,
-  }
-}
-
-function summarizeTaskPrompt(prompt: string): string {
-  return prompt.replace(/\s+/g, " ").trim().split(/\s+/).slice(0, 5).join(" ")
-}
-
-function matchSearchTerm(text: string): string | undefined {
-  return (
-    matchQuotedAfter(text, "for") ??
-    cleanScalarValue(text.match(/\b(?:search|grep|find|locate)\s+(?:for\s+)?([A-Za-z_$][\w$.-]*)\b/i)?.[1])
-  )
-}
-
-function matchDefinitionTarget(text: string): string | undefined {
-  return (
-    cleanScalarValue(text.match(/\bwhere\s+([A-Za-z_$][\w$.-]*)\s+(?:is|are)\s+defined\b/i)?.[1]) ??
-    cleanScalarValue(
-      text.match(/\b(?:find|locate|search for|grep for)\s+([A-Za-z_$][\w$.-]*)\b[\s\S]{0,60}\bdefinition\b/i)?.[1],
-    ) ??
-    cleanScalarValue(text.match(/\b([A-Za-z_$][\w$.-]*)\s+(?:is|are)\s+defined\b/i)?.[1])
-  )
-}
-
-function matchFilePath(text: string): string | undefined {
-  return text.match(/\b(?:[\w.-]+\/)*[\w.-]+\.[A-Za-z0-9]{1,12}\b/)?.[0]
-}
-
-function matchPathInText(text: string): string | undefined {
-  return cleanPathValue(
-    text.match(/(?:\/[^\s:]+|(?:[\w.-]+\/)+[\w.-]+\.[A-Za-z0-9]{1,12}|[\w.-]+\.[A-Za-z0-9]{1,12})/)?.[0],
-  )
-}
-
-function matchDefinitionPathInText(text: string, target: string): string | undefined {
-  let currentPath: string | undefined
-  const candidates: string[] = []
-  for (const line of text.split(/\r?\n/)) {
-    const pathOnly = cleanPathValue(
-      line.match(/^\s*((?:\/[^\s:]+|(?:[\w.-]+\/)+[\w.-]+\.[A-Za-z0-9]{1,12}|[\w.-]+\.[A-Za-z0-9]{1,12})):\s*$/)?.[1],
-    )
-    if (pathOnly) {
-      currentPath = pathOnly
-      continue
-    }
-
-    const inline = line.match(
-      /^\s*((?:\/[^\s:]+|(?:[\w.-]+\/)+[\w.-]+\.[A-Za-z0-9]{1,12}|[\w.-]+\.[A-Za-z0-9]{1,12})):\s*(.*)$/,
-    )
-    const inlinePath = cleanPathValue(inline?.[1])
-    const content = inline?.[2] ?? line
-    const path = inlinePath ?? currentPath
-    if (!path) continue
-    if (!new RegExp(`\\b${escapeRegExp(target)}\\b`).test(content)) continue
-    if (!isDefinitionLineForTarget(content, target)) continue
-    candidates.push(path)
-  }
-  return candidates.find((path) => !isTestPath(path)) ?? candidates[0]
-}
-
-function isDefinitionLineForTarget(line: string, target: string): boolean {
-  const name = escapeRegExp(target)
-  return new RegExp(
-    [
-      `\\bexport\\s+(?:async\\s+)?function\\s+${name}\\b`,
-      `\\b(?:async\\s+)?function\\s+${name}\\b`,
-      `\\bexport\\s+(?:const|let|var|class|interface|type|enum)\\s+${name}\\b`,
-      `\\b(?:const|let|var|class|interface|type|enum)\\s+${name}\\b`,
-    ].join("|"),
-  ).test(line)
-}
-
-function isTestPath(path: string): boolean {
-  return /(?:^|\/)(?:__tests__|test|tests|spec)(?:\/|$)|\.(?:test|spec)\.[^/]+$/i.test(path)
-}
-
-function isLikelyPath(value: string): boolean {
-  return /^(?:\/|\.\.?\/|~\/)/.test(value) || value.includes("/") || /\.[A-Za-z0-9]{1,12}$/.test(value)
-}
-
-function cleanPathValue(value: string | undefined): string | undefined {
-  const cleaned = value
-    ?.trim()
-    .replace(/<[^>]*>.*$/, "")
-    .replace(/[),;:]+$/, "")
-  if (/[<>]/.test(cleaned ?? "")) return undefined
-  if (!cleaned || !isLikelyPath(cleaned)) return undefined
-  return cleaned
-}
-
-function cleanScalarValue(value: string | undefined): string | undefined {
-  const cleaned = value?.trim().replace(/[.;:]+$/, "")
-  if (!cleaned || /^(with|to|for|from|and|or|the|a|an|where|how|before|after|answer|answering)$/i.test(cleaned)) {
-    return undefined
-  }
-  return cleaned
-}
-
-function escapeRegExp(value: string): string {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-}
-
-function summarizeParameters(input: unknown): unknown {
-  if (!isRecord(input)) return {}
-  const properties = isRecord(input.properties) ? input.properties : {}
-  const required = Array.isArray(input.required) ? input.required.filter((item) => typeof item === "string") : []
-  return {
-    type: stringValue(input.type) ?? "object",
-    properties: Object.fromEntries(
-      Object.entries(properties).flatMap(([key, value]) => {
-        if (!isRecord(value)) return [[key, {}]]
-        return [
-          [
-            key,
-            {
-              type: stringValue(value.type) ?? "string",
-              description: truncateToolText(stringValue(value.description) ?? "", 180),
-            },
-          ],
-        ]
-      }),
-    ),
-    required,
-  }
-}
-
-function truncateToolText(input: string, max: number): string {
-  const text = input.replace(/\s+/g, " ").trim()
-  if (text.length <= max) return text
-  return `${text.slice(0, max - 3)}...`
 }
 
 function sse(value: unknown): Uint8Array {

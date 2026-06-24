@@ -50,34 +50,43 @@ export class PromptLabClient {
     return normalizeCatalog(models, endpoints)
   }
 
-  async startChat(request: OpenAIChatCompletionRequest, selection: ModelSelection): Promise<PromptLabChatResponse> {
-    const payload = buildPromptLabPayload(request, selection)
+  // completions sends a minimal request through PromptLab's chat endpoint.  PromptLab does not
+  // expose a raw model proxy; the chatbox is the only available endpoint.  Tool schemas are
+  // injected as text instructions in promptPrefix via buildPromptLabPayload, and the SSE
+  // transformer extracts <heelcode_tool_call> XML from the response and emits native tool_calls.
+  async completions(
+    request: OpenAIChatCompletionRequest,
+    selection: ModelSelection,
+  ): Promise<PromptLabChatResponse> {
     const endpoint = encodeURIComponent(selection.endpoint)
+    const payload = buildPromptLabPayload(request, selection)
+
     const response = await this.request(`/api/agents/chat/${endpoint}`, {
       method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
+      headers: { "content-type": "application/json" },
       body: JSON.stringify(payload),
     })
 
-    if (response.headers.get("content-type")?.includes("text/event-stream")) {
+    const contentType = response.headers.get("content-type") ?? ""
+    if (contentType.includes("text/event-stream")) {
       return { kind: "stream", response }
     }
 
-    const text = await response.text().catch(() => "")
-    if (looksLikePromptLabSSE(text)) return { kind: "stream", response: textStreamResponse(text) }
+    const responseText = await response.text().catch(() => "")
+    if (looksLikePromptLabSSE(responseText)) return { kind: "stream", response: textStreamResponse(responseText) }
 
-    const value = parseJSON(text)
+    const value = parseJSON(responseText)
     if (isRecord(value) && typeof value.streamId === "string") {
       const stream = await this.request(`/api/agents/chat/stream/${encodeURIComponent(value.streamId)}`, {
         method: "GET",
-        headers: {
-          accept: "text/event-stream",
-        },
+        headers: { accept: "text/event-stream" },
       })
       return { kind: "stream", response: stream }
     }
+
+    // If the upstream returned a well-formed OpenAI JSON response, forward it directly.
+    if (isOpenAIResponse(value)) return { kind: "openai", response: new Response(responseText, { headers: response.headers }) }
+
     return { kind: "json", value }
   }
 
@@ -186,7 +195,7 @@ export class PromptLabClient {
 
 function shouldThrottle(path: string, method?: string) {
   if ((method ?? "GET").toUpperCase() !== "POST") return false
-  return path.startsWith("/api/agents/chat/")
+  return path.includes("/chat/completions") || path.startsWith("/api/agents/chat/")
 }
 
 function enqueuePromptLabRequest<T>(task: () => Promise<T>): Promise<T> {
@@ -300,4 +309,12 @@ function isPromptLabLikeError(input: unknown): input is {
 
 function isRecord(input: unknown): input is Record<string, unknown> {
   return typeof input === "object" && input !== null && !Array.isArray(input)
+}
+
+function isOpenAIResponse(value: unknown): boolean {
+  if (!isRecord(value)) return false
+  return (
+    Array.isArray(value.choices) &&
+    (value.object === "chat.completion" || value.object === "chat.completion.chunk" || typeof value.id === "string")
+  )
 }

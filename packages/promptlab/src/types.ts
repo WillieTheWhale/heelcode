@@ -81,6 +81,10 @@ export type PromptLabChatResponse =
       response: Response
     }
   | {
+      kind: "openai"
+      response: Response
+    }
+  | {
       kind: "json"
       value: unknown
     }

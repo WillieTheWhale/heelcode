@@ -1,10 +1,18 @@
 import { describe, expect, test } from "bun:test"
 import {
   buildPromptLabPayload,
+  lastUserText,
+  messageContentToText,
   messagesToPromptText,
-  preflightToolCallFromRequest,
+  openAIChunk,
+  openAINonStreamingResponse,
+  openAIToolCallStream,
   promptLabEventToDelta,
-  toolInstructionFromRequest,
+  promptLabJSONToText,
+  promptLabStreamToText,
+  promptLabTemperature,
+  selectionFromRequest,
+  toolInstructionText,
   transformPromptLabSSEToOpenAI,
 } from "./openai"
 
@@ -28,33 +36,17 @@ describe("OpenAI to PromptLab adapter", () => {
   })
 
   test("builds a conservative PromptLab payload", () => {
-    const tools = [
-      {
-        type: "function",
-        function: {
-          name: "list",
-          parameters: {
-            type: "object",
-            properties: {
-              path: { type: "string" },
-            },
-          },
-        },
-      },
-    ]
     const payload = buildPromptLabPayload(
       {
         model: "promptlab/openAI/gpt-4.1",
         messages: [{ role: "user", content: "Use the list tool for the current directory." }],
         stream: true,
-        tools,
+        tools: [{ type: "function", function: { name: "list", parameters: { type: "object", properties: { path: { type: "string" } } } } }],
         tool_choice: "auto",
       },
       { openAIModelID: "promptlab/openAI/gpt-4.1", endpoint: "openAI", model: "gpt-4.1" },
     )
-    const payloadText = String(payload.text)
-    expect(payloadText).toContain("Heelcode local opencode tools are available")
-    expect(payloadText).toContain("Use the list tool")
+    expect(String(payload.text)).toContain("Use the list tool")
     expect(payload).toMatchObject({
       endpointOption: "gpt-4.1",
       endpoint: "openAI",
@@ -71,40 +63,6 @@ describe("OpenAI to PromptLab adapter", () => {
     expect(payload).not.toHaveProperty("prompt")
     expect(payload).not.toHaveProperty("userMessage")
     expect(typeof payload.conversationId).toBe("string")
-  })
-
-  test("exposes synthetic tool instructions without sending OpenAI tools to PromptLab", () => {
-    const payload = buildPromptLabPayload(
-      {
-        model: "promptlab/openAI/gpt-4.1",
-        messages: [{ role: "user", content: "Reply with exactly: HEELCODE_OK" }],
-        stream: true,
-        tools: [{ type: "function", function: { name: "list", parameters: {} } }],
-        tool_choice: "auto",
-      },
-      { openAIModelID: "promptlab/openAI/gpt-4.1", endpoint: "openAI", model: "gpt-4.1" },
-    )
-
-    expect(payload.text).toContain("Heelcode local opencode tools are available")
-    expect(payload.text).toContain("Reply with exactly: HEELCODE_OK")
-    expect(payload).not.toHaveProperty("messages")
-    expect(payload).not.toHaveProperty("tools")
-    expect(payload).not.toHaveProperty("tool_choice")
-  })
-
-  test("keeps the synthetic tool loop active after opencode returns tool results", () => {
-    const instruction = toolInstructionFromRequest({
-      model: "promptlab/openAI/gpt-4.1",
-      messages: [
-        { role: "user", content: "Fix the failing tests." },
-        { role: "tool", content: "test failure output", tool_call_id: "call_1" },
-      ],
-      tools: [{ type: "function", function: { name: "read", parameters: {} } }],
-      tool_choice: "auto",
-    })
-
-    expect(instruction).toContain("call exactly one next tool")
-    expect(instruction).toContain("Do not ask the user what to do next")
   })
 
   test("omits incompatible Bedrock Claude temperatures", () => {
@@ -246,185 +204,6 @@ describe("OpenAI to PromptLab adapter", () => {
     })
   })
 
-  test("converts synthetic heelcode tool call text into OpenAI-compatible SSE", async () => {
-    const source = new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.enqueue(
-          encoder.encode(
-            `data: ${JSON.stringify({
-              message: '<heelcode_tool_call>{"name":"list","arguments":{"path":"."}}</heelcode_tool_call>',
-            })}\n\n`,
-          ),
-        )
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ final: true })}\n\n`))
-        controller.close()
-      },
-    })
-
-    const stream = transformPromptLabSSEToOpenAI(source, "promptlab/openAI/gpt-4.1", {
-      tools: [{ type: "function", function: { name: "list", parameters: {} } }],
-    })
-    const output = await readStream(stream)
-    expect(output).toContain('"tool_calls"')
-    expect(output).toContain('"name":"list"')
-    expect(output).toContain('"arguments":"{\\"path\\":\\".\\"}"')
-    expect(output).toContain('"finish_reason":"tool_calls"')
-    expect(output).not.toContain("heelcode_tool_call")
-  })
-
-  test("converts prose tool intent into OpenAI-compatible tool calls for opencode", async () => {
-    const source = new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.enqueue(
-          encoder.encode(`data: ${JSON.stringify({ message: "I should use the read tool for package.json." })}\n\n`),
-        )
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ final: true })}\n\n`))
-        controller.close()
-      },
-    })
-
-    const stream = transformPromptLabSSEToOpenAI(source, "promptlab/openAI/gpt-4.1", {
-      tools: [{ type: "function", function: { name: "read", parameters: {} } }],
-    })
-    const output = await readStream(stream)
-    expect(output).toContain('"tool_calls"')
-    expect(output).toContain('"name":"read"')
-    expect(output).toContain('"arguments":"{\\"filePath\\":\\"package.json\\"}"')
-    expect(output).toContain('"finish_reason":"tool_calls"')
-  })
-
-  test("cleans XML-like suffixes from prose path tool calls", async () => {
-    const source = new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.enqueue(
-          encoder.encode(
-            `data: ${JSON.stringify({ message: "I should use the read tool for path package.json</path>." })}\n\n`,
-          ),
-        )
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ final: true })}\n\n`))
-        controller.close()
-      },
-    })
-
-    const stream = transformPromptLabSSEToOpenAI(source, "promptlab/openAI/gpt-4.1", {
-      tools: [{ type: "function", function: { name: "read", parameters: {} } }],
-    })
-    const output = await readStream(stream)
-    expect(output).toContain('"tool_calls"')
-    expect(output).toContain('"name":"read"')
-    expect(output).toContain('"arguments":"{\\"filePath\\":\\"package.json\\"}"')
-    expect(output).not.toContain("package.json</path>")
-  })
-
-  test("extracts definition targets for prose grep calls", async () => {
-    const source = new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.enqueue(
-          encoder.encode(
-            `data: ${JSON.stringify({
-              message: "I should use grep to find where toolInstructionFromRequest is defined.",
-            })}\n\n`,
-          ),
-        )
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ final: true })}\n\n`))
-        controller.close()
-      },
-    })
-
-    const stream = transformPromptLabSSEToOpenAI(source, "promptlab/openAI/gpt-4.1", {
-      tools: [{ type: "function", function: { name: "grep", parameters: {} } }],
-    })
-    const output = await readStream(stream)
-    expect(output).toContain('"tool_calls"')
-    expect(output).toContain('"name":"grep"')
-    expect(output).toContain('"arguments":"{\\"pattern\\":\\"toolInstructionFromRequest\\"}"')
-  })
-
-  test("does not infer read calls from vague file prose", async () => {
-    const source = new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.enqueue(
-          encoder.encode(
-            `data: ${JSON.stringify({ message: "I should read the matching file before answering." })}\n\n`,
-          ),
-        )
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ final: true })}\n\n`))
-        controller.close()
-      },
-    })
-
-    const stream = transformPromptLabSSEToOpenAI(source, "promptlab/openAI/gpt-4.1", {
-      tools: [{ type: "function", function: { name: "read", parameters: {} } }],
-    })
-    const output = await readStream(stream)
-    expect(output).not.toContain('"tool_calls"')
-    expect(output).toContain("I should read the matching file before answering.")
-  })
-
-  test("does not infer file reads from XML task result tag fragments", async () => {
-    const source = new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ message: "I should read /task_result>." })}\n\n`))
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ final: true })}\n\n`))
-        controller.close()
-      },
-    })
-
-    const stream = transformPromptLabSSEToOpenAI(source, "promptlab/openAI/gpt-4.1", {
-      tools: [{ type: "function", function: { name: "read", parameters: {} } }],
-    })
-    const output = await readStream(stream)
-    expect(output).not.toContain('"tool_calls"')
-    expect(output).toContain("I should read /task_result>.")
-  })
-
-  test("infers safe inspection tools from prose when PromptLab skips XML", async () => {
-    const source = new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ message: "I should inspect package.json." })}\n\n`))
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ final: true })}\n\n`))
-        controller.close()
-      },
-    })
-
-    const stream = transformPromptLabSSEToOpenAI(source, "promptlab/openAI/gpt-4.1", {
-      tools: [
-        { type: "function", function: { name: "glob", parameters: {} } },
-        { type: "function", function: { name: "read", parameters: {} } },
-      ],
-    })
-    const output = await readStream(stream)
-    expect(output).toContain('"tool_calls"')
-    expect(output).toContain('"name":"read"')
-    expect(output).toContain('"arguments":"{\\"filePath\\":\\"package.json\\"}"')
-  })
-
-  test("converts explicit subagent prose into a local task tool call", async () => {
-    const source = new ReadableStream<Uint8Array>({
-      start(controller) {
-        controller.enqueue(
-          encoder.encode(
-            `data: ${JSON.stringify({
-              message:
-                'I should use the task tool with subagent_type explore and prompt "Inspect package.json and report the package name."',
-            })}\n\n`,
-          ),
-        )
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ final: true })}\n\n`))
-        controller.close()
-      },
-    })
-
-    const stream = transformPromptLabSSEToOpenAI(source, "promptlab/openAI/gpt-4.1", {
-      tools: [{ type: "function", function: { name: "task", parameters: {} } }],
-    })
-    const output = await readStream(stream)
-    expect(output).toContain('"tool_calls"')
-    expect(output).toContain('"name":"task"')
-    expect(output).toContain('\\"subagent_type\\":\\"explore\\"')
-    expect(output).toContain('\\"prompt\\":\\"Inspect package.json and report the package name.\\"')
-  })
-
   test("turns PromptLab stream errors into complete OpenAI-compatible SSE", async () => {
     const source = new ReadableStream<Uint8Array>({
       start(controller) {
@@ -455,159 +234,339 @@ describe("OpenAI to PromptLab adapter", () => {
     expect(output.match(/data: \[DONE\]/g)?.length).toBe(1)
   })
 
-  test("preflights explicit local tool requests", () => {
-    const call = preflightToolCallFromRequest({
-      model: "promptlab/openAI/gpt-4.1",
-      stream: true,
-      messages: [{ role: "user", content: "Use the glob tool with pattern * before answering." }],
-      tools: [{ type: "function", function: { name: "glob", parameters: {} } }],
-    })
+  // --- Tool instruction text ---
 
-    expect(call?.function?.name).toBe("glob")
-    expect(call?.function?.arguments).toBe('{"pattern":"*"}')
-  })
-
-  test("preflights explicit file patterns without truncating extensions", () => {
-    const call = preflightToolCallFromRequest({
-      model: "promptlab/openAI/gpt-4.1",
-      stream: true,
-      messages: [{ role: "user", content: "Use the glob tool with pattern package.json before answering." }],
-      tools: [{ type: "function", function: { name: "glob", parameters: {} } }],
-    })
-
-    expect(call?.function?.name).toBe("glob")
-    expect(call?.function?.arguments).toBe('{"pattern":"package.json"}')
-  })
-
-  test("preflights natural workspace inspection requests", () => {
-    const call = preflightToolCallFromRequest({
-      model: "promptlab/openAI/gpt-4.1",
-      stream: true,
-      messages: [{ role: "user", content: "List the top-level files in the current directory before answering." }],
-      tools: [{ type: "function", function: { name: "glob", parameters: {} } }],
-    })
-
-    expect(call?.function?.name).toBe("glob")
-    expect(call?.function?.arguments).toBe('{"pattern":"*"}')
-  })
-
-  test("preflights natural file read requests", () => {
-    const call = preflightToolCallFromRequest({
-      model: "promptlab/openAI/gpt-4.1",
-      stream: true,
-      messages: [{ role: "user", content: "Read package.json before answering." }],
-      tools: [{ type: "function", function: { name: "read", parameters: {} } }],
-    })
-
-    expect(call?.function?.name).toBe("read")
-    expect(call?.function?.arguments).toBe('{"filePath":"package.json"}')
-  })
-
-  test("preflights explicitly named task tools before tools mentioned inside the task prompt", () => {
-    const call = preflightToolCallFromRequest({
-      model: "promptlab/openAI/gpt-4.1",
-      stream: true,
-      messages: [
-        {
-          role: "user",
-          content:
-            'Use the task tool with subagent_type explore and prompt "Read package.json and report only the package name."',
+  test("toolInstructionText generates XML-format call instructions with tool schema", () => {
+    const tools = [
+      {
+        type: "function",
+        function: {
+          name: "read_file",
+          description: "Read a file",
+          parameters: {
+            type: "object",
+            properties: {
+              path: { type: "string" },
+              limit: { type: "number" },
+            },
+          },
         },
-      ],
-      tools: [
-        { type: "function", function: { name: "read", parameters: {} } },
-        { type: "function", function: { name: "task", parameters: {} } },
-      ],
-    })
-
-    expect(call?.function?.name).toBe("task")
-    expect(call?.function?.arguments).toContain('"subagent_type":"explore"')
-    expect(call?.function?.arguments).toContain('"prompt":"Read package.json and report only the package name."')
+      },
+    ]
+    const text = toolInstructionText(tools)
+    expect(text).toContain("heelcode_tool_call")
+    expect(text).toContain("read_file")
+    expect(text).toContain("Tool Call Protocol")
+    expect(text).toContain("Native function calling")
+    expect(text).toContain("path: string")
   })
 
-  test("preflights task tools from JSON-quoted CLI prompts", () => {
-    const call = preflightToolCallFromRequest({
-      model: "promptlab/openAI/gpt-4.1",
-      stream: true,
-      messages: [
+  test("toolInstructionText returns empty string when tools array is empty", () => {
+    expect(toolInstructionText([])).toBe("")
+  })
+
+  test("toolInstructionText renders tools with no parameters gracefully", () => {
+    const tools = [{ type: "function", function: { name: "echo", description: "Echo text" } }]
+    expect(toolInstructionText(tools)).toContain("- echo: Echo text")
+    expect(toolInstructionText(tools)).not.toContain("()")
+  })
+
+  // --- messagesToPromptText ---
+
+  test("messagesToPromptText serializes tool results with tool: prefix", () => {
+    expect(
+      messagesToPromptText([
+        { role: "user", content: "Read the config." },
+        { role: "tool", content: '{"port":3000}', tool_call_id: "call_1" },
+      ]),
+    ).toBe('Read the config.\n\ntool: {"port":3000}')
+  })
+
+  test("messagesToPromptText serializes assistant tool_calls as called name(args)", () => {
+    expect(
+      messagesToPromptText([
         {
-          role: "user",
-          content: JSON.stringify(
-            'Use the task tool with subagent_type explore and prompt "Read package.json and report only the package name."',
+          role: "assistant",
+          content: null,
+          tool_calls: [
+            { id: "call_1", type: "function", function: { name: "glob", arguments: '{"pattern":"*.ts"}' } },
+          ],
+        } as never,
+        { role: "tool", content: '["a.ts","b.ts"]', tool_call_id: "call_1" },
+      ]),
+    ).toBe('assistant: called glob({"pattern":"*.ts"})\n\ntool: ["a.ts","b.ts"]')
+  })
+
+  // --- buildPromptLabPayload ---
+
+  test("buildPromptLabPayload combines system message and tool instructions in promptPrefix", () => {
+    const payload = buildPromptLabPayload(
+      {
+        model: "promptlab/openAI/gpt-4.1",
+        messages: [
+          { role: "system", content: "You are a coding assistant." },
+          { role: "user", content: "Read the config file." },
+        ],
+        stream: true,
+        tools: [{ type: "function", function: { name: "read_file", description: "Read a file", parameters: { type: "object", properties: { path: { type: "string" } } } } }],
+        tool_choice: "auto",
+      },
+      { openAIModelID: "promptlab/openAI/gpt-4.1", endpoint: "openAI", model: "gpt-4.1" },
+    )
+
+    // promptPrefix has system message first, then tool instructions.
+    expect(String(payload.promptPrefix)).toMatch(/^You are a coding assistant\./)
+    expect(String(payload.promptPrefix)).toContain("Tool Call Protocol")
+    expect(String(payload.promptPrefix)).toContain("heelcode_tool_call")
+    expect(String(payload.promptPrefix)).toContain("read_file")
+    // Text has only the conversation (not system, not tool instructions).
+    expect(String(payload.text)).not.toContain("You are a coding assistant")
+    expect(String(payload.text)).toContain("Read the config file.")
+    // Native tools not forwarded.
+    expect(payload).not.toHaveProperty("tools")
+  })
+
+  // --- XML tool call extraction from streaming ---
+
+  test("extracts XML tool call from streamed text and emits as native tool_calls", async () => {
+    const source = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({
+              event: "on_message_delta",
+              data: { delta: { content: [{ type: "text", text: '<heelcode_tool_call>{"name":"glob","arguments":{"pattern":"*.ts"}}</heelcode_tool_call>', index: 0 }] } },
+            })}\n\n`,
           ),
-        },
-      ],
-      tools: [
-        { type: "function", function: { name: "glob", parameters: {} } },
-        { type: "function", function: { name: "read", parameters: {} } },
-        { type: "function", function: { name: "task", parameters: {} } },
-      ],
+        )
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ final: true })}\n\n`))
+        controller.close()
+      },
     })
 
-    expect(call?.function?.name).toBe("task")
-    expect(call?.function?.arguments).toContain('"subagent_type":"explore"')
-    expect(call?.function?.arguments).toContain('"prompt":"Read package.json and report only the package name."')
+    const output = await readStream(transformPromptLabSSEToOpenAI(source, "promptlab/openAI/gpt-4.1"))
+    expect(output).toContain('"tool_calls"')
+    expect(output).toContain('"name":"glob"')
+    expect(output).toContain('"finish_reason":"tool_calls"')
+    expect(output).not.toContain("heelcode_tool_call")
   })
 
-  test("preflights explicit follow-up tools from previous tool output", () => {
-    const call = preflightToolCallFromRequest({
-      model: "promptlab/openAI/gpt-4.1",
-      stream: true,
-      messages: [
-        {
-          role: "user",
-          content: "Use grep to find where toolInstructionFromRequest is defined, then read the matching file.",
-        },
-        {
-          role: "tool",
-          tool_call_id: "call_grep",
-          content:
-            'Found 4 matches\n\n/Users/example/heelcode/packages/promptlab/src/server.ts:\n  Line 12:   toolInstructionFromRequest,\n\n/Users/example/heelcode/packages/promptlab/src/openai.test.ts:\n  Line 91:     const instruction = toolInstructionFromRequest({\n  Line 473:     "Line 85: export function toolInstructionFromRequest",\n\n/Users/example/heelcode/packages/promptlab/src/openai.ts:\n  Line 85: export function toolInstructionFromRequest',
-        },
-      ],
-      tools: [
-        { type: "function", function: { name: "grep", parameters: {} } },
-        { type: "function", function: { name: "read", parameters: {} } },
-      ],
+  test("streams text content before a tool call without buffering pre-tag text", async () => {
+    const source = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({
+              event: "on_message_delta",
+              data: { delta: { content: [{ type: "text", text: 'Hello world<heelcode_tool_call>{"name":"glob","arguments":{"pattern":"*.ts"}}</heelcode_tool_call>', index: 0 }] } },
+            })}\n\n`,
+          ),
+        )
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ final: true })}\n\n`))
+        controller.close()
+      },
     })
 
-    expect(call?.function?.name).toBe("read")
-    expect(call?.function?.arguments).toBe('{"filePath":"/Users/example/heelcode/packages/promptlab/src/openai.ts"}')
+    const output = await readStream(transformPromptLabSSEToOpenAI(source, "promptlab/openAI/gpt-4.1"))
+    expect(output).toContain('"content":"Hello world"')
+    expect(output).toContain('"tool_calls"')
+    expect(output).toContain('"name":"glob"')
+    expect(output).toContain('"finish_reason":"tool_calls"')
   })
 
-  test("does not preflight sequenced follow-up tools without concrete arguments", () => {
-    const call = preflightToolCallFromRequest({
-      model: "promptlab/openAI/gpt-4.1",
-      stream: true,
-      messages: [
-        {
-          role: "user",
-          content: "Use grep to find where toolInstructionFromRequest is defined, then read the matching file.",
-        },
-        {
-          role: "tool",
-          tool_call_id: "call_grep",
-          content: "No files found",
-        },
-      ],
-      tools: [
-        { type: "function", function: { name: "grep", parameters: {} } },
-        { type: "function", function: { name: "read", parameters: {} } },
-      ],
+  test("extracts XML tool call even when JSON has trailing garbage braces", async () => {
+    const source = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({
+              event: "on_message_delta",
+              data: { delta: { content: [{ type: "text", text: '<heelcode_tool_call>{"name":"glob","arguments":{"pattern":"*.ts"}}}}</heelcode_tool_call>', index: 0 }] } },
+            })}\n\n`,
+          ),
+        )
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ final: true })}\n\n`))
+        controller.close()
+      },
     })
 
-    expect(call).toBeUndefined()
+    const output = await readStream(transformPromptLabSSEToOpenAI(source, "promptlab/openAI/gpt-4.1"))
+    expect(output).toContain('"tool_calls"')
+    expect(output).toContain('"name":"glob"')
+    expect(output).toContain('"finish_reason":"tool_calls"')
+    expect(output).not.toContain("heelcode_tool_call")
   })
 
-  test("does not preflight plain chat requests", () => {
-    const call = preflightToolCallFromRequest({
-      model: "promptlab/openAI/gpt-4.1",
-      stream: true,
-      messages: [{ role: "user", content: "Reply with exactly: HEELCODE_OK" }],
-      tools: [{ type: "function", function: { name: "glob", parameters: {} } }],
+  test("falls back to plain text when XML is malformed", async () => {
+    const source = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({
+              event: "on_message_delta",
+              data: { delta: { content: [{ type: "text", text: "<heelcode_tool_call>not-valid-json</heelcode_tool_call>", index: 0 }] } },
+            })}\n\n`,
+          ),
+        )
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ final: true })}\n\n`))
+        controller.close()
+      },
     })
 
-    expect(call).toBeUndefined()
+    const output = await readStream(transformPromptLabSSEToOpenAI(source, "promptlab/openAI/gpt-4.1"))
+    expect(output).not.toContain('"tool_calls"')
+    expect(output).toContain('"finish_reason":"stop"')
+  })
+
+  // --- promptLabJSONToText edge cases ---
+
+  test("promptLabJSONToText extracts text from first choices entry with content", () => {
+    expect(promptLabJSONToText({ choices: [{ message: { content: "actual content" } }, { message: {} }, {}] })).toBe(
+      "actual content",
+    )
+    expect(promptLabJSONToText({ choices: [{ message: {} }, {}] })).toBe("")
+  })
+
+  // --- promptLabTemperature ---
+
+  test("promptLabTemperature returns undefined for non-default temperatures on bedrock Claude", () => {
+    const bedrockClaude = { endpoint: "bedrock", model: "us.anthropic.claude-sonnet-4-6", openAIModelID: "promptlab/bedrock/us.anthropic.claude-sonnet-4-6" }
+    expect(promptLabTemperature(0, bedrockClaude)).toBeUndefined()
+    expect(promptLabTemperature(0.5, bedrockClaude)).toBeUndefined()
+    // temperature=1 (default) is allowed through
+    expect(promptLabTemperature(1, bedrockClaude)).toBe(1)
+    // undefined passes through
+    expect(promptLabTemperature(undefined, bedrockClaude)).toBeUndefined()
+    // Non-bedrock endpoints are unaffected
+    expect(promptLabTemperature(0, { endpoint: "openAI", model: "gpt-4.1", openAIModelID: "promptlab/openAI/gpt-4.1" })).toBe(0)
+  })
+
+  // --- openAINonStreamingResponse ---
+
+  test("openAINonStreamingResponse returns correct OpenAI chat completion format", () => {
+    const resp = openAINonStreamingResponse({ model: "gpt-4.1", content: "test content" })
+    expect(resp.object).toBe("chat.completion")
+    expect(resp.model).toBe("gpt-4.1")
+    expect(resp.choices[0].message.content).toBe("test content")
+    expect(resp.choices[0].finish_reason).toBe("stop")
+    expect(typeof resp.id).toBe("string")
+    expect(typeof resp.created).toBe("number")
+    // Custom finishReason
+    const resp2 = openAINonStreamingResponse({ model: "gpt-4.1", content: "x", finishReason: "tool_calls" })
+    expect(resp2.choices[0].finish_reason).toBe("tool_calls")
+  })
+
+  // --- lastUserText ---
+
+  test("lastUserText returns last user message text", () => {
+    expect(
+      lastUserText([
+        { role: "system", content: "Start" },
+        { role: "user", content: "User prompt" },
+        { role: "assistant", content: "Reply" },
+      ]),
+    ).toBe("User prompt")
+  })
+
+  test("lastUserText falls back to full serialized messages if no user message", () => {
+    const result = lastUserText([{ role: "system", content: "Start" }, { role: "assistant", content: "Reply" }])
+    expect(result).toContain("system: Start")
+  })
+
+  // --- openAIToolCallStream ---
+
+  test("openAIToolCallStream produces OpenAI-compliant SSE with tool call and done", async () => {
+    const stream = openAIToolCallStream("gpt-4.1", {
+      index: 0,
+      id: "call_fn",
+      type: "function",
+      function: { name: "echo", arguments: '{"text":"hi"}' },
+    })
+    const out = await readStream(stream)
+    expect(out).toContain('"tool_calls"')
+    expect(out).toContain('"name":"echo"')
+    expect(out).toContain('"finish_reason":"tool_calls"')
+    expect(out).toContain("data: [DONE]")
+  })
+
+  // --- messageContentToText ---
+
+  test("messageContentToText converts string content directly", () => {
+    expect(messageContentToText("Hello")).toBe("Hello")
+    expect(messageContentToText("")).toBe("")
+    expect(messageContentToText(null as never)).toBe("")
+  })
+
+  test("messageContentToText joins multi-part content blocks", () => {
+    expect(
+      messageContentToText([
+        { type: "text", text: "Part A" },
+        { type: "text", text: "Part B" },
+      ]),
+    ).toBe("Part A\nPart B")
+    expect(messageContentToText([{ type: "image_url", image_url: { url: "http://example.com/img.png" } }])).toBe(
+      "[image]",
+    )
+  })
+
+  // --- selectionFromRequest ---
+
+  test("selectionFromRequest parses promptlab model ID into endpoint and model", () => {
+    const sel = selectionFromRequest({
+      model: "promptlab/azureOpenAI/gpt-4.1",
+      messages: [],
+      stream: true,
+    })
+    expect(sel.endpoint).toBe("azureOpenAI")
+    expect(sel.model).toBe("gpt-4.1")
+    expect(sel.openAIModelID).toBe("promptlab/azureOpenAI/gpt-4.1")
+  })
+
+  test("selectionFromRequest throws on invalid model ID", () => {
+    expect(() =>
+      selectionFromRequest({ model: "not-a-promptlab-model", messages: [], stream: true }),
+    ).toThrow(/Expected PromptLab model id/)
+  })
+
+  // --- openAIChunk ---
+
+  test("openAIChunk builds a streaming delta with content", () => {
+    const chunk = openAIChunk({ id: "chatcmpl-1", model: "gpt-4.1", content: "Hello" })
+    expect(chunk.object).toBe("chat.completion.chunk")
+    expect(chunk.id).toBe("chatcmpl-1")
+    expect(chunk.model).toBe("gpt-4.1")
+    expect(chunk.choices[0].delta.content).toBe("Hello")
+    expect(chunk.choices[0].finish_reason).toBeNull()
+  })
+
+  test("openAIChunk builds a finish chunk with finishReason and no delta content", () => {
+    const chunk = openAIChunk({ id: "chatcmpl-1", model: "gpt-4.1", finishReason: "stop" })
+    expect(chunk.choices[0].finish_reason).toBe("stop")
+    expect(chunk.choices[0].delta).not.toHaveProperty("content")
+  })
+
+  // --- promptLabStreamToText ---
+
+  test("promptLabStreamToText collects text from on_message_delta events", async () => {
+    const source = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({ event: "on_message_delta", data: { delta: { content: [{ type: "text", text: "Hello ", index: 0 }] } } })}\n\n`,
+          ),
+        )
+        controller.enqueue(
+          encoder.encode(
+            `data: ${JSON.stringify({ event: "on_message_delta", data: { delta: { content: [{ type: "text", text: "world", index: 0 }] } } })}\n\n`,
+          ),
+        )
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ final: true, responseMessage: { text: "Hello world" } })}\n\n`))
+        controller.close()
+      },
+    })
+    const text = await promptLabStreamToText(source)
+    expect(text).toContain("Hello ")
+    expect(text).toContain("world")
   })
 })
 

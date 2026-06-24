@@ -3,12 +3,10 @@ import { PromptLabClient, configFromEnv, safeLogError } from "./client"
 import {
   lastUserText,
   openAINonStreamingResponse,
-  openAIToolCallStream,
-  preflightToolCallFromRequest,
   promptLabJSONToText,
+  promptLabStreamToOpenAINonStreaming,
   promptLabStreamToText,
   selectionFromRequest,
-  toolInstructionFromRequest,
   transformPromptLabSSEToOpenAI,
 } from "./openai"
 import { redactJSON } from "./redact"
@@ -58,26 +56,25 @@ export function createHandler(
         const body = (await request.json()) as OpenAIChatCompletionRequest
         debugChatRequest(body)
         const selection = selectionFromRequest(body)
-        const preflightToolCall = preflightToolCallFromRequest(body)
-        if (preflightToolCall && body.stream) {
-          return new Response(openAIToolCallStream(body.model, preflightToolCall), {
-            headers: eventStreamHeaders(),
-          })
-        }
-        const response = await client.startChat(body, selection)
+        const response = await client.completions(body, selection)
 
         if (response.kind === "stream") {
           if (!response.response.body) throw new Error("PromptLab returned an empty stream body")
           if (body.stream) {
-            const stream = transformPromptLabSSEToOpenAI(response.response.body, body.model, {
-              tools: toolInstructionFromRequest(body) ? body.tools : undefined,
-            })
+            const stream = transformPromptLabSSEToOpenAI(response.response.body, body.model)
             return new Response(stream, {
               headers: eventStreamHeaders(),
             })
           }
-          const content = await promptLabStreamToText(response.response.body)
-          return json(openAINonStreamingResponse({ model: body.model, content }))
+          return json(await promptLabStreamToOpenAINonStreaming(response.response.body, body.model))
+        }
+
+        if (response.kind === "openai") {
+          // Raw OpenAI-compatible response: proxy it directly.
+          return new Response(response.response.body, {
+            status: response.response.status,
+            headers: forwardHeaders(response.response.headers, body.stream),
+          })
         }
 
         const content = promptLabJSONToText(response.value)
@@ -203,6 +200,19 @@ function mergeHeaders(headers: Headers, input: ResponseInit["headers"]) {
     if (typeof value === "string") headers.set(key, value)
     else if (Array.isArray(value)) headers.set(key, value.join(", "))
   }
+}
+
+function forwardHeaders(upstream: Headers, streaming: boolean | undefined): Headers {
+  const headers = new Headers({
+    "access-control-allow-origin": "http://127.0.0.1",
+  })
+  const contentType = upstream.get("content-type")
+  if (contentType) headers.set("content-type", contentType)
+  if (streaming) {
+    headers.set("cache-control", "no-cache")
+    headers.set("connection", "keep-alive")
+  }
+  return headers
 }
 
 function empty(status: number): Response {
