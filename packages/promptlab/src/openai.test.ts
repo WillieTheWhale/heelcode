@@ -256,8 +256,8 @@ describe("OpenAI to PromptLab adapter", () => {
     const text = toolInstructionText(tools)
     expect(text).toContain("heelcode_tool_call")
     expect(text).toContain("read_file")
-    expect(text).toContain("Tool Call Protocol")
-    expect(text).toContain("Native function calling")
+    expect(text).toContain("LOCAL WORKSPACE TOOLS")
+    expect(text).toContain("CANNOT access local files")
     expect(text).toContain("path: string")
   })
 
@@ -316,7 +316,7 @@ describe("OpenAI to PromptLab adapter", () => {
 
     // promptPrefix has system message first, then tool instructions.
     expect(String(payload.promptPrefix)).toMatch(/^You are a coding assistant\./)
-    expect(String(payload.promptPrefix)).toContain("Tool Call Protocol")
+    expect(String(payload.promptPrefix)).toContain("LOCAL WORKSPACE TOOLS")
     expect(String(payload.promptPrefix)).toContain("heelcode_tool_call")
     expect(String(payload.promptPrefix)).toContain("read_file")
     // Text has only the conversation (not system, not tool instructions).

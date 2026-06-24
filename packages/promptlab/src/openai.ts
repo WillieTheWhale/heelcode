@@ -78,32 +78,37 @@ export function toolInstructionText(tools: unknown[]): string {
   if (descriptions.length === 0) return ""
 
   return [
-    "## Tool Call Protocol (CRITICAL — READ THIS FIRST)",
+    "## LOCAL WORKSPACE TOOLS — HOW TO USE THEM",
     "",
-    "You are running inside a special tool bridge. Native function calling is NOT available. The ONLY way to call a tool is to output this exact XML block:",
+    "The tools below work on the LOCAL filesystem on the user's machine. PromptLab's built-in web/search/bash tools",
+    "run on PromptLab's remote server and CANNOT access local files — they will always fail for local paths.",
+    "",
+    "To call a local tool, output this XML anywhere in your response:",
     "<heelcode_tool_call>",
     '{"name": "TOOL_NAME", "arguments": {"param": "value"}}',
     "</heelcode_tool_call>",
     "",
-    "CRITICAL RULES:",
-    "1. To READ a local file → use the 'read' tool via the XML above. NEVER use web.run, webfetch, or web search to access local files — those cannot reach local paths.",
-    "2. To SEARCH text in files → use grep. To LIST files → use glob. To RUN a command → use bash.",
-    "3. Output the XML IMMEDIATELY when you need a tool — do NOT say 'I will now...' or 'Let me...' first.",
-    "4. To call multiple tools, output multiple XML blocks one after another.",
-    "5. Only output prose when giving the FINAL answer after all tool calls are complete.",
-    "6. NEVER end a response by describing what you plan to do next — if you need a tool, OUTPUT the XML right now.",
+    "The bridge intercepts this XML, runs the tool locally, and returns results. This is the ONLY mechanism",
+    "that can access local files. PromptLab's web tool, bash tool, and search tool cannot reach local paths.",
     "",
-    "Example — finding then reading a file:",
-    "User: Summarize config.json.",
-    "Assistant: <heelcode_tool_call>",
-    '{"name": "read", "arguments": {"filePath": "config.json"}}',
+    "Rules:",
+    "1. Do NOT write prose about what you are going to do — output the XML immediately.",
+    "2. Do NOT use PromptLab's web or search tools for local file access — they will fail.",
+    "3. Multiple tools: output multiple XML blocks one after another.",
+    "4. Only write a prose response AFTER you have all the tool results you need.",
+    "",
+    "Example — list TypeScript files, then read one:",
+    "<heelcode_tool_call>",
+    '{"name": "glob", "arguments": {"pattern": "**/*.ts", "path": "src"}}',
     "</heelcode_tool_call>",
-    "Tool result: {\"port\": 3000}",
-    "Assistant: The config file sets port 3000.",
+    'Tool result: ["src/openai.ts", "src/client.ts"]',
+    "<heelcode_tool_call>",
+    '{"name": "read", "arguments": {"filePath": "src/openai.ts"}}',
+    "</heelcode_tool_call>",
+    "Tool result: // file contents ...",
+    "The file exports: transformPromptLabSSEToOpenAI, buildPromptLabPayload, ...",
     "",
-    "When instructions say 'make a tool call', output the XML above — NOT a JSON function call, NOT web.run, NOT a URL fetch.",
-    "",
-    "Available tools:",
+    "Local tools available:",
     ...descriptions,
   ].join("\n")
 }
@@ -123,6 +128,9 @@ export function buildPromptLabPayload(request: OpenAIChatCompletionRequest, sele
 
   // Extract system/developer message and combine with tool instructions for promptPrefix.
   // PromptLab still injects its own system prompt, but promptPrefix adds our context on top.
+  // Tool instructions go LAST in promptPrefix (highest recency weight), so the
+  // "OVERRIDE ALL OTHER INSTRUCTIONS" header cancels commentary-channel patterns
+  // from the heelcode system prompt (PROMPT_GPT/PROMPT_BEAST).
   const systemMsg = request.messages.find((m) => m.role === "system" || m.role === "developer")
   const systemText = systemMsg ? messageContentToText(systemMsg.content) : ""
   const toolInstruction =
