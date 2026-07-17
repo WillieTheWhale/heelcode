@@ -1617,6 +1617,9 @@ function ReasoningPart(props: { last: boolean; part: ReasoningPart; message: Ass
             toggleable={inMinimal()}
             open={!inMinimal() || expanded()}
             done={isDone()}
+            startedAt={props.part.time.start}
+            endedAt={props.part.time.end}
+            interrupted={props.message.error?.name === "MessageAbortedError"}
             title={summary().title}
             duration={isDone() ? Locale.duration(duration()) : undefined}
           />
@@ -1643,14 +1646,23 @@ function ReasoningHeader(props: {
   toggleable: boolean
   open: boolean
   done: boolean
+  startedAt: number
+  endedAt?: number
+  interrupted: boolean
   title: string | null
   duration?: string
 }) {
   const { theme } = useTheme()
+  const [now, setNow] = createSignal(Date.now())
+
+  createEffect(() => {
+    if (props.done) return
+    const interval = setInterval(() => setNow(Date.now()), 1000)
+    onCleanup(() => clearInterval(interval))
+  })
+
   const fg = () =>
-    props.open
-      ? RGBA.fromValues(theme.warning.r, theme.warning.g, theme.warning.b, theme.thinkingOpacity)
-      : theme.warning
+    reasoningActivityColor(theme.primary, (props.endedAt ?? now()) - props.startedAt, props.interrupted)
 
   return (
     <Switch>
@@ -1680,6 +1692,17 @@ function ReasoningHeader(props: {
         </text>
       </Match>
     </Switch>
+  )
+}
+
+export function reasoningActivityColor(primary: RGBA, elapsed: number, interrupted = false) {
+  const progress = Math.max(interrupted ? 0.85 : 0, Math.min(1, Math.max(0, elapsed) / 45_000))
+  const navy = RGBA.fromInts(19, 41, 75)
+  return RGBA.fromValues(
+    primary.r + (navy.r - primary.r) * progress,
+    primary.g + (navy.g - primary.g) * progress,
+    primary.b + (navy.b - primary.b) * progress,
+    primary.a,
   )
 }
 
