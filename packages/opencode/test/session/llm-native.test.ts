@@ -5,6 +5,8 @@ import { jsonSchema, tool, type ModelMessage, type Tool } from "ai"
 import { Effect, Fiber, Layer, Stream } from "effect"
 import { LLMNative } from "@/session/llm/native-request"
 import { LLMNativeRuntime } from "@/session/llm/native-runtime"
+import { PromptLabRuntime } from "@/session/llm/promptlab-runtime"
+import { canRetry, conformanceError, isUnfinishedNarration, retryMessage } from "@/session/llm/promptlab-action"
 import type { Provider } from "@/provider/provider"
 
 import { OAUTH_DUMMY_KEY } from "@/auth"
@@ -76,12 +78,99 @@ const it = testEffect(
   LLMClient.layer.pipe(Layer.provide(Layer.mergeAll(RequestExecutor.defaultLayer, WebSocketExecutor.layer))),
 )
 
+describe("PromptLab action conformance", () => {
+  test("recognizes unfinished action narration without matching completed work", () => {
+    expect(isUnfinishedNarration("I'm checking the app structure first so I can add this cleanly.")).toBe(true)
+    expect(
+      isUnfinishedNarration(
+        "I've located the home page file. I'm reading it next so I can replace the current hero cleanly.",
+      ),
+    ).toBe(true)
+    expect(isUnfinishedNarration("I found the failing test. Reading the implementation next.")).toBe(true)
+    expect(isUnfinishedNarration("Implemented the landing page and verified it with `bun run build`.")).toBe(false)
+    expect(isUnfinishedNarration("The requested feature is complete.")).toBe(false)
+  })
+
+  test("bounds retries and gives the provider an explicit action contract", () => {
+    expect([0, 1, 2, 3].map(canRetry)).toEqual([true, true, true, false])
+    expect(retryMessage(2)).toContain("RETRY 2/3")
+    expect(retryMessage(2)).toContain("exactly one typed HeelCode action")
+    expect(retryMessage(2, "Visible response contained multiple HeelCode actions")).toContain(
+      "Visible response contained multiple HeelCode actions",
+    )
+    expect(
+      conformanceError({
+        name: "UnknownError",
+        data: { message: "Visible response contained multiple HeelCode actions" },
+      }),
+    ).toBe("Visible response contained multiple HeelCode actions")
+    expect(conformanceError({ name: "UnknownError", data: { message: "token balance exhausted" } })).toBeUndefined()
+  })
+})
+
 function responsesStream(chunks: unknown[]) {
   return new Response(chunks.map((chunk) => `data: ${JSON.stringify(chunk)}`).join("\n\n") + "\n\n", {
     status: 200,
     headers: { "Content-Type": "text/event-stream" },
   })
 }
+
+test("PromptLab runtime reports expired authentication instead of a generic connector 500", async () => {
+  const stream = PromptLabRuntime.stream({
+    sessionID: "session-1",
+    inferenceScopeID: "session-1:primary",
+    model: "promptlab/azureOpenAI/gpt-5.4-mini",
+    apiKey: "heelcode",
+    messages: [{ role: "user", content: "hello" }],
+    tools: [],
+    abort: new AbortController().signal,
+    fetch: Object.assign(
+      async () =>
+        Response.json(
+          { error: { message: '{"name":"PromptLabError","message":"jwt expired","status":401}' } },
+          { status: 401 },
+        ),
+      { preconnect: () => undefined },
+    ) satisfies typeof fetch,
+  })
+
+  const result = await Effect.runPromise(Stream.runCollect(stream).pipe(Effect.flip))
+  expect(String(result)).toContain("PromptLab authentication expired")
+  expect(String(result)).not.toContain("500 Internal Server Error")
+})
+
+test("PromptLab runtime restarts a missing default daemon once", async () => {
+  let attempts = 0
+  let restarts = 0
+  const stream = PromptLabRuntime.stream({
+    sessionID: "session-restart",
+    inferenceScopeID: "session-restart:primary",
+    model: "promptlab/azureOpenAI/gpt-5.4-mini",
+    apiKey: "heelcode",
+    messages: [{ role: "user", content: "hello" }],
+    tools: [],
+    abort: new AbortController().signal,
+    restart: async () => {
+      restarts++
+    },
+    fetch: Object.assign(
+      async () => {
+        attempts++
+        if (attempts === 1) throw new TypeError("Unable to connect")
+        return responsesStream([
+          { type: "step-start", index: 0 },
+          { type: "finish", reason: "stop" },
+        ])
+      },
+      { preconnect: () => undefined },
+    ) satisfies typeof fetch,
+  })
+
+  const result = await Effect.runPromise(Stream.runCollect(stream))
+  expect(Array.from(result).map((event) => event.type)).toEqual(["step-start", "finish"])
+  expect(attempts).toBe(2)
+  expect(restarts).toBe(1)
+})
 
 type NativeRequestInput = Parameters<typeof LLMNative.request>[0]
 
@@ -559,6 +648,173 @@ describe("session.llm-native.request", () => {
       const failure = yield* Effect.flip(wrapped.incomplete.execute({}, { id: "call-1", name: "incomplete" }))
       expect(failure).toBeInstanceOf(ToolFailure)
       expect(failure.message).toContain("incomplete")
+    }),
+  )
+
+  it.effect("native tool wrapper rejects malformed JSON-schema arguments before execution", () =>
+    Effect.gen(function* () {
+      let executions = 0
+      const wrapped = LLMNativeRuntime.nativeTools(
+        {
+          read: {
+            description: "read a file",
+            inputSchema: jsonSchema({
+              type: "object",
+              properties: { filePath: { type: "string" } },
+              required: ["filePath"],
+              additionalProperties: false,
+            }),
+            execute: async () => {
+              executions++
+              return { output: "unused" }
+            },
+          } satisfies Tool,
+        },
+        { messages: [] as ModelMessage[], abort: new AbortController().signal },
+      )
+
+      const failure = yield* Effect.flip(wrapped.read.execute({ filePath: 42 }, { id: "call-1", name: "read" }))
+      expect(failure).toBeInstanceOf(ToolFailure)
+      expect(failure.message).toContain("expected string")
+      expect(executions).toBe(0)
+    }),
+  )
+
+  it.effect("runs PromptLab structured actions through HeelCode-owned tool execution", () =>
+    Effect.gen(function* () {
+      const captures: Array<Record<string, unknown>> = []
+      const customFetch = Object.assign(
+        async (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
+          const request = input instanceof Request ? input : new Request(input, init)
+          captures.push((await request.json()) as Record<string, unknown>)
+          return responsesStream([
+            { type: "step-start", index: 0, providerMetadata: { promptlab: { model: "gpt-5.4-mini" } } },
+            {
+              type: "reasoning-start",
+              id: "reason-1",
+              providerMetadata: { promptlab: { model: "gpt-5.4-mini" } },
+            },
+            {
+              type: "reasoning-delta",
+              id: "reason-1",
+              text: "I need to read the file.",
+              providerMetadata: { promptlab: { model: "gpt-5.4-mini" } },
+            },
+            {
+              type: "reasoning-end",
+              id: "reason-1",
+              providerMetadata: { promptlab: { model: "gpt-5.4-mini" } },
+            },
+            {
+              type: "tool-call",
+              id: "call-1",
+              name: "read",
+              input: { filePath: "AGENTS.md" },
+              providerMetadata: { promptlab: { model: "gpt-5.4-mini" } },
+            },
+            {
+              type: "step-finish",
+              index: 0,
+              reason: "tool-calls",
+              providerMetadata: { promptlab: { model: "gpt-5.4-mini" } },
+            },
+            {
+              type: "finish",
+              reason: "tool-calls",
+              providerMetadata: { promptlab: { model: "gpt-5.4-mini" } },
+            },
+          ])
+        },
+        { preconnect: () => undefined },
+      ) satisfies typeof fetch
+      let executed: unknown
+      const read = {
+        description: "Read a local file",
+        inputSchema: jsonSchema({
+          type: "object",
+          properties: { filePath: { type: "string" } },
+          required: ["filePath"],
+          additionalProperties: false,
+        }),
+        execute: async (value: unknown) => {
+          executed = value
+          return { title: "AGENTS.md", metadata: {}, output: "local contents" }
+        },
+      } satisfies Tool
+      const model = {
+        ...baseModel,
+        id: ModelV2.ID.make("azureOpenAI/gpt-5.4-mini"),
+        providerID: ProviderV2.ID.make("promptlab"),
+        api: {
+          id: "promptlab/azureOpenAI/gpt-5.4-mini",
+          url: "http://127.0.0.1:43117/v1",
+          npm: "@ai-sdk/openai-compatible",
+        },
+      } satisfies Provider.Model
+      const provider = {
+        ...providerInfo,
+        id: ProviderV2.ID.make("promptlab"),
+        name: "PromptLab",
+        options: { apiKey: "heelcode", baseURL: "http://127.0.0.1:43117/v1", fetch: customFetch },
+      } satisfies Provider.Info
+      const native = LLMNativeRuntime.stream({
+        sessionID: "session-1",
+        model,
+        provider,
+        auth: undefined,
+        llmClient: {
+          prepare: () => Effect.die("PromptLab must not use LLMClient transport"),
+          stream: () => Stream.die("PromptLab must not use OpenAI-compatible transport"),
+          generate: () => Effect.die("PromptLab must not use LLMClient transport"),
+        } as LLMClientShape,
+        messages: [{ role: "user", content: "inspect AGENTS.md" }],
+        tools: { read },
+        headers: {},
+        abort: new AbortController().signal,
+      })
+      expect(native.type).toBe("supported")
+      if (native.type === "unsupported") throw new Error(native.reason)
+      const events = Array.from(yield* native.stream.pipe(Stream.runCollect))
+
+      expect(captures).toHaveLength(1)
+      expect(captures[0]).toMatchObject({
+        sessionID: "session-1",
+        inferenceScopeID: "session-1:primary",
+        model: "promptlab/azureOpenAI/gpt-5.4-mini",
+        tools: [{ name: "read" }],
+      })
+      expect(executed).toEqual({ filePath: "AGENTS.md" })
+      expect(events).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ type: "reasoning-delta", text: "I need to read the file." }),
+          expect.objectContaining({ type: "tool-call", name: "read" }),
+          expect.objectContaining({ type: "tool-result", name: "read" }),
+        ]),
+      )
+
+      const advisory = LLMNativeRuntime.stream({
+        sessionID: "session-1",
+        small: true,
+        model,
+        provider,
+        auth: undefined,
+        llmClient: {
+          prepare: () => Effect.die("PromptLab must not use LLMClient transport"),
+          stream: () => Stream.die("PromptLab must not use OpenAI-compatible transport"),
+          generate: () => Effect.die("PromptLab must not use LLMClient transport"),
+        } as LLMClientShape,
+        messages: [{ role: "user", content: "generate a title" }],
+        tools: { read },
+        headers: {},
+        abort: new AbortController().signal,
+      })
+      expect(advisory.type).toBe("supported")
+      if (advisory.type === "unsupported") throw new Error(advisory.reason)
+      yield* advisory.stream.pipe(Stream.runDrain)
+
+      expect(captures).toHaveLength(2)
+      expect(captures[1]).toMatchObject({ sessionID: "session-1", transient: true })
+      expect(captures[1].inferenceScopeID).toEqual(expect.stringMatching(/^session-1:advisory:/))
     }),
   )
 
