@@ -10,13 +10,27 @@ import {
   transformPromptLabSSEToOpenAI,
 } from "./openai"
 import { redactJSON } from "./redact"
-import type { OpenAIChatCompletionRequest, PromptLabConfig } from "./types"
+import { nativeInference } from "./native"
+import type {
+  OpenAIChatCompletionRequest,
+  PromptLabConfig,
+  PromptLabContinuation,
+  PromptLabNativeRequest,
+} from "./types"
+import { PromptLabError } from "./types"
 
 type ServeOptions = {
   port?: number
   hostname?: string
   config?: PromptLabConfig | (() => PromptLabConfig | Promise<PromptLabConfig>)
 }
+
+type ServerControl = {
+  timeout(request: Request, seconds: number): void
+  stop?(closeActiveConnections?: boolean): void
+}
+
+export const PROMPTLAB_PROTOCOL_VERSION = 2
 
 type CatalogResponse = {
   body: ReturnType<typeof toOpenAIModels>
@@ -25,21 +39,27 @@ type CatalogResponse = {
 
 export function createHandler(
   config: PromptLabConfig | (() => PromptLabConfig | Promise<PromptLabConfig>) = configFromEnv(),
-): (request: Request) => Promise<Response> {
+): (request: Request, server?: ServerControl) => Promise<Response> {
   let catalogCache:
     | (CatalogResponse & {
         expiresAt: number
       })
     | undefined
   let catalogInFlight: Promise<CatalogResponse> | undefined
+  const nativeSessions = new Map<string, PromptLabContinuation>()
+  const activeNativeSessions = new Set<string>()
 
-  return async function handle(request: Request): Promise<Response> {
+  return async function handle(request: Request, server?: ServerControl): Promise<Response> {
     const client = new PromptLabClient(await resolveConfig(config))
     const url = new URL(request.url)
     try {
       if (request.method === "OPTIONS") return empty(204)
       if (request.method === "GET" && url.pathname === "/health")
-        return json({ ok: true, service: "heelcode-promptlabd" })
+        return json({ ok: true, service: "heelcode-promptlabd", protocol: PROMPTLAB_PROTOCOL_VERSION, pid: process.pid })
+      if (request.method === "POST" && url.pathname === "/shutdown") {
+        setTimeout(() => server?.stop?.(), 0)
+        return json({ ok: true })
+      }
       if (request.method === "GET" && url.pathname === "/v1/models") {
         if (catalogCache && catalogCache.expiresAt > Date.now())
           return json(catalogCache.body, { headers: catalogCache.headers })
@@ -50,6 +70,38 @@ export function createHandler(
         const ttl = catalogTTL()
         if (ttl > 0) catalogCache = { ...result, expiresAt: Date.now() + ttl }
         return json(result.body, { headers: result.headers })
+      }
+
+      if (request.method === "POST" && url.pathname === "/v1/native/inference") {
+        // Provider reasoning can remain quiet for longer than Bun's 10-second default.
+        // A quiet SSE response is still active and must not be reset by the loopback server.
+        server?.timeout(request, 0)
+        const body = requireNativeRequest(await request.json())
+        const scopeID = body.inferenceScopeID ?? body.sessionID
+        if (activeNativeSessions.has(scopeID))
+          return json(
+            { error: { message: "A PromptLab inference turn is already active for this inference scope" } },
+            { status: 409 },
+          )
+        activeNativeSessions.add(scopeID)
+        const result = await nativeInference({
+          client,
+          request: body,
+          continuation: nativeSessions.get(scopeID),
+          signal: request.signal,
+          onContinuation: body.transient ? undefined : (continuation) => nativeSessions.set(scopeID, continuation),
+          onSettled: () => activeNativeSessions.delete(scopeID),
+        }).catch((error) => {
+          activeNativeSessions.delete(scopeID)
+          throw error
+        })
+        const abort = () => {
+          activeNativeSessions.delete(scopeID)
+          void client.abort({ conversationID: result.conversationID, streamID: result.streamID }).catch(() => {})
+        }
+        if (request.signal.aborted) abort()
+        else request.signal.addEventListener("abort", abort, { once: true })
+        return new Response(result.stream, { headers: eventStreamHeaders() })
       }
 
       if (request.method === "POST" && url.pathname === "/v1/chat/completions") {
@@ -107,9 +159,26 @@ export function createHandler(
 
       return json({ error: { message: "Not found" } }, { status: 404 })
     } catch (error) {
-      return json({ error: { message: safeLogError(error) } }, { status: 500 })
+      return json(
+        { error: { message: safeLogError(error) } },
+        { status: error instanceof PromptLabError && error.status === 401 ? 401 : 500 },
+      )
     }
   }
+}
+
+function requireNativeRequest(value: unknown): PromptLabNativeRequest {
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Native inference body is required")
+  const input = value as Record<string, unknown>
+  if (typeof input.sessionID !== "string" || !input.sessionID) throw new Error("Native inference sessionID is required")
+  if (input.inferenceScopeID !== undefined && (typeof input.inferenceScopeID !== "string" || !input.inferenceScopeID))
+    throw new Error("Native inference inferenceScopeID must be a non-empty string")
+  if (input.transient !== undefined && typeof input.transient !== "boolean")
+    throw new Error("Native inference transient must be a boolean")
+  if (typeof input.model !== "string" || !input.model) throw new Error("Native inference model is required")
+  if (!Array.isArray(input.messages)) throw new Error("Native inference messages must be an array")
+  if (!Array.isArray(input.tools)) throw new Error("Native inference tools must be an array")
+  return value as PromptLabNativeRequest
 }
 
 function debugChatRequest(body: OpenAIChatCompletionRequest) {
