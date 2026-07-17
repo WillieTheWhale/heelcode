@@ -4,8 +4,10 @@ import { fileURLToPath } from "node:url"
 
 const DEFAULT_ORIGIN = "http://127.0.0.1:43117"
 const DEFAULT_URL = `${DEFAULT_ORIGIN}/v1`
+const PROMPTLAB_URL = "https://promptlab.lib.unc.edu/c/new"
 const HEALTH_URL = `${DEFAULT_ORIGIN}/health`
-const MODELS_URL = `${DEFAULT_URL}/models`
+const SHUTDOWN_URL = `${DEFAULT_ORIGIN}/shutdown`
+const REQUIRED_PROMPTLAB_PROTOCOL = 2
 
 const sourceDir = dirname(fileURLToPath(import.meta.url))
 const packagesDir = resolve(sourceDir, "../../..")
@@ -18,12 +20,13 @@ export async function ensurePromptLabReady(args = process.argv.slice(2)): Promis
   if (!shouldBootstrap(args)) return
   process.env.HEELCODE_PROMPTLAB_URL ??= DEFAULT_URL
 
+  if (shouldOpenPromptLab(args)) await openPromptLabInChrome()
   await ensurePromptLabServer()
-  if (await promptLabModelsReady()) return
+  if (await promptLabReady()) return
 
   if (shouldAutoCapture()) {
     await capturePromptLabSession()
-    if (await promptLabModelsReady()) return
+    if (await promptLabReady()) return
   }
 
   throw new Error(
@@ -36,6 +39,15 @@ export async function ensurePromptLabReady(args = process.argv.slice(2)): Promis
       "  bun run --cwd packages/promptlab capture --store-session",
     ].join("\n"),
   )
+}
+
+export function shouldOpenPromptLab(
+  args: string[],
+  interactive = process.stdin.isTTY || process.stderr.isTTY,
+) {
+  if (!shouldBootstrap(args)) return false
+  if (process.env.HEELCODE_PROMPTLAB_OPEN_BROWSER === "0") return false
+  return interactive
 }
 
 export function shouldBootstrap(args: string[]) {
@@ -77,7 +89,9 @@ const NON_BOOTSTRAP_COMMANDS = new Set([
 ])
 
 async function ensurePromptLabServer() {
-  if (await healthy()) return
+  const health = await daemonHealth()
+  if (health?.protocol === REQUIRED_PROMPTLAB_PROTOCOL) return
+  if (health?.service === "heelcode-promptlabd") await stopStalePromptLabServer(health.pid)
   await access(promptlabCli)
   const debugOutput = process.env.HEELCODE_PROMPTLAB_DEBUG_REQUESTS === "1"
   const child = Bun.spawn([bunPath(), promptlabCli, "serve"], {
@@ -105,12 +119,55 @@ async function ensurePromptLabServer() {
 }
 
 async function healthy() {
-  const response = await timedFetch(HEALTH_URL, 500).catch(() => undefined)
-  return response?.ok === true
+  return (await daemonHealth())?.protocol === REQUIRED_PROMPTLAB_PROTOCOL
 }
 
-async function promptLabModelsReady() {
-  const response = await timedFetch(MODELS_URL, 4000).catch(() => undefined)
+async function daemonHealth() {
+  const response = await timedFetch(HEALTH_URL, 500).catch(() => undefined)
+  if (!response?.ok) return
+  const body: unknown = await response.json().catch(() => undefined)
+  if (!isRecord(body) || body.ok !== true || typeof body.service !== "string") return
+  return {
+    service: body.service,
+    protocol: typeof body.protocol === "number" ? body.protocol : undefined,
+    pid: typeof body.pid === "number" && Number.isInteger(body.pid) && body.pid > 1 ? body.pid : undefined,
+  }
+}
+
+async function stopStalePromptLabServer(pid: number | undefined) {
+  await fetch(SHUTDOWN_URL, { method: "POST" }).catch(() => undefined)
+  if (await waitForPromptLabExit(1000)) return
+  const owner = pid ?? (process.platform === "darwin" ? await promptLabPortOwner() : undefined)
+  if (owner) process.kill(owner, "SIGTERM")
+  if (await waitForPromptLabExit(2000)) return
+  throw new Error("An outdated heelcode-promptlabd is still listening on http://127.0.0.1:43117.")
+}
+
+async function waitForPromptLabExit(timeout: number) {
+  const deadline = Date.now() + timeout
+  while (Date.now() < deadline) {
+    if (!(await timedFetch(HEALTH_URL, 200).catch(() => undefined))) return true
+    await delay(50)
+  }
+  return false
+}
+
+async function promptLabPortOwner() {
+  const child = Bun.spawn(["lsof", "-nP", "-tiTCP:43117", "-sTCP:LISTEN"], {
+    stdin: "ignore",
+    stdout: "pipe",
+    stderr: "ignore",
+  })
+  const output = await new Response(child.stdout).text()
+  if ((await child.exited) !== 0) return
+  const pid = Number(output.trim().split(/\s+/)[0])
+  return Number.isInteger(pid) && pid > 1 ? pid : undefined
+}
+
+export async function promptLabReady(origin = DEFAULT_ORIGIN) {
+  const active = await timedFetch(`${origin}/promptlab/active`, 4000).catch(() => undefined)
+  if (!active?.ok) return false
+  const response = await timedFetch(`${origin}/v1/models`, 4000).catch(() => undefined)
   if (!response?.ok) return false
   const body = await response.json().catch(() => undefined)
   return isRecord(body) && Array.isArray(body.data) && body.data.length > 0
@@ -134,7 +191,15 @@ async function capturePromptLabSession() {
     stderr: "inherit",
   })
   const code = await child.exited
-  if (code !== 0) throw new Error("PromptLab session capture failed.")
+  if (code !== 0)
+    throw new Error("PromptLab login was not completed. Sign in to PromptLab in normal Chrome, then run HeelCode again.")
+}
+
+async function openPromptLabInChrome() {
+  await Bun.spawn(["open", "-a", "Google Chrome", PROMPTLAB_URL], {
+    stdout: "ignore",
+    stderr: "ignore",
+  }).exited.catch(() => {})
 }
 
 function bunPath() {
