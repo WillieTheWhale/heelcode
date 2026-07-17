@@ -23,7 +23,7 @@ export const assertExternalDirectoryEffect = Effect.fn("Tool.assertExternalDirec
 
   const ins = yield* InstanceState.context
   const full = process.platform === "win32" ? FSUtil.normalizePath(target) : target
-  if (containsPath(full, ins)) return false
+  if (containsToolPath(ctx, full, ins)) return false
 
   const kind = options?.kind ?? "file"
   const dir = kind === "directory" ? full : path.dirname(full)
@@ -43,6 +43,16 @@ export const assertExternalDirectoryEffect = Effect.fn("Tool.assertExternalDirec
   })
   return true
 })
+
+export function containsToolPath(ctx: Tool.Context, target: string, instance: Parameters<typeof containsPath>[1]) {
+  if (isPromptLab(ctx)) return FSUtil.contains(instance.directory, target)
+  return containsPath(target, instance)
+}
+
+function isPromptLab(ctx: Tool.Context) {
+  const model = ctx.extra?.["model"]
+  return typeof model === "object" && model !== null && "providerID" in model && model.providerID === "promptlab"
+}
 
 export async function assertExternalDirectory(ctx: Tool.Context, target?: string, options?: Options) {
   return Effect.runPromise(assertExternalDirectoryEffect(ctx, target, options))

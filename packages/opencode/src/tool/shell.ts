@@ -3,7 +3,7 @@ import os from "os"
 import { createWriteStream } from "node:fs"
 import * as Tool from "./tool"
 import path from "path"
-import { containsPath, type InstanceContext } from "../project/instance-context"
+import type { InstanceContext } from "../project/instance-context"
 import { InstanceState } from "@/effect/instance-state"
 import { lazy } from "@/util/lazy"
 import { Language, type Node } from "web-tree-sitter"
@@ -21,6 +21,7 @@ import { ChildProcess } from "effect/unstable/process"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import { ShellPrompt, type Parameters } from "./shell/prompt"
 import { BashArity } from "@/permission/arity"
+import { containsToolPath } from "./external-directory"
 
 export { Parameters } from "./shell/prompt"
 
@@ -387,6 +388,7 @@ export const ShellTool = Tool.define(
       ps: boolean,
       shell: string,
       instance: InstanceContext,
+      ctx: Tool.Context,
     ) {
       const scan: Scan = {
         dirs: new Set<string>(),
@@ -404,7 +406,7 @@ export const ShellTool = Tool.define(
           for (const arg of pathArgs(command, ps, shellKind === "cmd")) {
             const resolved = yield* argPath(arg, cwd, ps, shell)
             yield* Effect.logInfo("resolved path", { arg, resolved })
-            if (!resolved || containsPath(resolved, instance)) continue
+            if (!resolved || containsToolPath(ctx, resolved, instance)) continue
             const dir = (yield* fs.isDir(resolved)) ? resolved : path.dirname(resolved)
             scan.dirs.add(dir)
           }
@@ -633,8 +635,8 @@ export const ShellTool = Tool.define(
                   const tree = yield* Effect.acquireRelease(parse(params.command, ps), (tree) =>
                     Effect.sync(() => tree.delete()),
                   )
-                  const scan = yield* collect(tree.rootNode, cwd, ps, shell, instanceCtx)
-                  if (!containsPath(cwd, instanceCtx)) scan.dirs.add(cwd)
+                  const scan = yield* collect(tree.rootNode, cwd, ps, shell, instanceCtx, ctx)
+                  if (!containsToolPath(ctx, cwd, instanceCtx)) scan.dirs.add(cwd)
                   yield* ask(ctx, scan, params)
                 }),
               )
