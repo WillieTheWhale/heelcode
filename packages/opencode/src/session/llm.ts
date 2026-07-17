@@ -223,8 +223,10 @@ const live: Layer.Layer<
 
       // Runtime seam: native is an opt-in adapter over @opencode-ai/llm. It
       // either returns a ready LLMEvent stream or a concrete fallback reason.
-      if (flags.experimentalNativeLlm) {
+      if (flags.experimentalNativeLlm || input.model.providerID === "promptlab") {
         const native = LLMNativeRuntime.stream({
+          sessionID: input.sessionID,
+          small: input.small,
           model: input.model,
           provider: item,
           auth: info,
@@ -257,6 +259,8 @@ const live: Layer.Layer<
           "llm.model": input.model.id,
           "llm.native_unsupported_reason": native.reason,
         })
+        if (input.model.providerID === "promptlab")
+          return yield* Effect.fail(new Error(`PromptLab native inference is required: ${native.reason}`))
         yield* Effect.logInfo("native runtime unavailable; falling back to ai-sdk", {
           providerID: input.model.providerID,
           modelID: input.model.id,
