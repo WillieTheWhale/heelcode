@@ -1,10 +1,12 @@
 import type { TuiPlugin, TuiPluginApi } from "@opencode-ai/plugin/tui"
+import { RGBA } from "@opentui/core"
 import type { BuiltinTuiPlugin } from "../builtins"
 import { createMemo, Show } from "solid-js"
 import { abbreviateHome } from "../../runtime"
 import { useTuiPaths } from "../../context/runtime"
 
 const id = "internal:sidebar-footer"
+const UNC_NAVY = RGBA.fromInts(19, 41, 75)
 
 function View(props: { api: TuiPluginApi; sessionID: string }) {
   const paths = useTuiPaths()
@@ -69,9 +71,12 @@ function View(props: { api: TuiPluginApi; sessionID: string }) {
         <span style={{ fg: theme().text }}>{path().name}</span>
       </text>
       <text fg={theme().textMuted}>
-        <span style={{ fg: theme().success }}>•</span> <b>Open</b>
-        <span style={{ fg: theme().text }}>
-          <b>Code</b>
+        <span style={{ fg: theme().success }}>•</span>{" "}
+        <span style={{ fg: UNC_NAVY }}>
+          <b>heel</b>
+        </span>
+        <span style={{ fg: theme().primary }}>
+          <b>code</b>
         </span>{" "}
         <span>{props.api.app.version}</span>
       </text>
