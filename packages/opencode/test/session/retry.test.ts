@@ -162,6 +162,17 @@ describe("session.retry.retryable", () => {
     expect(SessionRetry.retryable(error, retryProvider)).toEqual({ message: msg })
   })
 
+  test("bounds PromptLab silence and loopback server retries", () => {
+    const silence = "PromptLab inference produced no events for 120000ms"
+    const server = "PromptLab native inference failed: 500 Internal Server Error"
+    const disconnected = "Unable to connect. Is the computer able to access the url?"
+
+    expect(SessionRetry.retryable(wrap(silence), "promptlab")).toEqual({ message: silence, maxAttempts: 3 })
+    expect(SessionRetry.retryable(wrap(server), "promptlab")).toEqual({ message: server, maxAttempts: 3 })
+    expect(SessionRetry.retryable(wrap(disconnected), "promptlab")).toEqual({ message: disconnected, maxAttempts: 3 })
+    expect(SessionRetry.retryable(wrap(silence), retryProvider)).toBeUndefined()
+  })
+
   test("retries transport timeout errors", () => {
     const request = MessageV2.fromError(new ProviderError.HeaderTimeoutError(10000), { providerID })
     expect(SessionV1.APIError.isInstance(request)).toBe(true)
