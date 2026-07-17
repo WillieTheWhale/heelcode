@@ -90,6 +90,48 @@ const PEAK = RGBA.fromInts(255, 255, 255)
 const UNC_NAVY = RGBA.fromInts(19, 41, 75)
 const UNC_BLUE = RGBA.fromInts(75, 156, 211)
 const UNC_BLUE_LIGHT = RGBA.fromInts(166, 216, 248)
+// Each brick of the wordmark is traced with a double-line box-drawing rim
+// wherever it borders empty space (outer silhouette, letter counters, and
+// the seams between letters), giving the letters a 3D voxel/brick look.
+const RIM_H = "═"
+const RIM_V = "║"
+const RIM_TL = "╔"
+const RIM_TR = "╗"
+const RIM_BL = "╚"
+const RIM_BR = "╝"
+const RIM_CROSS = "╬"
+const RIM_CHARS = new Set([RIM_H, RIM_V, RIM_TL, RIM_TR, RIM_BL, RIM_BR, RIM_CROSS])
+
+function buildRim(full: string[]): string[][] {
+  const height = full.length
+  const width = full[0]?.length ?? 0
+  const isLit = (x: number, y: number) => y >= 0 && y < height && x >= 0 && x < width && lit(full[y]?.[x] ?? " ")
+  const rows: string[][] = []
+  for (let y = 0; y < height; y++) {
+    const row: string[] = []
+    for (let x = 0; x < width; x++) {
+      if (!isLit(x, y)) {
+        row.push(" ")
+        continue
+      }
+      const n = !isLit(x, y - 1)
+      const s = !isLit(x, y + 1)
+      const e = !isLit(x + 1, y)
+      const w = !isLit(x - 1, y)
+      const count = (n ? 1 : 0) + (s ? 1 : 0) + (e ? 1 : 0) + (w ? 1 : 0)
+      if (count === 0) row.push("█")
+      else if (count === 2 && n && w) row.push(RIM_TL)
+      else if (count === 2 && n && e) row.push(RIM_TR)
+      else if (count === 2 && s && w) row.push(RIM_BL)
+      else if (count === 2 && s && e) row.push(RIM_BR)
+      else if (count >= 3) row.push(RIM_CROSS)
+      else if (n || s) row.push(RIM_H)
+      else row.push(RIM_V)
+    }
+    rows.push(row)
+  }
+  return rows
+}
 
 type Ring = {
   x: number
@@ -296,16 +338,17 @@ type LogoContext = {
   SPAN: number
   MAP: ReturnType<typeof mapGlyphs>
   shape: LogoShape
+  RIM: string[][] | undefined
 }
 
-function build(shape: LogoShape): LogoContext {
+function build(shape: LogoShape, options: { rim?: boolean } = {}): LogoContext {
   const LEFT = shape.left[0]?.length ?? 0
   const FULL = shape.left.map((line, i) => line + " ".repeat(GAP) + shape.right[i])
   const SPAN = Math.hypot(FULL[0]?.length ?? 0, FULL.length * 2) * 0.94
-  return { LEFT, FULL, SPAN, MAP: mapGlyphs(FULL), shape }
+  return { LEFT, FULL, SPAN, MAP: mapGlyphs(FULL), shape, RIM: options.rim ? buildRim(FULL) : undefined }
 }
 
-const DEFAULT = build(logo)
+const DEFAULT = build(logo, { rim: true })
 const GO = build(go)
 
 function shimmer(x: number, y: number, frame: Frame, ctx: LogoContext) {
@@ -687,7 +730,6 @@ export function Logo(props: { shape?: LogoShape; ink?: RGBA; idle?: boolean } = 
     const depth = ctx.shape.right.length <= 1 ? 0 : row / (ctx.shape.right.length - 1)
     return tint(theme.background, tint(UNC_BLUE, UNC_BLUE_LIGHT, 0.16 + depth * 0.34), 0.92)
   }
-
   const renderLine = (
     line: string,
     y: number,
@@ -702,16 +744,22 @@ export function Logo(props: { shape?: LogoShape; ink?: RGBA; idle?: boolean } = 
     const attrs = bold ? TextAttributes.BOLD : undefined
 
     return Array.from(line).map((char, i) => {
-      if (char === " ") {
+      const glyph = ctx.RIM ? (ctx.RIM[y]?.[off + i] ?? char) : char
+      const rimGlyph = RIM_CHARS.has(glyph)
+      // Rim strokes read as a beveled highlight along each brick's edge, so
+      // brighten the ink a touch relative to the brick's solid interior.
+      const cellInk = rimGlyph ? tint(ink, PEAK, 0.22) : ink
+
+      if (glyph === " ") {
         return (
-          <text fg={ink} attributes={attrs} selectable={false}>
-            {char}
+          <text fg={cellInk} attributes={attrs} selectable={false}>
+            {glyph}
           </text>
         )
       }
 
       const h = field(off + i, y, frame, ctx)
-      const charLit = lit(char)
+      const charLit = lit(glyph)
       // Sub-pixel sampling: cells are 2 pixels tall. Sample at top (y*2) and bottom (y*2+1) pixel rows.
       const pulseTop = state ? idle(off + i, y * 2, frame, ctx, state) : { glow: 0, peak: 0, primary: 0 }
       const pulseBot = state ? idle(off + i, y * 2 + 1, frame, ctx, state) : { glow: 0, peak: 0, primary: 0 }
@@ -721,8 +769,8 @@ export function Logo(props: { shape?: LogoShape; ink?: RGBA; idle?: boolean } = 
       const primaryMixBot = charLit ? Math.min(1, pulseBot.primary) : 0
       // Layer primary tint first, then white peak on top — so the halo/tail pulls toward primary,
       // while the bright core stays pure white
-      const inkTopTint = primaryMixTop > 0 ? tint(ink, theme.primary, primaryMixTop) : ink
-      const inkBotTint = primaryMixBot > 0 ? tint(ink, theme.primary, primaryMixBot) : ink
+      const inkTopTint = primaryMixTop > 0 ? tint(cellInk, theme.primary, primaryMixTop) : cellInk
+      const inkBotTint = primaryMixBot > 0 ? tint(cellInk, theme.primary, primaryMixBot) : cellInk
       const inkTop = peakMixTop > 0 ? tint(inkTopTint, PEAK, peakMixTop) : inkTopTint
       const inkBot = peakMixBot > 0 ? tint(inkBotTint, PEAK, peakMixBot) : inkBotTint
       // For the non-peak-aware brightness channels, use the average of top/bot
@@ -733,7 +781,7 @@ export function Logo(props: { shape?: LogoShape; ink?: RGBA; idle?: boolean } = 
       }
       const peakMix = charLit ? Math.min(1, pulse.peak) : 0
       const primaryMix = charLit ? Math.min(1, pulse.primary) : 0
-      const inkPrimary = primaryMix > 0 ? tint(ink, theme.primary, primaryMix) : ink
+      const inkPrimary = primaryMix > 0 ? tint(cellInk, theme.primary, primaryMix) : cellInk
       const inkTinted = peakMix > 0 ? tint(inkPrimary, PEAK, peakMix) : inkPrimary
       const shadowMixCfg = state?.cfg.shadowMix ?? shimmerConfig.shadowMix
       const shadowMixTop = Math.min(1, pulseTop.peak * shadowMixCfg)
@@ -749,7 +797,7 @@ export function Logo(props: { shape?: LogoShape; ink?: RGBA; idle?: boolean } = 
       const b = charLit ? bloom(off + i, y, frame, ctx) : 0
       const q = shimmer(off + i, y, frame, ctx)
 
-      if (char === "_") {
+      if (glyph === "_") {
         return (
           <text
             fg={shade(inkTinted, theme, s * 0.08)}
@@ -762,7 +810,7 @@ export function Logo(props: { shape?: LogoShape; ink?: RGBA; idle?: boolean } = 
         )
       }
 
-      if (char === "^") {
+      if (glyph === "^") {
         return (
           <text
             fg={shade(inkTop, theme, n + p + e + b)}
@@ -775,7 +823,7 @@ export function Logo(props: { shape?: LogoShape; ink?: RGBA; idle?: boolean } = 
         )
       }
 
-      if (char === "~") {
+      if (glyph === "~") {
         return (
           <text fg={shade(shadowTop, theme, ghost(s, 0.22) + ghost(q, 0.05))} attributes={attrs} selectable={false}>
             ▀
@@ -783,7 +831,7 @@ export function Logo(props: { shape?: LogoShape; ink?: RGBA; idle?: boolean } = 
         )
       }
 
-      if (char === ",") {
+      if (glyph === ",") {
         return (
           <text fg={shade(shadowBot, theme, ghost(s, 0.22) + ghost(q, 0.05))} attributes={attrs} selectable={false}>
             ▄
@@ -792,7 +840,7 @@ export function Logo(props: { shape?: LogoShape; ink?: RGBA; idle?: boolean } = 
       }
 
       // Solid █: render as ▀ so the top pixel (fg) and bottom pixel (bg) can carry independent shimmer values
-      if (char === "█" && useSubpixelBlocks()) {
+      if (glyph === "█" && useSubpixelBlocks()) {
         return (
           <text
             fg={shade(inkTop, theme, n + p + e + b)}
@@ -806,7 +854,7 @@ export function Logo(props: { shape?: LogoShape; ink?: RGBA; idle?: boolean } = 
       }
 
       // ▀ top-half-lit: fg uses top-pixel sample, bg stays transparent/panel
-      if (char === "▀") {
+      if (glyph === "▀") {
         return (
           <text fg={shade(inkTop, theme, n + p + e + b)} attributes={attrs} selectable={false}>
             ▀
@@ -815,7 +863,7 @@ export function Logo(props: { shape?: LogoShape; ink?: RGBA; idle?: boolean } = 
       }
 
       // ▄ bottom-half-lit: fg uses bottom-pixel sample
-      if (char === "▄") {
+      if (glyph === "▄") {
         return (
           <text fg={shade(inkBot, theme, n + p + e + b)} attributes={attrs} selectable={false}>
             ▄
@@ -824,8 +872,13 @@ export function Logo(props: { shape?: LogoShape; ink?: RGBA; idle?: boolean } = 
       }
 
       return (
-        <text fg={shade(inkTinted, theme, n + p + e + b)} attributes={attrs} selectable={false}>
-          {char}
+        <text
+          fg={shade(inkTinted, theme, n + p + e + b)}
+          bg={rimGlyph ? shade(ink, theme, n + p + e + b) : undefined}
+          attributes={attrs}
+          selectable={false}
+        >
+          {glyph}
         </text>
       )
     })
