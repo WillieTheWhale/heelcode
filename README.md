@@ -28,7 +28,7 @@ Then run heelcode from any project:
 heelcode
 ```
 
-The CLI starts `heelcode-promptlabd` on `127.0.0.1:43117`, points the PromptLab provider at `http://127.0.0.1:43117/v1`, and checks that PromptLab models are available before the TUI opens. If the stored PromptLab session is stale, heelcode opens PromptLab in the normal Google Chrome profile and captures the refreshed session after login. It does not create blank Chrome profiles or close existing Chrome tabs.
+The CLI opens PromptLab in the normal Google Chrome profile for interactive launches, starts `heelcode-promptlabd` on `127.0.0.1:43117`, points the PromptLab provider at `http://127.0.0.1:43117/v1`, and checks that PromptLab models are available before the TUI opens. If the stored PromptLab session is stale, HeelCode waits for the refreshed Chrome session after login. A later inference 401 reopens PromptLab and waits for the same browser-session recovery path. It does not create blank Chrome profiles or close existing Chrome tabs. Set `HEELCODE_PROMPTLAB_OPEN_BROWSER=0` to suppress the startup tab for interactive automation.
 
 Manual fallback:
 
