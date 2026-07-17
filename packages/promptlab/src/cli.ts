@@ -17,10 +17,10 @@ const command = process.argv[2] ?? "serve"
 
 try {
   if (command === "serve") {
-    const server = serve({ config: () => configFromEnvOrStore() })
+    const server = serve({ config: promptLabConfig })
     console.log(`heelcode-promptlabd listening on http://${server.hostname}:${server.port}`)
   } else if (command === "models") {
-    const client = new PromptLabClient(await configFromEnvOrStore())
+    const client = new PromptLabClient(await promptLabConfig())
     const catalog = await client.getCatalog()
     console.log(JSON.stringify({ metrics: catalogMetrics(catalog), models: toOpenAIModels(catalog).data }, null, 2))
   } else if (command === "config") {
@@ -85,4 +85,22 @@ try {
 } catch (error) {
   console.error(safeLogError(error))
   process.exit(1)
+}
+
+async function promptLabConfig() {
+  return {
+    ...(await configFromEnvOrStore()),
+    persistSession: savePromptLabSession,
+    recoverSession: async () => {
+      const { capturePromptLabSessionFromChrome, openPromptLabInChrome } = await import("./chrome-session")
+      await openPromptLabInChrome()
+      const deadline = Date.now() + Number.parseInt(process.env.HEELCODE_PROMPTLAB_CAPTURE_WAIT_MS ?? "45000", 10)
+      while (Date.now() < deadline) {
+        const session = await capturePromptLabSessionFromChrome()
+        if (session) return { bearerToken: session.bearerToken, cookie: session.cookie }
+        await Bun.sleep(Number.parseInt(process.env.HEELCODE_PROMPTLAB_CAPTURE_POLL_MS ?? "250", 10))
+      }
+      return undefined
+    },
+  }
 }
