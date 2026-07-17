@@ -60,6 +60,7 @@ import { SessionTable } from "@opencode-ai/core/session/sql"
 import { SessionReminders } from "./reminders"
 import { SessionTools } from "./tools"
 import { LLMEvent } from "@opencode-ai/llm"
+import { canRetry, conformanceError, isUnfinishedNarration, retryMessage } from "./llm/promptlab-action"
 
 // @ts-ignore
 globalThis.AI_SDK_LOG_WARNINGS = false
@@ -1136,6 +1137,8 @@ export const layer = Layer.effect(
         const ctx = yield* InstanceState.context
         let structured: unknown
         let step = 0
+        let actionConformanceAttempt = 0
+        let actionConformanceMessage: string | undefined
         const session = yield* sessions.get(sessionID).pipe(Effect.orDie)
 
         while (true) {
@@ -1160,10 +1163,14 @@ export const layer = Layer.effect(
             lastAssistantMsg?.parts.some(
               (part) => part.type === "tool" && !part.metadata?.providerExecuted && !isOrphanedInterruptedTool(part),
             ) ?? false
+          if (hasToolCalls) {
+            actionConformanceAttempt = 0
+            actionConformanceMessage = undefined
+          }
 
           if (
             lastAssistant?.finish &&
-            !["tool-calls"].includes(lastAssistant.finish) &&
+            !["tool-calls", "unknown"].includes(lastAssistant.finish) &&
             !hasToolCalls &&
             lastUser.id < lastAssistant.id
           ) {
@@ -1324,6 +1331,7 @@ export const layer = Layer.effect(
               system,
               messages: [
                 ...modelMsgs,
+                ...(actionConformanceMessage ? [{ role: "user" as const, content: actionConformanceMessage }] : []),
                 ...(isLastStep ? [{ role: "assistant" as const, content: MAX_STEPS_PROMPT }] : []),
               ],
               tools,
@@ -1331,11 +1339,61 @@ export const layer = Layer.effect(
               toolChoice: format.type === "json_schema" ? "required" : undefined,
             })
 
+            const actionError = conformanceError(handle.message.error)
+            if (model.providerID === "promptlab" && actionError && canRetry(actionConformanceAttempt)) {
+              actionConformanceAttempt++
+              actionConformanceMessage = retryMessage(actionConformanceAttempt, actionError)
+              handle.message.error = undefined
+              handle.message.finish = "unknown"
+              yield* sessions.updateMessage(handle.message)
+              yield* Effect.logWarning("promptlab action conformance retry", {
+                "session.id": sessionID,
+                messageID: handle.message.id,
+                attempt: actionConformanceAttempt,
+                problem: actionError,
+              })
+              return "continue" as const
+            }
+
             if (structured !== undefined) {
               handle.message.structured = structured
               handle.message.finish = handle.message.finish ?? "stop"
               yield* sessions.updateMessage(handle.message)
               return "break" as const
+            }
+
+            const parts = yield* MessageV2.parts(handle.message.id).pipe(
+              Effect.provideService(Database.Service, database),
+            )
+            const usedTool = parts.some((part) => part.type === "tool")
+            if (usedTool) {
+              actionConformanceAttempt = 0
+              actionConformanceMessage = undefined
+            }
+            const text = parts
+              .filter((part): part is SessionV1.TextPart => part.type === "text")
+              .map((part) => part.text)
+              .join("\n")
+            if (
+              model.providerID === "promptlab" &&
+              format.type === "text" &&
+              Object.keys(tools).length > 0 &&
+              handle.message.finish === "stop" &&
+              !handle.message.error &&
+              !usedTool &&
+              isUnfinishedNarration(text) &&
+              canRetry(actionConformanceAttempt)
+            ) {
+              actionConformanceAttempt++
+              actionConformanceMessage = retryMessage(actionConformanceAttempt)
+              handle.message.finish = "unknown"
+              yield* sessions.updateMessage(handle.message)
+              yield* Effect.logWarning("promptlab action conformance retry", {
+                "session.id": sessionID,
+                messageID: handle.message.id,
+                attempt: actionConformanceAttempt,
+              })
+              return "continue" as const
             }
 
             const finished = handle.message.finish && !["tool-calls", "unknown"].includes(handle.message.finish)
