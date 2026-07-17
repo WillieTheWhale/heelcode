@@ -16,6 +16,36 @@ afterEach(() => {
 })
 
 describe("heelcode-promptlabd handler", () => {
+  test("identifies the native protocol and process on the health endpoint", async () => {
+    const response = await createHandler({ baseURL: "https://promptlab.example" })(
+      new Request("http://127.0.0.1/health"),
+    )
+
+    expect(await response.json()).toEqual({
+      ok: true,
+      service: "heelcode-promptlabd",
+      protocol: 2,
+      pid: process.pid,
+    })
+  })
+
+  test("lets a compatible launcher stop a stale daemon", async () => {
+    let stopped = false
+    const response = await createHandler({ baseURL: "https://promptlab.example" })(
+      new Request("http://127.0.0.1/shutdown", { method: "POST" }),
+      {
+        timeout() {},
+        stop() {
+          stopped = true
+        },
+      },
+    )
+
+    expect(await response.json()).toEqual({ ok: true })
+    await Bun.sleep(1)
+    expect(stopped).toBe(true)
+  })
+
   test("exposes PromptLab models through OpenAI-compatible /v1/models", async () => {
     const handler = createHandler({ baseURL: "https://promptlab.example", fetch: fakePromptLabFetch() })
     const response = await handler(new Request("http://127.0.0.1/v1/models"))
@@ -89,6 +119,96 @@ describe("heelcode-promptlabd handler", () => {
     expect(text).toContain('"content":"Hello"')
     expect(text).toContain('"content":" world"')
     expect(text).toContain("data: [DONE]")
+  })
+
+  test("streams native canonical events and keeps PromptLab continuation behind the Session ID", async () => {
+    const calls: Array<{ path: string; method: string; body?: unknown }> = []
+    const handler = createHandler({
+      baseURL: "https://promptlab.example",
+      fetch: fakePromptLabFetch({ calls, completionsMode: "native" }),
+    })
+    const timeouts: Array<{ request: Request; seconds: number }> = []
+    const server = {
+      timeout(request: Request, seconds: number) {
+        timeouts.push({ request, seconds })
+      },
+    }
+    const firstRequest = nativeRequest("Remember blue.")
+    const first = await handler(firstRequest, server)
+    const firstText = await first.text()
+    const secondRequest = nativeRequest("What color?")
+    const second = await handler(secondRequest, server)
+    const secondText = await second.text()
+    const starts = calls.filter((call) => call.path === "/api/agents/chat/openAI")
+
+    expect(first.status).toBe(200)
+    expect(firstText).toContain('"type":"reasoning-delta"')
+    expect(firstText).toContain('"type":"text-delta"')
+    expect(secondText).toContain('"text":"blue"')
+    expect(timeouts).toEqual([
+      { request: firstRequest, seconds: 0 },
+      { request: secondRequest, seconds: 0 },
+    ])
+    expect(starts).toHaveLength(2)
+    expect(starts[1].body).toMatchObject({ parentMessageId: "assistant-native-1", isContinued: true })
+  })
+
+  test("does not retain continuation for transient advisory scopes", async () => {
+    const calls: Array<{ path: string; method: string; body?: unknown }> = []
+    const handler = createHandler({
+      baseURL: "https://promptlab.example",
+      fetch: fakePromptLabFetch({ calls, completionsMode: "native" }),
+    })
+    const first = await handler(nativeRequest("Generate a title", "native-session:advisory:title", true))
+    await first.text()
+    const second = await handler(nativeRequest("Generate another title", "native-session:advisory:title", true))
+    await second.text()
+    const starts = calls.filter((call) => call.path === "/api/agents/chat/openAI")
+
+    expect(starts).toHaveLength(2)
+    expect(starts[1].body).toMatchObject({
+      parentMessageId: "00000000-0000-0000-0000-000000000000",
+      isContinued: false,
+    })
+  })
+
+  test("isolates concurrent primary and advisory inference scopes within one HeelCode Session", async () => {
+    const streams: ReadableStreamDefaultController<Uint8Array>[] = []
+    let streamID = 0
+    const handler = createHandler({
+      baseURL: "https://promptlab.example",
+      fetch: (async (input: Request | URL | string, init?: RequestInit) => {
+        const url = new URL(String(input))
+        if (url.pathname === "/api/agents/chat/openAI" && init?.method === "POST")
+          return json({ streamId: `held-${++streamID}` })
+        if (url.pathname.startsWith("/api/agents/chat/stream/held-"))
+          return new Response(
+            new ReadableStream<Uint8Array>({
+              start(controller) {
+                streams.push(controller)
+              },
+            }),
+            { headers: { "content-type": "text/event-stream" } },
+          )
+        return json({ message: "not found" }, 404)
+      }) as typeof fetch,
+    })
+    const primary = await handler(nativeRequest("Primary work", "native-session:primary"))
+    const conflict = await handler(nativeRequest("Duplicate primary work", "native-session:primary"))
+    const advisory = await handler(nativeRequest("Generate a title", "native-session:advisory:title"))
+
+    expect(primary.status).toBe(200)
+    expect(conflict.status).toBe(409)
+    expect(advisory.status).toBe(200)
+    streams.forEach((controller, index) => {
+      controller.enqueue(
+        new TextEncoder().encode(
+          `data: ${JSON.stringify({ final: true, responseMessage: { messageId: `held-${index}`, text: "done" } })}\n\n`,
+        ),
+      )
+      controller.close()
+    })
+    await Promise.all([primary.text(), advisory.text()])
   })
 
   test("forwards bare OpenAI-compatible non-streaming responses directly", async () => {
@@ -305,10 +425,29 @@ describe("heelcode-promptlabd handler", () => {
       body: { conversationID: "conversation-1", streamID: "stream-1" },
     })
   })
+
+  test("preserves expired authentication as 401 instead of hiding it behind a connector 500", async () => {
+    const handler = createHandler({
+      baseURL: "https://promptlab.example",
+      bearerToken: "expired-token",
+      cookie: "expired-cookie=1",
+      fetch: (async () => json({ message: "jwt expired" }, 401)) as unknown as typeof fetch,
+    })
+    const response = await handler(new Request("http://127.0.0.1/promptlab/active"))
+
+    expect(response.status).toBe(401)
+    expect(await response.text()).toContain("jwt expired")
+  })
 })
 
 type FakePromptLabOptions = {
-  completionsMode?: "openai-stream" | "openai-json" | "openai-tool-call" | "promptlab-json" | "untyped-error-stream"
+  completionsMode?:
+    | "openai-stream"
+    | "openai-json"
+    | "openai-tool-call"
+    | "promptlab-json"
+    | "untyped-error-stream"
+    | "native"
   calls?: Array<{ path: string; method: string; body?: unknown }>
 }
 
@@ -328,6 +467,10 @@ function fakePromptLabFetch(options: FakePromptLabOptions = {}): typeof fetch {
 
     // PromptLab chatbox endpoint — the only model call path available.
     if (url.pathname === "/api/agents/chat/openAI" && method === "POST") {
+      if (options.completionsMode === "native") {
+        const nativeCalls = options.calls?.filter((call) => call.path === "/api/agents/chat/openAI").length ?? 1
+        return json({ streamId: `stream-native-${nativeCalls}` })
+      }
       if (options.completionsMode === "openai-stream") {
         // Simulate PromptLab returning a stream-id that resolves to an SSE stream with OpenAI deltas.
         return json({ streamId: "stream-openai" })
@@ -358,6 +501,17 @@ function fakePromptLabFetch(options: FakePromptLabOptions = {}): typeof fetch {
         { choices: [{ delta: {}, finish_reason: "stop", index: 0 }] },
       ])
     }
+    if (url.pathname === "/api/agents/chat/stream/stream-native-1") {
+      return sse([
+        'data: {"event":"on_reasoning_delta","data":{"id":"reason-1","delta":"Remembering."}}\n\n',
+        'data: {"final":true,"responseMessage":{"messageId":"assistant-native-1","content":[{"type":"think","think":"Remembering."},{"type":"text","text":"ACK"}]}}\n\n',
+      ])
+    }
+    if (url.pathname === "/api/agents/chat/stream/stream-native-2") {
+      return sse([
+        'data: {"final":true,"responseMessage":{"messageId":"assistant-native-2","content":[{"type":"text","text":"blue"}]}}\n\n',
+      ])
+    }
     if (url.pathname === "/api/agents/chat/stream/stream-openai-json") {
       return sse([`data: ${JSON.stringify({ final: true, responseMessage: { text: "Hello world" } })}\n\n`])
     }
@@ -367,7 +521,14 @@ function fakePromptLabFetch(options: FakePromptLabOptions = {}): typeof fetch {
           choices: [
             {
               delta: {
-                tool_calls: [{ index: 0, id: "call_1", type: "function", function: { name: "glob", arguments: '{"pattern":"*"}' } }],
+                tool_calls: [
+                  {
+                    index: 0,
+                    id: "call_1",
+                    type: "function",
+                    function: { name: "glob", arguments: '{"pattern":"*"}' },
+                  },
+                ],
               },
               finish_reason: null,
               index: 0,
@@ -399,6 +560,21 @@ function fakePromptLabFetch(options: FakePromptLabOptions = {}): typeof fetch {
 function restoreEnv(key: string, value: string | undefined) {
   if (value === undefined) delete process.env[key]
   else process.env[key] = value
+}
+
+function nativeRequest(text: string, inferenceScopeID?: string, transient?: boolean) {
+  return new Request("http://127.0.0.1/v1/native/inference", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({
+      sessionID: "native-session",
+      inferenceScopeID,
+      transient,
+      model: "promptlab/openAI/gpt-4.1",
+      messages: [{ role: "user", content: text }],
+      tools: [],
+    }),
+  })
 }
 
 function delay(ms: number) {
