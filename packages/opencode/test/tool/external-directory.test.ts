@@ -4,7 +4,7 @@ import path from "path"
 import { Effect } from "effect"
 import { CrossSpawnSpawner } from "@opencode-ai/core/cross-spawn-spawner"
 import type { Tool } from "@/tool/tool"
-import { assertExternalDirectoryEffect } from "../../src/tool/external-directory"
+import { assertExternalDirectoryEffect, containsToolPath } from "../../src/tool/external-directory"
 import { Filesystem } from "@/util/filesystem"
 import { TestInstance, tmpdirScoped } from "../fixture/fixture"
 import type { Permission } from "../../src/permission"
@@ -39,6 +39,22 @@ function makeCtx() {
 }
 
 describe("tool.assertExternalDirectory", () => {
+  it.live("limits PromptLab tools to the invocation directory rather than a parent Git worktree", () =>
+    Effect.sync(() => {
+      const regular = { ...baseCtx, extra: { model: { providerID: "openai" } }, ask: () => Effect.void }
+      const promptlab = { ...baseCtx, extra: { model: { providerID: "promptlab" } }, ask: () => Effect.void }
+      const instance = {
+        directory: "/repo/tmp",
+        worktree: "/repo",
+        project: { vcs: "git" },
+      } as Parameters<typeof containsToolPath>[2]
+
+      expect(containsToolPath(regular, "/repo/sibling/file.ts", instance)).toBe(true)
+      expect(containsToolPath(promptlab, "/repo/sibling/file.ts", instance)).toBe(false)
+      expect(containsToolPath(promptlab, "/repo/tmp/file.ts", instance)).toBe(true)
+    }),
+  )
+
   it.live("no-ops for empty target", () =>
     Effect.gen(function* () {
       const { requests, ctx } = makeCtx()
