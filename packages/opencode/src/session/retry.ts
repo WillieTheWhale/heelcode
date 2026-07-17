@@ -13,6 +13,7 @@ export type RetryReason = "free_tier_limit" | "account_rate_limit" | (string & {
 
 export type Retryable = {
   message: string
+  maxAttempts?: number
   action?: {
     reason: RetryReason
     provider: string
@@ -119,6 +120,14 @@ export function retryable(error: Err, provider: string) {
   if (typeof msg === "string") {
     const lower = msg.toLowerCase()
     if (
+      provider === "promptlab" &&
+      (lower.includes("promptlab inference produced no events") ||
+        lower.includes("promptlab native inference failed: 500") ||
+        lower.includes("unable to connect. is the computer able to access the url"))
+    ) {
+      return { message: msg, maxAttempts: 3 }
+    }
+    if (
       lower.includes("rate increased too quickly") ||
       lower.includes("rate limit") ||
       lower.includes("too many requests")
@@ -175,6 +184,7 @@ export function policy(opts: {
       const error = opts.parse(meta.input)
       const retry = retryable(error, opts.provider)
       if (!retry) return Cause.done(meta.attempt)
+      if (retry.maxAttempts !== undefined && meta.attempt > retry.maxAttempts) return Cause.done(meta.attempt)
       return Effect.gen(function* () {
         const wait = delay(meta.attempt, SessionV1.APIError.isInstance(error) ? error : undefined)
         const now = yield* Clock.currentTimeMillis
