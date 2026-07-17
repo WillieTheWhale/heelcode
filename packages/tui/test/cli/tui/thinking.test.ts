@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test"
+import { RGBA } from "@opentui/core"
 import { reasoningSummary } from "../../../src/context/thinking"
+import { reasoningActivityColor } from "../../../src/routes/session/index"
 
 describe("reasoningSummary", () => {
   test("extracts a leading summary title and leaves markdown body", () => {
@@ -32,5 +34,17 @@ describe("reasoningSummary", () => {
 
   test("leaves content without a leading title in its body", () => {
     expect(reasoningSummary("Details only.")).toEqual({ title: null, body: "Details only." })
+  })
+})
+
+describe("reasoningActivityColor", () => {
+  test("starts light UNC blue for every new reasoning turn", () => {
+    expect(reasoningActivityColor(RGBA.fromInts(75, 156, 211), 0).toInts()).toEqual([75, 156, 211, 255])
+  })
+
+  test("deepens to UNC navy during a long turn or interruption", () => {
+    const primary = RGBA.fromInts(75, 156, 211)
+    expect(reasoningActivityColor(primary, 45_000).toInts()).toEqual([19, 41, 75, 255])
+    expect(reasoningActivityColor(primary, 0, true).toInts()).not.toEqual(primary.toInts())
   })
 })
