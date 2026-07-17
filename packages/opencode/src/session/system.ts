@@ -64,11 +64,13 @@ export const layer = Layer.effect(
             `Here is some useful information about the environment you are running in:`,
             `<env>`,
             `  Working directory: ${ctx.directory}`,
-            `  Workspace root folder: ${ctx.worktree}`,
+            `  Task workspace root: ${ctx.directory}`,
+            ...(ctx.worktree === ctx.directory ? [] : [`  Git repository root (informational only): ${ctx.worktree}`]),
             `  Is directory a git repo: ${ctx.project.vcs === "git" ? "yes" : "no"}`,
             `  Platform: ${process.platform}`,
             `  Today's date: ${new Date().toDateString()}`,
             `</env>`,
+            `Keep searches, reads, writes, and commands inside the task workspace root unless the user explicitly requests another path. If the task workspace is empty, create the requested project there instead of selecting a parent or sibling project.`,
           ].join("\n"),
           references.length === 0
             ? undefined
