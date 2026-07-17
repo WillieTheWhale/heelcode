@@ -1,11 +1,13 @@
 import { normalizeCatalog } from "./catalog"
 import { buildPromptLabPayload } from "./openai"
+import { updatedCookieHeader } from "./cookie"
 import { redactError, redactHeaders, redactJSON } from "./redact"
 import type {
   OpenAIChatCompletionRequest,
   PromptLabCatalog,
   PromptLabChatResponse,
   PromptLabConfig,
+  PromptLabSession,
   ModelSelection,
 } from "./types"
 import { PromptLabError } from "./types"
@@ -50,21 +52,21 @@ export class PromptLabClient {
     return normalizeCatalog(models, endpoints)
   }
 
-  // completions sends a minimal request through PromptLab's chat endpoint.  PromptLab does not
-  // expose a raw model proxy; the chatbox is the only available endpoint.  Tool schemas are
-  // injected as text instructions in promptPrefix via buildPromptLabPayload, and the SSE
-  // transformer extracts <heelcode_tool_call> XML from the response and emits native tool_calls.
-  async completions(
-    request: OpenAIChatCompletionRequest,
-    selection: ModelSelection,
-  ): Promise<PromptLabChatResponse> {
-    const endpoint = encodeURIComponent(selection.endpoint)
+  // Legacy OpenAI compatibility path. PromptLab's provider chat route can expose structured
+  // reasoning, but this adapter intentionally reduces it to OpenAI Chat text/tool-call output.
+  // Native Heelcode integration must consume the PromptLab event stream directly instead of
+  // extending the promptPrefix XML bridge implemented here.
+  async completions(request: OpenAIChatCompletionRequest, selection: ModelSelection): Promise<PromptLabChatResponse> {
     const payload = buildPromptLabPayload(request, selection)
+    return this.chat(selection.endpoint, payload)
+  }
 
-    const response = await this.request(`/api/agents/chat/${endpoint}`, {
+  async chat(endpoint: string, payload: Record<string, unknown>, signal?: AbortSignal): Promise<PromptLabChatResponse> {
+    const response = await this.request(`/api/agents/chat/${encodeURIComponent(endpoint)}`, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(payload),
+      signal,
     })
 
     const contentType = response.headers.get("content-type") ?? ""
@@ -80,12 +82,16 @@ export class PromptLabClient {
       const stream = await this.request(`/api/agents/chat/stream/${encodeURIComponent(value.streamId)}`, {
         method: "GET",
         headers: { accept: "text/event-stream" },
+        signal,
       })
-      return { kind: "stream", response: stream }
+      const headers = new Headers(stream.headers)
+      headers.set("x-promptlab-stream-id", value.streamId)
+      return { kind: "stream", response: new Response(stream.body, { status: stream.status, headers }) }
     }
 
     // If the upstream returned a well-formed OpenAI JSON response, forward it directly.
-    if (isOpenAIResponse(value)) return { kind: "openai", response: new Response(responseText, { headers: response.headers }) }
+    if (isOpenAIResponse(value))
+      return { kind: "openai", response: new Response(responseText, { headers: response.headers }) }
 
     return { kind: "json", value }
   }
@@ -120,6 +126,8 @@ export class PromptLabClient {
     const token = value?.token ?? value?.accessToken ?? value?.access_token
     if (!token) return false
     this.token = token
+    this.cookie = updatedCookieHeader(this.cookie, response.headers) ?? this.cookie
+    await this.persistSession({ bearerToken: token, cookie: this.cookie })
     return true
   }
 
@@ -136,6 +144,7 @@ export class PromptLabClient {
     const retry = options.retry ?? true
     const { auth = true, ...requestInit } = init
     let refreshed = false
+    let recovered = false
     let rateRetries = 0
 
     while (true) {
@@ -144,9 +153,20 @@ export class PromptLabClient {
         headers: this.headers(requestInit.headers, auth),
       })
 
-      if (response.status === 401 && retry && !refreshed && (await this.refresh().catch(() => false))) {
-        refreshed = true
-        continue
+      if (response.status === 401 && retry && !refreshed) {
+        if (await this.refresh().catch(() => false)) {
+          refreshed = true
+          continue
+        }
+        const session = recovered ? undefined : await this.config.recoverSession?.().catch(() => undefined)
+        recovered = true
+        if (session?.bearerToken) {
+          this.token = session.bearerToken
+          this.cookie = session.cookie ?? this.cookie
+          await this.persistSession({ bearerToken: this.token, cookie: this.cookie })
+          refreshed = true
+          continue
+        }
       }
 
       if (response.status === 429 && retry && rateRetries < retryAttempts()) {
@@ -190,6 +210,10 @@ export class PromptLabClient {
     if (auth && this.token) headers.set("authorization", `Bearer ${this.token}`)
     if (this.cookie) headers.set("cookie", this.cookie)
     return headers
+  }
+
+  private async persistSession(session: PromptLabSession) {
+    await this.config.persistSession?.(session).catch(() => {})
   }
 }
 
