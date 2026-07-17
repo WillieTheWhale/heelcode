@@ -40,34 +40,76 @@ describe("PromptLab client", () => {
   })
 
   test("refreshes expired auth once and retries with replacement token", async () => {
-    const calls: Array<{ path: string; authorization: string | null }> = []
+    const calls: Array<{ path: string; authorization: string | null; cookie: string | null }> = []
+    const persisted: Array<{ bearerToken?: string; cookie?: string }> = []
     const client = new PromptLabClient({
       baseURL: "https://promptlab.example",
       bearerToken: "expired-token",
       fetch: (async (input: Request | URL | string, init?: RequestInit) => {
         const url = new URL(String(input))
         const authorization = new Headers(init?.headers).get("authorization")
-        calls.push({ path: url.pathname, authorization })
+        const cookie = new Headers(init?.headers).get("cookie")
+        calls.push({ path: url.pathname, authorization, cookie })
 
         if (url.pathname === "/api/models" && authorization === "Bearer expired-token") {
           return json({ error: "expired" }, 401)
         }
         if (url.pathname === "/api/auth/refresh") {
-          return json({ token: "fresh-token" })
+          return json({ token: "fresh-token" }, 200, { "set-cookie": "refresh=fresh; Path=/; HttpOnly" })
         }
         if (url.pathname === "/api/models" && authorization === "Bearer fresh-token") {
           return json({ openAI: ["gpt-4.1"] })
         }
         return json({ error: "unexpected request" }, 500)
       }) as typeof fetch,
+      cookie: "refresh=old; stable=keep",
+      persistSession: async (session) => {
+        persisted.push(session)
+      },
+    })
+
+    await expect(client.getModels()).resolves.toEqual({ openAI: ["gpt-4.1"] })
+    expect(calls).toEqual([
+      { path: "/api/models", authorization: "Bearer expired-token", cookie: "refresh=old; stable=keep" },
+      { path: "/api/auth/refresh", authorization: null, cookie: "refresh=old; stable=keep" },
+      { path: "/api/models", authorization: "Bearer fresh-token", cookie: "refresh=fresh; stable=keep" },
+    ])
+    expect(persisted).toEqual([{ bearerToken: "fresh-token", cookie: "refresh=fresh; stable=keep" }])
+  })
+
+  test("recovers an expired browser session from Chrome and retries the request", async () => {
+    const calls: Array<{ path: string; authorization: string | null }> = []
+    const persisted: Array<{ bearerToken?: string; cookie?: string }> = []
+    let recoveries = 0
+    const client = new PromptLabClient({
+      baseURL: "https://promptlab.example",
+      bearerToken: "expired-token",
+      cookie: "stale-cookie=1",
+      fetch: (async (input: Request | URL | string, init?: RequestInit) => {
+        const url = new URL(String(input))
+        const authorization = new Headers(init?.headers).get("authorization")
+        calls.push({ path: url.pathname, authorization })
+        if (url.pathname === "/api/models" && authorization === "Bearer chrome-token")
+          return json({ openAI: ["gpt-4.1"] })
+        return json({ message: "jwt expired" }, 401)
+      }) as typeof fetch,
+      recoverSession: async () => {
+        recoveries++
+        return { bearerToken: "chrome-token", cookie: "fresh-cookie=1" }
+      },
+      persistSession: async (session) => {
+        persisted.push(session)
+      },
     })
 
     await expect(client.getModels()).resolves.toEqual({ openAI: ["gpt-4.1"] })
     expect(calls).toEqual([
       { path: "/api/models", authorization: "Bearer expired-token" },
       { path: "/api/auth/refresh", authorization: null },
-      { path: "/api/models", authorization: "Bearer fresh-token" },
+      { path: "/api/models", authorization: "Bearer chrome-token" },
     ])
+    expect(recoveries).toBe(1)
+    expect(persisted).toEqual([{ bearerToken: "chrome-token", cookie: "fresh-cookie=1" }])
   })
 
   test("retries PromptLab 429 responses before surfacing rate-limit failures", async () => {
