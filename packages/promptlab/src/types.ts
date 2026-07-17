@@ -5,6 +5,13 @@ export type PromptLabConfig = {
   bearerToken?: string
   cookie?: string
   fetch?: typeof fetch
+  recoverSession?: () => Promise<PromptLabSession | undefined>
+  persistSession?: (session: PromptLabSession) => Promise<void>
+}
+
+export type PromptLabSession = {
+  bearerToken?: string
+  cookie?: string
 }
 
 export type PromptLabEndpoint = {
@@ -88,6 +95,59 @@ export type PromptLabChatResponse =
       kind: "json"
       value: unknown
     }
+
+export type PromptLabContinuation = {
+  conversationID: string
+  parentMessageID: string
+  endpoint: string
+  model: string
+}
+
+export type PromptLabNativeTool = {
+  name: string
+  description: string
+  inputSchema: JsonObject
+}
+
+export type PromptLabNativeMessage = {
+  role: "system" | "user" | "assistant" | "tool"
+  content: unknown
+}
+
+export type PromptLabNativeRequest = {
+  sessionID: string
+  inferenceScopeID?: string
+  transient?: boolean
+  model: string
+  messages: PromptLabNativeMessage[]
+  tools: PromptLabNativeTool[]
+  toolChoice?: "auto" | "required" | "none"
+  temperature?: number
+  topP?: number
+  maxOutputTokens?: number
+}
+
+export type PromptLabNativeEvent =
+  | { type: "step-start"; index: number; providerMetadata: JsonObject }
+  | { type: "reasoning-start"; id: string; providerMetadata: JsonObject }
+  | { type: "reasoning-delta"; id: string; text: string; providerMetadata: JsonObject }
+  | { type: "reasoning-end"; id: string; providerMetadata: JsonObject }
+  | { type: "text-start"; id: string; providerMetadata: JsonObject }
+  | { type: "text-delta"; id: string; text: string; providerMetadata: JsonObject }
+  | { type: "text-end"; id: string; providerMetadata: JsonObject }
+  | { type: "tool-input-start"; id: string; name: string; providerMetadata: JsonObject }
+  | { type: "tool-input-delta"; id: string; name: string; text: string }
+  | { type: "tool-input-end"; id: string; name: string; providerMetadata: JsonObject }
+  | { type: "tool-call"; id: string; name: string; input: unknown; providerMetadata: JsonObject }
+  | {
+      type: "step-finish"
+      index: number
+      reason: "stop" | "tool-calls"
+      usage?: JsonObject
+      providerMetadata: JsonObject
+    }
+  | { type: "finish"; reason: "stop" | "tool-calls"; usage?: JsonObject; providerMetadata: JsonObject }
+  | { type: "provider-error"; message: string; providerMetadata: JsonObject }
 
 export class PromptLabError extends Error {
   constructor(
