@@ -1,74 +1,33 @@
 # heelcode
 
-heelcode is a UNC PromptLab-backed fork of opencode. It keeps the local coding-agent workflow while routing model traffic through PromptLab by way of a local OpenAI-compatible daemon.
+An open-source coding agent that uses UNC PromptLab models from your terminal.
 
-## Status
+![HeelCode terminal preview](assets/heelcode-preview.png)
 
-This repository currently includes:
+## Quick start
 
-- the imported opencode baseline;
-- a PromptLab-only default provider list and a `promptlab` provider that discovers models from a local daemon;
-- a new `@heelcode/promptlab` workspace package with `heelcode-promptlabd`;
-- PromptLab model normalization, stripped chat payloads, OpenAI-compatible model/chat endpoints, stream translation, refresh support, redaction helpers, and focused tests;
-- normal Chrome profile session capture into macOS Keychain, without blank Chrome profiles or tab shutdown;
-- synthetic local-tool call bridging, deterministic inspection preflights, and local `task` handoff through the OpenAI-compatible daemon;
-- UNC-blue TUI theming and visible heelcode branding.
-
-## Local Flow
-
-Link the local checkout once so `heelcode` is available in your shell:
+Link this checkout once:
 
 ```bash
 ln -sf "$(pwd)/packages/opencode/bin/opencode" "$HOME/.local/bin/heelcode"
 ```
 
-Then run heelcode from any project:
+Then run it in any project:
 
 ```bash
 heelcode
 ```
 
-The CLI opens PromptLab in the normal Google Chrome profile for interactive launches, starts `heelcode-promptlabd` on `127.0.0.1:43117`, points the PromptLab provider at `http://127.0.0.1:43117/v1`, and checks that PromptLab models are available before the TUI opens. If the stored PromptLab session is stale, HeelCode waits for the refreshed Chrome session after login. A later inference 401 reopens PromptLab and waits for the same browser-session recovery path. It does not create blank Chrome profiles or close existing Chrome tabs. Set `HEELCODE_PROMPTLAB_OPEN_BROWSER=0` to suppress the startup tab for interactive automation.
+HeelCode opens PromptLab in your normal Chrome profile, starts its local connector, and verifies your session before the TUI opens. If you need to sign in, complete the ONYEN/MFA flow in Chrome and rerun the command.
 
-Manual fallback:
+## What it does
 
-```bash
-bun run --cwd packages/promptlab capture --store-session
-bun run --cwd packages/promptlab serve
-export HEELCODE_PROMPTLAB_URL=http://127.0.0.1:43117/v1
-bun run --cwd packages/opencode dev
-```
+- Discovers available PromptLab models automatically.
+- Preserves provider-exposed reasoning while keeping tool execution, permissions, and task orchestration local.
+- Uses a local `heelcode-promptlabd` connector; no credentials belong in this repository.
 
-The connector exposes:
+For setup details, architecture, model behavior, and troubleshooting, see [the PromptLab connector docs](docs/promptlab-connector.md).
 
-- `GET /v1/models`
-- `POST /v1/chat/completions`
-- `POST /v1/chat/abort`
-- `GET /promptlab/active`
-- `GET /promptlab/status/:conversationID`
+## Based on OpenCode
 
-## Credentials
-
-Do not place ONYEN passwords, bearer tokens, cookies, or HAR files in this repository.
-
-The preferred auth path is:
-
-1. Log in to PromptLab in the normal Google Chrome profile.
-2. Run `heelcode`; it will refresh the stored PromptLab session if needed.
-3. Let `heelcode-promptlabd` read the stored PromptLab session from macOS Keychain.
-
-Runtime environment overrides are still supported for development:
-
-- `PROMPTLAB_BEARER_TOKEN`
-- `PROMPTLAB_COOKIE`
-- `PROMPTLAB_BASE_URL`
-
-Plaintext ONYEN credential config is intentionally not part of the design.
-
-## Documentation
-
-See [docs/promptlab-connector.md](docs/promptlab-connector.md) for architecture, setup, model discovery, testing metrics, security expectations, and known limitations.
-
-## Upstream
-
-heelcode is based on opencode from `https://github.com/anomalyco/opencode`.
+HeelCode is a fork of [OpenCode](https://github.com/anomalyco/opencode).
