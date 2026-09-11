@@ -12,6 +12,7 @@ import everforest from "./assets/everforest.json" with { type: "json" }
 import flexoki from "./assets/flexoki.json" with { type: "json" }
 import github from "./assets/github.json" with { type: "json" }
 import gruvbox from "./assets/gruvbox.json" with { type: "json" }
+import heelcode from "./assets/heelcode.json" with { type: "json" }
 import kanagawa from "./assets/kanagawa.json" with { type: "json" }
 import lucentOrng from "./assets/lucent-orng.json" with { type: "json" }
 import material from "./assets/material.json" with { type: "json" }
@@ -140,6 +141,7 @@ export const DEFAULT_THEMES: Record<string, ThemeJson> = {
   flexoki,
   github,
   gruvbox,
+  heelcode,
   kanagawa,
   material,
   matrix,
