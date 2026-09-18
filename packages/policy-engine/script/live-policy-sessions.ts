@@ -1,11 +1,12 @@
 import { mkdir } from "node:fs/promises"
+import { existsSync } from "node:fs"
 import path from "node:path"
 
 const root = path.resolve(import.meta.dir, "../../..")
 const output = path.resolve(process.argv[2] ?? "")
 if (!process.argv[2] || !process.argv[3]) throw new Error("Usage: bun script/live-policy-sessions.ts NEW_OUTPUT POLICY_RUN")
 const policy = path.resolve(process.argv[3])
-if (await Bun.file(path.join(output, "summary.json")).exists()) throw new Error("Refusing to overwrite evidence")
+if (existsSync(output)) throw new Error("Refusing to overwrite evidence")
 const workspace = path.join(root, "tmp/policy-session-" + crypto.randomUUID())
 const command = path.join(root, "bin/heelcode")
 await mkdir(workspace, { recursive: true })

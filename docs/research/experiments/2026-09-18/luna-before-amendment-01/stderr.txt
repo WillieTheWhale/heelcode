@@ -1,0 +1,6 @@
+2026-09-18T15:25:28.317457Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 139 column 5
+2026-09-18T15:25:30.236512Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-18T15:25:30.237737Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-18T15:25:30.241235Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-18T15:25:30.242313Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-18T15:25:30.243465Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back

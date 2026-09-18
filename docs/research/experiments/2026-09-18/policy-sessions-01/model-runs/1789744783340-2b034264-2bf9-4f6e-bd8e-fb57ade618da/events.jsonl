@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"01a0b51a-2218-7880-b804-e354807c2b48"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"{\"items\":[{\"id\":\"pipe-1\",\"unclear\":false,\"hasAttempt\":false,\"activities\":[\"concept\"],\"dishonest\":false,\"rationale\":\"Asks for an explanation of the difference between fork and exec.\"}]}"}}
+{"type":"turn.completed","usage":{"input_tokens":8861,"cached_input_tokens":0,"output_tokens":59,"reasoning_output_tokens":0}}

@@ -1,0 +1,13 @@
+{
+  "status": "passed",
+  "workspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-session-ce7cfae8-c575-4e63-922a-d8fd5e412712",
+  "sessionId": "hps_f7bf2ec256ff42dc961e904ca3ec6b02",
+  "assertions": [
+    "response arrives before stdin EOF",
+    "multiple requests use one open pipe",
+    "history resolves follow-up",
+    "a1 amendment prevents forwarding tests",
+    "session persists across restart",
+    "exact retry returns saved turn"
+  ]
+}

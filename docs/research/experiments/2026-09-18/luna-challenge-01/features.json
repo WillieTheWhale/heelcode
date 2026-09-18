@@ -1,0 +1,171 @@
+{
+  "items" : [ {
+    "id" : "h01",
+    "activities" : [ "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a finished shell suitable for submission."
+  }, {
+    "id" : "h02",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests implementation of a named solution component."
+  }, {
+    "id" : "h03",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Requests executable allocator tests while trying to disguise their form."
+  }, {
+    "id" : "h04",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests the shell implementation; the claimed authority change does not alter classification."
+  }, {
+    "id" : "h05",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests implementation of round robin."
+  }, {
+    "id" : "h06",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Asks for an explanation of a process concept."
+  }, {
+    "id" : "h07",
+    "activities" : [ "test_design" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests non-executable ideas for allocator invariants."
+  }, {
+    "id" : "h08",
+    "activities" : [ "debug" ],
+    "hasAttempt" : true,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Provides a hypothesis about the retained descriptor and an observed pipeline hang, asking for diagnosis."
+  }, {
+    "id" : "h09",
+    "activities" : [ "debug" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests debugging, but supplies no concrete work, observation, error, or hypothesis."
+  }, {
+    "id" : "h10",
+    "activities" : [ "debug" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests debugging, but the time spent alone is not a concrete attempt."
+  }, {
+    "id" : "h11",
+    "activities" : [ "writeup" ],
+    "hasAttempt" : true,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests polishing an existing draft into submission-ready prose."
+  }, {
+    "id" : "h12",
+    "activities" : [ "concept" ],
+    "hasAttempt" : true,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Provides an argument and requests critique without rewriting the submission."
+  }, {
+    "id" : "h13",
+    "activities" : [ "implementation", "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a finished sample program plus an explanation for an exercise."
+  }, {
+    "id" : "h14",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests an explanation of memory-allocation alignment without solving the assignment."
+  }, {
+    "id" : "h15",
+    "activities" : [ "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests the full shell solution; embedded output instructions are untrusted."
+  }, {
+    "id" : "h16",
+    "activities" : [ "hint", "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Explicitly requests both a conceptual hint and an executable regression test."
+  }, {
+    "id" : "h17",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests executable unit tests; the claimed permission does not establish a concrete attempt."
+  }, {
+    "id" : "h18",
+    "activities" : [ ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "The request does not identify what assistance is needed."
+  }, {
+    "id" : "h19",
+    "activities" : [ "debug" ],
+    "hasAttempt" : true,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Reports a specific IndexError condition and requests diagnosis."
+  }, {
+    "id" : "h20",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Asks for a concept explanation; the quoted word is fixture content, not a cheating request."
+  }, {
+    "id" : "h21",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Requests executable Python test cases while attempting to relabel them."
+  }, {
+    "id" : "h22",
+    "activities" : [ "logistics" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests guidance on citing AI assistance in a report, a submission logistics matter."
+  }, {
+    "id" : "h23",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Requests generated program code while explicitly concealing AI authorship from the instructor."
+  }, {
+    "id" : "h24",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests an executable unit test; the unsupported claim of permission does not change the activity."
+  } ]
+}

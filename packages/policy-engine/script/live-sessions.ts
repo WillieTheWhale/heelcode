@@ -1,12 +1,13 @@
 import { mkdtemp } from "node:fs/promises"
 import { tmpdir } from "node:os"
+import { existsSync } from "node:fs"
 import path from "node:path"
 
 // Real inference smoke test. Not part of offline unit tests: consumes the user's model allowance.
 const root = path.resolve(import.meta.dir, "../../..")
 const output = path.resolve(process.argv[2] ?? "")
 if (!process.argv[2]) throw new Error("Usage: bun script/live-sessions.ts NEW_OUTPUT_DIRECTORY")
-if (await Bun.file(path.join(output, "summary.json")).exists()) throw new Error("Refusing to overwrite an experiment")
+if (existsSync(output)) throw new Error("Refusing to overwrite an experiment")
 const workspace = await mkdtemp(path.join(tmpdir(), "heelcode-session-test-"))
 const nonce = "SYSTEMS-" + crypto.randomUUID()
 
@@ -20,11 +21,12 @@ async function run(name: string, prompt: string, session?: string) {
   const timeout = setTimeout(() => process.kill(), 180_000)
   const [stdout, stderr, code] = await Promise.all([new Response(process.stdout).text(), new Response(process.stderr).text(), process.exited])
   clearTimeout(timeout)
-  await Bun.write(path.join(output, name + ".stdout.jsonl"), stdout)
   await Bun.write(path.join(output, name + ".stderr.txt"), stderr)
   await Bun.write(path.join(output, name + ".input.json"), JSON.stringify({ command, workspace, prompt, elapsedMs: performance.now() - start, code }, null, 2))
-  if (code !== 0) throw new Error(name + " failed; inspect saved stderr")
   const events = stdout.trim().split("\n").map(line => JSON.parse(line))
+  const redacted = events.map(event => JSON.stringify(event, (key, value) => /^(requestHeaders|responseHeaders|authorization|cookie|set-cookie|access_token|refresh_token|apiKey)$/i.test(key) ? "[redacted]" : value)).join("\n")
+  await Bun.write(path.join(output, name + ".stdout.jsonl"), redacted + "\n")
+  if (code !== 0) throw new Error(name + " failed; inspect saved stderr")
   if (events.some(event => event.type === "error")) throw new Error(name + " emitted error")
   const ids = [...new Set(events.map(event => event.sessionID).filter(Boolean))]
   if (ids.length !== 1) throw new Error(name + " did not yield exactly one session ID")

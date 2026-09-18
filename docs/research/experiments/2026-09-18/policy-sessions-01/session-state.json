@@ -1,0 +1,77 @@
+{
+  "id" : "hps_f7bf2ec256ff42dc961e904ca3ec6b02",
+  "workspace" : "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-session-ce7cfae8-c575-4e63-922a-d8fd5e412712",
+  "courseDigest" : "4eca5b9ad4c1018853e543f0c49b0bc09d894e0ae387f74fd14ffba746015f46",
+  "policyDigest" : "0de4d7662d060c1be3d2e743785eeb5eb4d649ca87549b0fa0be8a0e85d681c6",
+  "assignment" : "a1",
+  "turns" : [ {
+    "requestId" : "pipe-1",
+    "prompt" : "Explain how fork differs from exec.",
+    "features" : {
+      "id" : "pipe-1",
+      "activities" : [ "concept" ],
+      "hasAttempt" : false,
+      "unclear" : false,
+      "dishonest" : false,
+      "rationale" : "Asks for an explanation of the difference between fork and exec."
+    },
+    "decision" : {
+      "action" : "allow",
+      "forward" : true,
+      "reason" : "policy_allows_activity",
+      "feedback" : "This request is within the selected assignment's assistance policy. Disclose AI use as required.",
+      "evidence" : [ {
+        "source" : "10-a1-shell.md",
+        "quote" : "The learning objective is implementing process control yourself. Inherit the syllabus policy."
+      }, {
+        "source" : "00-syllabus.md",
+        "quote" : "Concept explanations, conceptual hints, test-design discussion without executable test code, and administrative/logistics questions are allowed throughout the course."
+      } ]
+    }
+  }, {
+    "requestId" : "pipe-2",
+    "prompt" : "Explain that distinction using a different analogy.",
+    "features" : {
+      "id" : "pipe-2",
+      "activities" : [ "concept" ],
+      "hasAttempt" : false,
+      "unclear" : false,
+      "dishonest" : false,
+      "rationale" : "Requests an alternative analogy to explain the fork-versus-exec distinction."
+    },
+    "decision" : {
+      "action" : "allow",
+      "forward" : true,
+      "reason" : "policy_allows_activity",
+      "feedback" : "This request is within the selected assignment's assistance policy. Disclose AI use as required.",
+      "evidence" : [ {
+        "source" : "10-a1-shell.md",
+        "quote" : "The learning objective is implementing process control yourself. Inherit the syllabus policy."
+      }, {
+        "source" : "00-syllabus.md",
+        "quote" : "Concept explanations, conceptual hints, test-design discussion without executable test code, and administrative/logistics questions are allowed throughout the course."
+      } ]
+    }
+  }, {
+    "requestId" : "pipe-3",
+    "prompt" : "Write a unit test that checks my pipeline exit status.",
+    "features" : {
+      "id" : "pipe-3",
+      "activities" : [ "test_code" ],
+      "hasAttempt" : false,
+      "unclear" : false,
+      "dishonest" : false,
+      "rationale" : "Requests an executable unit test for pipeline exit status; no concrete attempt, error, hypothesis, or test result is supplied."
+    },
+    "decision" : {
+      "action" : "deny",
+      "forward" : false,
+      "reason" : "policy_prohibits_activity",
+      "feedback" : "This assignment does not permit the requested output. Ask for a conceptual explanation or permitted smaller step; see the cited rules.",
+      "evidence" : [ {
+        "source" : "40-amendment.md",
+        "quote" : "This supersedes only the earlier a1 executable-test permission. Effective immediately, AI may discuss test design for a1 but may no longer generate executable tests for a1."
+      } ]
+    }
+  } ]
+}
