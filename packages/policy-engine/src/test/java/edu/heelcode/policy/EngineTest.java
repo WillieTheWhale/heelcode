@@ -246,6 +246,27 @@ class EngineTest {
   }
 
   @Test
+  void changedSourcesDuringInferenceCannotAdmitPrompt() throws Exception {
+    var course = course();
+    var workspace = root.resolve("workspace");
+    Workspace.activate(workspace, root.resolve("sources"), course, policy(course));
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            Workspace.check(
+                workspace,
+                new Workspace.Request("r1", "", "a1", "Explain pointers"),
+                (id, prompt, assignment, history) -> {
+                  Files.writeString(
+                      root.resolve("sources/policy.md"), "Policy changed during classification.");
+                  return features(id, List.of("concept"), false, false, false);
+                }));
+    try (var files = Files.list(workspace.resolve(".heelcode-policy/sessions"))) {
+      assertTrue(files.noneMatch(p -> p.toString().endsWith(".json")));
+    }
+  }
+
+  @Test
   void strictJsonRejectsUnknownFieldsAndMissingValues() {
     assertThrows(
         Exception.class,

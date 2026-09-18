@@ -140,6 +140,11 @@ public final class Workspace {
           session.turns().subList(Math.max(0, session.turns().size() - 6), session.turns().size());
       var features =
           extractor.extract(request.requestId(), request.prompt(), request.assignment(), history);
+      var current = active(root);
+      if (!current.policyDigest().equals(active.policyDigest())
+          || !current.course().digest().equals(active.course().digest()))
+        throw new IllegalArgumentException(
+            "Policy changed while classifying; retry under the current policy");
       if (!features.id().equals(request.requestId()))
         throw new IllegalArgumentException("Classifier returned the wrong request ID");
       var decision = Classifier.decide(active.policy(), request.assignment(), features);
