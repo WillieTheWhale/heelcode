@@ -171,6 +171,7 @@ public final class Workspace {
   }
 
   static Extractor model(Path workspace, String model) {
+    if (model.equals(JevModel.MODEL) || model.equals("jev")) return JevModel.model(workspace);
     var client = new CodexModel(model);
     return (id, prompt, assignment, history) -> {
       var inputs =

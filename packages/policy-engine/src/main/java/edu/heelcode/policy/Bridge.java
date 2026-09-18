@@ -249,6 +249,8 @@ public final class Bridge {
               .directory(workspace.toFile())
               .redirectOutput(run.resolve("stdout.private.jsonl").toFile())
               .redirectError(run.resolve("stderr.private.txt").toFile());
+      // The answer model does not need the classifier's credential.
+      builder.environment().remove("TYPESAFE_API_KEY");
       // Pin auxiliary title work too; no expensive implicit model or tool execution in this path.
       builder
           .environment()

@@ -32,6 +32,7 @@ public final class Main {
           score-policy BUNDLE POLICY ORACLE REPORT       independent rule-cell comparison
           schema policy|features                        print model output schema
           Models: gpt-5.6-luna or gpt-5.6-terra. No implicit fallback.
+          Classifier only: jev or jev-1.13.0 (requires TYPESAFE_API_KEY).
           Request: {"requestId":"r1","sessionId":"","assignment":"a1","prompt":"Explain fork"}
           Empty sessionId creates a new hps_ session; reuse returned ID for follow-up requests.
           """);

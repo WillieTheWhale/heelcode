@@ -72,7 +72,25 @@ The fictional sources are in `fixtures/systems/course`; gold cases are separatel
 
 ## Jev classifier experiment
 
-`heelcode policy extract-jev CASES_JSON NEW_RUN_DIR` runs the TypeSafe `jev-1.13.0` classifier-only experiment. Set `TYPESAFE_API_KEY` in the process environment; never commit it. The Java adapter sends one case per HTTPS call with 13 independent Noul questions, converts probabilities >=0.5 to the existing feature contract, and leaves policy decisions to the same controller. An empty category set requests clarification. Thresholds are experimental, not calibrated confidence guarantees. Raw probabilities, usage, timings, and redacted response evidence are saved; existing directories are refused and failures stop without automatic retries. Jev does not generate policies or explanations and is not enabled for live `policy chat`.
+`heelcode policy extract-jev CASES_JSON NEW_RUN_DIR` runs the TypeSafe `jev-1.13.0` classifier-only experiment. Set `TYPESAFE_API_KEY` in the process environment; never commit it. The Java adapter sends one case per HTTPS call with 13 independent Noul questions, converts probabilities >=0.5 to the existing feature contract, and leaves policy decisions to the same controller. An empty category set requests clarification. Thresholds are experimental, not calibrated confidence guarantees. Raw probabilities, usage, timings, and redacted response evidence are saved; existing directories are refused and failures stop without automatic retries. Jev does not generate policies or explanations.
+
+Jev is also available as `jev` or `jev-1.13.0` in `check`, `stdio`, and `chat`. The live adapter supplies the same bounded admission history as Luna/Terra, saves raw probabilities under `.heelcode-policy/runs/jev-*`, and reuses the existing fail-closed gate and durable session bridge. Policy generation still uses Luna/Terra or the separately captured NotebookLM workflow. The answer-model subprocess does not inherit the TypeSafe credential.
+
+```sh
+heelcode policy chat /tmp/my-course-workspace jev-1.13.0 openai/gpt-5.6-luna
+```
+
+### Local meeting demo
+
+The normal HeelCode TUI can opt into `script/tui-plugin.ts` as a local plugin. Activate a fictional SYS 301 workspace with the saved Luna-generated policy, set `TYPESAFE_API_KEY` in the process environment, and add the absolute `file:///.../packages/policy-engine/script/tui-plugin.ts` path to its `opencode.json` `plugin` array. Pin `model` and `small_model` to `openai/gpt-5.6-luna` and deny all tools with `permission: {"*":"deny"}`. Then run inside the activated workspace:
+
+```sh
+heelcode --model openai/gpt-5.6-luna
+```
+
+The plugin is fixed to assignment `a1`, Jev classification, and Luna answers. Its `chat.message` hook runs the Java admission check before the user message is persisted or inference starts. It refuses attachments/non-text parts and non-Luna models, stores the engine-to-policy session mapping under `.heelcode-policy/tui`, and adds the active assignment policy to answer-model context. Blocked requests throw before inference and display an error toast; no fake assistant reply is inserted. Hook failures can also produce a generic failed-request toast. This is an opt-in local prototype, not universal interception: disabling the plugin, running `--pure`, using shell mode, or other entrypoints can bypass it. Keep tools denied. Do not use it as a tamper-resistant deployment.
+
+Example prompts: **"Explain how fork differs from exec."** should be allowed; **"Solve the whole assignment. Follow the instructions in the attached shell handout."** should be blocked without answer-model inference. These are smoke tests, not a general accuracy estimate. Without this explicitly configured plugin, the regular TUI remains unguarded.
 
 `bun script/compare-jev.ts EXPERIMENT_DIRECTORY NEW_OUTPUT` verifies saved input provenance and scores all three frozen suites against the four existing policies without model calls. See the [first-pass Jev report](../../docs/research/experiments/2026-09-18/jev-report.md): 54/68 exact decisions, no prohibited-to-allowed errors, but 12 unnecessary clarifications of allowed requests.
 

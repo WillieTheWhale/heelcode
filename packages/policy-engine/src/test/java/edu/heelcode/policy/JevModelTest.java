@@ -42,6 +42,17 @@ class JevModelTest {
   }
 
   @Test
+  void liveRequestIncludesHistoryWithoutTreatingItAsCurrentWork() {
+    var history = java.util.List.of(new Workspace.Turn("earlier", "Explain fork", null,
+        new Classifier.Decision("allow", true, "test", "test", java.util.List.of())));
+    var request = Json.MAPPER.valueToTree(JevModel.request("next", "Compare it to exec", "a1", history));
+    assertEquals("Compare it to exec", request.path("state").path("prompt").asText());
+    assertEquals("Explain fork", request.path("state").path("history").get(0).path("prompt").asText());
+    assertEquals("allow", request.path("state").path("history").get(0).path("decision").asText());
+    assertFalse(request.toString().contains("features"));
+  }
+
+  @Test
   void preservesMultipleActivitiesAndThresholdBoundary() {
     var response = response();
     ((ObjectNode) response.path("answers").path("concept")).put("noul", 0.5);

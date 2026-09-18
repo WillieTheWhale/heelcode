@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 /** Research-only classifier adapter. Jev never generates or changes course policies. */
 final class JevModel {
@@ -101,6 +102,11 @@ final class JevModel {
   }
 
   static Map<String, Object> request(Evaluation.Case item) {
+    return request(item.id(), item.prompt(), item.assignment(), List.of());
+  }
+
+  static Map<String, Object> request(
+      String id, String prompt, String assignment, List<Workspace.Turn> history) {
     return Map.of(
         "model",
         MODEL,
@@ -109,13 +115,40 @@ final class JevModel {
         "state",
         Map.of(
             "id",
-            item.id(),
+            id,
             "assignment",
-            item.assignment(),
+            assignment,
             "prompt",
-            item.prompt(),
+            prompt,
             "history",
-            List.of()));
+            history.stream()
+                .map(turn -> Map.of("prompt", turn.prompt(), "decision", turn.decision().action()))
+                .toList()));
+  }
+
+  static Workspace.Extractor model(Path workspace) {
+    var key = requireKey();
+    var client = client();
+    return (id, prompt, assignment, history) -> {
+      var directory = workspace.resolve(".heelcode-policy/runs/jev-" + UUID.randomUUID());
+      Files.createDirectories(directory.getParent());
+      Files.createDirectory(directory);
+      return classify(client, key, id, request(id, prompt, assignment, history), directory);
+    };
+  }
+
+  private static String requireKey() {
+    var key = System.getenv("TYPESAFE_API_KEY");
+    if (key == null || key.isBlank())
+      throw new IllegalArgumentException("Set TYPESAFE_API_KEY in the process environment");
+    return key;
+  }
+
+  private static HttpClient client() {
+    return HttpClient.newBuilder()
+        .connectTimeout(Duration.ofSeconds(15))
+        .followRedirects(HttpClient.Redirect.NEVER)
+        .build();
   }
 
   static Classifier.Features features(String id, JsonNode response) {
@@ -155,9 +188,7 @@ final class JevModel {
   }
 
   static void extract(Path casesPath, Path run) throws Exception {
-    var key = System.getenv("TYPESAFE_API_KEY");
-    if (key == null || key.isBlank())
-      throw new IllegalArgumentException("Set TYPESAFE_API_KEY in the process environment");
+    var key = requireKey();
     var cases = Json.read(casesPath, Evaluation.Cases.class).cases();
     if (cases.isEmpty()
         || cases.size() > 200
@@ -186,71 +217,71 @@ final class JevModel {
             false,
             "automaticRetries",
             0));
-    var client =
-        HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(15))
-            .followRedirects(HttpClient.Redirect.NEVER)
-            .build();
+    var client = client();
     var items = new ArrayList<Classifier.Features>();
     for (var item : cases) {
       var directory = run.resolve(String.format("case-%03d", items.size() + 1));
       Files.createDirectory(directory);
       var payload = request(item);
-      Json.write(directory.resolve("request.json"), payload);
-      var started = Instant.now();
-      var clock = System.nanoTime();
-      try {
-        var response =
-            client.send(
-                HttpRequest.newBuilder(URI.create("https://api.typesafe.ai/v1/systemone"))
-                    .timeout(Duration.ofSeconds(90))
-                    .header("Authorization", "Bearer " + key)
-                    .header("Content-Type", "application/json")
-                    .POST(
-                        HttpRequest.BodyPublishers.ofString(
-                            Json.MAPPER.writeValueAsString(payload)))
-                    .build(),
-                HttpResponse.BodyHandlers.ofString());
-        // Never persist request headers; redact the credential even if a service echoes it.
-        Files.writeString(
-            directory.resolve("response.json"), response.body().replace(key, "[REDACTED]"));
-        Json.write(
-            directory.resolve("metadata.json"),
-            Map.of(
-                "id",
-                item.id(),
-                "startedAt",
-                started.toString(),
-                "status",
-                response.statusCode(),
-                "elapsedMs",
-                (System.nanoTime() - clock) / 1_000_000,
-                "requestSha256",
-                Course.hash(Files.readString(directory.resolve("request.json")))));
-        if (response.statusCode() != 200)
-          throw new IllegalStateException(
-              "TypeSafe returned HTTP "
-                  + response.statusCode()
-                  + "; no automatic retry or fallback");
-        var result = features(item.id(), Json.MAPPER.readTree(response.body()));
-        items.add(result);
-        Json.write(directory.resolve("features.json"), result);
-        System.err.println("Jev classified " + items.size() + "/" + cases.size());
-      } catch (Exception error) {
-        Json.write(
-            directory.resolve("failure.json"),
-            Map.of(
-                "id",
-                item.id(),
-                "errorType",
-                error.getClass().getSimpleName(),
-                "elapsedMs",
-                (System.nanoTime() - clock) / 1_000_000,
-                "forward",
-                false));
-        throw new IllegalStateException("Jev extraction failed; saved evidence in " + directory);
-      }
+      items.add(classify(client, key, item.id(), payload, directory));
+      System.err.println("Jev classified " + items.size() + "/" + cases.size());
     }
     Json.write(run.resolve("features.json"), new Classifier.Batch(items));
+  }
+
+  private static Classifier.Features classify(
+      HttpClient client, String key, String id, Map<String, Object> payload, Path directory)
+      throws Exception {
+    Json.write(directory.resolve("request.json"), payload);
+    var started = Instant.now();
+    var clock = System.nanoTime();
+    try {
+      var response =
+          client.send(
+              HttpRequest.newBuilder(URI.create("https://api.typesafe.ai/v1/systemone"))
+                  .timeout(Duration.ofSeconds(90))
+                  .header("Authorization", "Bearer " + key)
+                  .header("Content-Type", "application/json")
+                  .POST(
+                      HttpRequest.BodyPublishers.ofString(
+                          Json.MAPPER.writeValueAsString(payload)))
+                  .build(),
+              HttpResponse.BodyHandlers.ofString());
+      // Never persist request headers; redact the credential even if a service echoes it.
+      Files.writeString(
+          directory.resolve("response.json"), response.body().replace(key, "[REDACTED]"));
+      Json.write(
+          directory.resolve("metadata.json"),
+          Map.of(
+              "id",
+              id,
+              "startedAt",
+              started.toString(),
+              "status",
+              response.statusCode(),
+              "elapsedMs",
+              (System.nanoTime() - clock) / 1_000_000,
+              "requestSha256",
+              Course.hash(Files.readString(directory.resolve("request.json")))));
+      if (response.statusCode() != 200)
+        throw new IllegalStateException(
+            "TypeSafe returned HTTP " + response.statusCode() + "; no automatic retry or fallback");
+      var result = features(id, Json.MAPPER.readTree(response.body()));
+      Json.write(directory.resolve("features.json"), result);
+      return result;
+    } catch (Exception error) {
+      Json.write(
+          directory.resolve("failure.json"),
+          Map.of(
+              "id",
+              id,
+              "errorType",
+              error.getClass().getSimpleName(),
+              "elapsedMs",
+              (System.nanoTime() - clock) / 1_000_000,
+              "forward",
+              false));
+      throw new IllegalStateException("Jev extraction failed; saved evidence in " + directory);
+    }
   }
 }
