@@ -27,6 +27,7 @@ public final class Main {
           stdio WORKSPACE MODEL                          persistent JSONL stdin/stdout server
           chat WORKSPACE CLASSIFIER_MODEL INFERENCE_MODEL  persistent gated HeelCode chat
           extract CASES_JSON RUN_DIR MODEL               extract evaluation features, no labels sent
+          extract-jev CASES_JSON RUN_DIR                 Jev 1.13 classifier-only research run
           evaluate BUNDLE POLICY CASES FEATURES REPORT   offline decisions and confusion matrix
           score-policy BUNDLE POLICY ORACLE REPORT       independent rule-cell comparison
           schema policy|features                        print model output schema
@@ -111,6 +112,11 @@ public final class Main {
         require(args, 4);
         Evaluation.extract(Path.of(args[1]), Path.of(args[2]), args[3]);
         emit(Map.of("status", "extracted"));
+      }
+      case "extract-jev" -> {
+        require(args, 3);
+        JevModel.extract(Path.of(args[1]), Path.of(args[2]));
+        emit(Map.of("status", "extracted", "model", JevModel.MODEL));
       }
       case "score-policy" -> {
         require(args, 5);

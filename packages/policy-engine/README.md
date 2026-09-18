@@ -70,6 +70,12 @@ The [September 18 session-verification report](../../docs/research/experiments/2
 
 The fictional sources are in `fixtures/systems/course`; gold cases are separately in `fixtures/systems/evaluation.json`. Model run directories preserve prompts, schema, outputs, events, metadata and errors. A new run must use a new directory. Research runs contain synthetic data; production prompt logging needs consent, retention, access controls and IRB review where applicable.
 
+## Jev classifier experiment
+
+`heelcode policy extract-jev CASES_JSON NEW_RUN_DIR` runs the TypeSafe `jev-1.13.0` classifier-only experiment. Set `TYPESAFE_API_KEY` in the process environment; never commit it. The Java adapter sends one case per HTTPS call with 13 independent Noul questions, converts probabilities >=0.5 to the existing feature contract, and leaves policy decisions to the same controller. An empty category set requests clarification. Thresholds are experimental, not calibrated confidence guarantees. Raw probabilities, usage, timings, and redacted response evidence are saved; existing directories are refused and failures stop without automatic retries. Jev does not generate policies or explanations and is not enabled for live `policy chat`.
+
+`bun script/compare-jev.ts EXPERIMENT_DIRECTORY NEW_OUTPUT` verifies saved input provenance and scores all three frozen suites against the four existing policies without model calls. See the [first-pass Jev report](../../docs/research/experiments/2026-09-18/jev-report.md): 54/68 exact decisions, no prohibited-to-allowed errors, but 12 unnecessary clarifications of allowed requests. NotebookLM classification is still separate and pending.
+
 ## Boundaries
 
 This is an English-language research prototype, not a secure academic-integrity enforcement product. A user who can edit their local workspace can replace a policy. SHA-256 detects accidental drift; it is not a signature or authorization mechanism. The source folder and activation command must be controlled by a trusted instructor/operator in deployment. Generation is explicit after ingestion; source changes fail closed until regenerated and reactivated. There is no upload portal, automatic file watcher, fine-tuned encoder, output filter, tool-action guard, or proof of learning. A syntactically valid policy is a draft until an instructor has reviewed its meaning.
