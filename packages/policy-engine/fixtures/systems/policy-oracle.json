@@ -1,0 +1,9 @@
+{
+  "scopes": [
+    {"id":"*","allow":["concept","hint","debug","test_design","logistics"],"requireAttempt":["debug"]},
+    {"id":"a1","allow":["concept","hint","debug","test_design","logistics"],"requireAttempt":["debug"]},
+    {"id":"a2","allow":["concept","hint","debug","test_design","logistics"],"requireAttempt":["debug"]},
+    {"id":"a3","allow":["concept","hint","debug","test_design","test_code","pseudocode","implementation","logistics"],"requireAttempt":["debug"]},
+    {"id":"practice","allow":["concept","hint","debug","test_design","test_code","pseudocode","implementation","full_solution","writeup","logistics"],"requireAttempt":[]}
+  ]
+}

@@ -4,6 +4,7 @@ node_modules
 .sst
 .env
 .env.local
+.heelcode-policy/
 .idea
 .vscode
 .codex

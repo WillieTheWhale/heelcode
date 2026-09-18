@@ -6,16 +6,19 @@ import path from "node:path"
 // Real inference smoke test. Not part of offline unit tests: consumes the user's model allowance.
 const root = path.resolve(import.meta.dir, "../../..")
 const output = path.resolve(process.argv[2] ?? "")
+const model = process.argv[3] ?? "openai/gpt-5.6-luna"
+if (!/^(openai|opencode)\/gpt-5\.6-(luna|terra)$/.test(model)) throw new Error("Choose a Luna/Terra model on OpenAI or OpenCode")
 if (!process.argv[2]) throw new Error("Usage: bun script/live-sessions.ts NEW_OUTPUT_DIRECTORY")
 if (existsSync(output)) throw new Error("Refusing to overwrite an experiment")
 const workspace = await mkdtemp(path.join(tmpdir(), "heelcode-session-test-"))
 const nonce = "SYSTEMS-" + crypto.randomUUID()
 
 async function run(name: string, prompt: string, session?: string) {
-  const command = [path.join(root, "bin/heelcode"), "run", "--pure", "--format", "json", "--model", "openai/gpt-5.6-luna",
+  const command = [path.join(root, "bin/heelcode"), "run", "--pure", "--format", "json", "--model", model, "--agent", "build",
     ...(session ? ["--session", session] : [])]
   const start = performance.now()
-  const process = Bun.spawn(command, { cwd: workspace, stdin: "pipe", stdout: "pipe", stderr: "pipe" })
+  const process = Bun.spawn(command, { cwd: workspace, stdin: "pipe", stdout: "pipe", stderr: "pipe",
+    env: {...Bun.env, OPENCODE_CONFIG_CONTENT:JSON.stringify({model,small_model:model,permission:{"*":"deny"},agent:{build:{steps:1}}})} })
   process.stdin.write(prompt)
   process.stdin.end()
   const timeout = setTimeout(() => process.kill(), 180_000)
@@ -40,6 +43,6 @@ const second = await run("followup", "What exact codeword did I give you in my p
 if (second.sessionId !== first.sessionId || !second.text.includes(nonce)) throw new Error("Session continuity failed")
 const separate = await run("isolated", "What exact codeword did I give you in my previous message? If no codeword exists in this conversation, reply only UNKNOWN. Do not use tools.")
 if (separate.sessionId === first.sessionId || separate.text.includes(nonce) || !separate.text.includes("UNKNOWN")) throw new Error("Session isolation failed")
-await Bun.write(path.join(output, "summary.json"), JSON.stringify({ status: "passed", model: "openai/gpt-5.6-luna", workspace, first, second, separate,
+await Bun.write(path.join(output, "summary.json"), JSON.stringify({ status: "passed", model, workspace, first, second, separate,
   assertions: ["stdout is parseable JSONL", "session ID survives process restart", "follow-up retrieves random codeword from history", "new session does not see codeword"] }, null, 2))
 console.log(JSON.stringify({ status: "passed", output }))

@@ -1,0 +1,10 @@
+{
+  "name": "@heelcode/policy-engine-tools",
+  "private": true,
+  "type": "module",
+  "scripts": { "typecheck": "tsgo --noEmit" },
+  "devDependencies": {
+    "@types/bun": "catalog:",
+    "@typescript/native-preview": "catalog:"
+  }
+}

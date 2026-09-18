@@ -12,6 +12,7 @@ done
 root=$(CDPATH= cd -- "$(dirname -- "$launcher")/.." && pwd)
 if [ "${1:-}" = policy ]; then
   shift
+  export HEELCODE_EXECUTABLE="$root/bin/heelcode"
   exec "$root/packages/policy-engine/run" "$@"
 fi
 if ! command -v bun >/dev/null 2>&1; then

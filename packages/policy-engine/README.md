@@ -33,7 +33,21 @@ Write one JSON object followed by a newline per request. A response arrives with
 
 Policy sessions use `hps_...` IDs and are stored under the workspace's `.heelcode-policy/sessions`. They persist across restarts and are pinned to an assignment, workspace, source digest, and policy digest. The last six turns are supplied to the extractor; the full local admission history is saved (maximum 200 turns). This is a bounded history policy, not an unlimited model context window.
 
-**These are admission sessions, not OpenCode inference sessions.** Existing inference uses `heelcode run --format json --session ses_...`. A frontend must maintain both IDs if it calls the gate and OpenCode separately. `heelcode run` itself still takes one EOF-delimited input per invocation; it does not gain persistent JSONL stdin from this package. The policy gate does not automatically intercept the TUI or raw `heelcode run`, and an allowed response is not a generated solution. It is the caller's responsibility to forward only allowed inputs. A direct enforcement bridge remains a separate integration step.
+**These are admission sessions, not OpenCode inference sessions.** Existing inference uses `heelcode run --format json --session ses_...`. `heelcode run` itself still takes one EOF-delimited input per invocation; it does not gain persistent JSONL stdin from this package. The admission-only commands do not produce model answers.
+
+## Gated inference bridge
+
+```sh
+heelcode policy chat /tmp/my-course-workspace gpt-5.6-luna openai/gpt-5.6-luna
+```
+
+This uses the same JSONL request framing. It owns the gate-to-inference boundary: a deny or clarify decision returns `status: "blocked"` without launching HeelCode inference. An allowed request runs `heelcode run --format json`, supplies the assignment policy, and pins both the main and auxiliary model to the explicitly selected Luna/Terra model. External plugins and tool actions are disabled for this text-only prototype. Responses are buffered until the turn finishes; this is not incremental token streaming.
+
+The response contains both `sessionId` (`hps_...`, send this on subsequent bridge requests) and `engineSessionId` (`ses_...`, tracked by the bridge). Do not supply an arbitrary engine ID or mix admission-only sessions with chat sessions. The `policy` field contains the admission decision. Successful inference returns `status: "completed"` and `text`. A provider failure returns `failed`; a crash/timeout with uncertain outcome returns `uncertain` and does not automatically reissue the call. A definitive result is persisted and an exact retry returns that same result, without re-running inference. `inferenceAttempted` describes the saved/emitted result, not a fresh billing event; an exact replay may retain its original `true` value. Treat `busy`, `failed`, `uncertain`, and `error` as non-successes.
+
+State is stored under `.heelcode-policy/chat/SESSION/state.json`. A durable pending marker precedes inference. An unresolved marker requires operator inspection; starting a new session does not cancel any outstanding provider-side work. This avoids claiming exactly-once remote execution after a crash. Requests are sequential per session, and each requires a unique request ID. An initial request with an empty session ID cannot be deduplicated if its first response is lost; a frontend must retain returned IDs.
+
+`HEELCODE_EXECUTABLE` selects the launcher when invoking the JAR directly. The `heelcode policy` wrapper supplies its own absolute launcher path. Only the explicit `policy chat` path is guarded; raw `heelcode run` and the TUI remain unguarded. Output content is not automatically classified. Supplying policy instructions to the answer model is a precaution, not a proof of output compliance.
 
 ## Components
 
@@ -46,7 +60,7 @@ Policy sessions use `hps_...` IDs and are stored under the workspace's `.heelcod
 
 ## Tests and research evidence
 
-`mvn test` is offline. `script/live-sessions.ts` runs real Luna inference through HeelCode and tests saved context across process restarts and isolation of a separate session. `script/live-policy-sessions.ts` tests the JSONL gate, follow-up context, amendment enforcement, and replay after restart. Both consume model allowance and save raw evidence; invoke explicitly with Bun from this package. Do not run from the monorepo root.
+`mvn test` is offline; `bun typecheck` checks the research scripts. `script/live-sessions.ts` runs real Luna inference through HeelCode and tests saved context across process restarts and isolation of a separate session. `script/live-policy-sessions.ts` tests the JSONL gate, follow-up context, amendment enforcement, and replay after restart. `script/live-bridge.ts` tests the actual bridge in `blocked-only` or `full` mode. Live scripts consume model allowance and save evidence; invoke explicitly with Bun from this package. Never rebuild the shaded JAR during a live Java model run. Do not run tests from the monorepo root.
 
 The fictional sources are in `fixtures/systems/course`; gold cases are separately in `fixtures/systems/evaluation.json`. Model run directories preserve prompts, schema, outputs, events, metadata and errors. A new run must use a new directory. Research runs contain synthetic data; production prompt logging needs consent, retention, access controls and IRB review where applicable.
 

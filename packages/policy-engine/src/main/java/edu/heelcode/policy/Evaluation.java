@@ -9,6 +9,77 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public final class Evaluation {
+  public record ExpectedScope(String id, List<String> allow, List<String> requireAttempt) {}
+
+  public record Oracle(List<ExpectedScope> scopes) {}
+
+  static Map<String, Object> scorePolicy(Path bundlePath, Path policyPath, Path oraclePath)
+      throws IOException {
+    var course = Json.read(bundlePath, Course.class);
+    var policy = Json.read(policyPath, Policy.class);
+    policy.validate(course);
+    var oracle = Json.read(oraclePath, Oracle.class);
+    if (oracle.scopes().isEmpty()
+        || oracle.scopes().stream().map(ExpectedScope::id).distinct().count()
+            != oracle.scopes().size()
+        || oracle.scopes().stream()
+            .anyMatch(
+                s ->
+                    !Policy.ACTIVITIES.containsAll(s.allow())
+                        || !s.allow().containsAll(s.requireAttempt())))
+      throw new IllegalArgumentException("Invalid policy oracle");
+    var rows =
+        oracle.scopes().stream()
+            .flatMap(
+                scope ->
+                    Policy.ACTIVITIES.stream()
+                        .map(
+                            activity -> {
+                              var generated = policy.scope(scope.id());
+                              var rule =
+                                  generated == null
+                                      ? null
+                                      : generated.rules().stream()
+                                          .filter(r -> r.activities().contains(activity))
+                                          .findFirst()
+                                          .orElse(null);
+                              var expected = scope.allow().contains(activity) ? "allow" : "deny";
+                              var requiresAttempt = scope.requireAttempt().contains(activity);
+                              return Map.of(
+                                  "scope",
+                                  scope.id(),
+                                  "activity",
+                                  activity,
+                                  "expected",
+                                  expected,
+                                  "expectedAttempt",
+                                  requiresAttempt,
+                                  "actual",
+                                  rule == null ? "missing" : rule.effect(),
+                                  "actualAttempt",
+                                  rule != null && rule.requireAttempt(),
+                                  "correct",
+                                  rule != null
+                                      && expected.equals(rule.effect())
+                                      && requiresAttempt == rule.requireAttempt());
+                            }))
+            .toList();
+    return Map.of(
+        "cells",
+        rows.size(),
+        "correct",
+        rows.stream().filter(r -> r.get("correct").equals(true)).count(),
+        "extraScopes",
+        policy.scopes().stream()
+            .map(Policy.Scope::id)
+            .filter(id -> oracle.scopes().stream().noneMatch(s -> s.id().equals(id)))
+            .toList(),
+        "rows",
+        rows,
+        "oracleSha256",
+        Course.hash(Json.MAPPER.writeValueAsString(oracle)));
+  }
+
   public record Case(
       String id, String assignment, String prompt, String expected, String category) {}
 

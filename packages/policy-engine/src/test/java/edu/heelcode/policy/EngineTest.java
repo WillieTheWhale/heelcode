@@ -267,6 +267,26 @@ class EngineTest {
   }
 
   @Test
+  void ruleScoringCoversEveryActivityAndMissingScopes() throws Exception {
+    var course = course();
+    var allowed = Policy.ACTIVITIES.stream().filter(a -> !a.equals("test_code")).toList();
+    var oracle =
+        new Evaluation.Oracle(
+            List.of(
+                new Evaluation.ExpectedScope("*", allowed, List.of("debug")),
+                new Evaluation.ExpectedScope("a1", allowed, List.of("debug")),
+                new Evaluation.ExpectedScope("missing", allowed, List.of("debug"))));
+    Json.write(root.resolve("bundle.json"), course);
+    Json.write(root.resolve("policy.json"), policy(course));
+    Json.write(root.resolve("oracle.json"), oracle);
+    var report =
+        Evaluation.scorePolicy(
+            root.resolve("bundle.json"), root.resolve("policy.json"), root.resolve("oracle.json"));
+    assertEquals(30, report.get("cells"));
+    assertEquals(20L, report.get("correct"));
+  }
+
+  @Test
   void strictJsonRejectsUnknownFieldsAndMissingValues() {
     assertThrows(
         Exception.class,
