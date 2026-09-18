@@ -2,6 +2,8 @@
 
 September 18, 2026. **Interim report: the Java prototype and comparative policy tests work; the overall goal is not complete.** NotebookLM and successful end-to-end answer-session tests remain pending.
 
+**Subsequent update:** The user reauthenticated HeelCode, and the [live session-verification checkpoint](session-verification.md) now documents successful end-to-end Luna tests. It supersedes the pending provider/session items below. A later extraction-prompt clarification was tested with Luna; the Luna/Terra tables in this report remain evidence for the earlier frozen prompt, not an updated comparison of that revision.
+
 ## Main finding
 
 Luna and Terra both produced the expected rule settings on this small fictional course, in two policy-generation runs each. Both also produced features that led to all 60 expected request decisions under every generated policy. This experiment therefore **does not establish a quality winner**. It demonstrates that the architecture can represent assignment exceptions, later amendments, and cautious handling of conflicting sources. It does not demonstrate general classroom accuracy, detect cheating reliably, or measure student understanding.

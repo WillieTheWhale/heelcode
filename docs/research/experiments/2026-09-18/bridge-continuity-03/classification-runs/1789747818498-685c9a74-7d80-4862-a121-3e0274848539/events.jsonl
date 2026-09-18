@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"01a0b548-703f-7981-bef8-d79fbf58ddc2"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"{\"items\":[{\"id\":\"isolated1\",\"rationale\":\"Requests recalling a user-provided label, but no label appears in the supplied history.\",\"dishonest\":false,\"activities\":[\"logistics\"],\"hasAttempt\":false,\"unclear\":false}]}"}}
+{"type":"turn.completed","usage":{"input_tokens":8973,"cached_input_tokens":0,"output_tokens":95,"reasoning_output_tokens":30}}

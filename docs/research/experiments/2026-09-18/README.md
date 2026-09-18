@@ -2,6 +2,8 @@
 
 Date: September 18, 2026. Status: **working prototype and initial Luna results; overall experiment remains incomplete**.
 
+**Latest checkpoint:** [Authenticated Luna session verification](session-verification.md). Successful real answer-session memory, restart, isolation, and gated inference are now verified on macOS. It also documents a classifier edge case found and corrected during multi-turn testing.
+
 **Later checkpoint:** [Luna/Terra comparison, guarded chat, and source-conflict results](comparison-report.md). It supersedes the pending Terra/bridge items and test counts below. This initial report is preserved as a dated experiment checkpoint; it is not the current completion checklist.
 
 ## What was built, in plain language

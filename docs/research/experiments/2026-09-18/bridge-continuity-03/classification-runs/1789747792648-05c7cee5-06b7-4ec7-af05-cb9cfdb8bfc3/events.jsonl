@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"01a0b548-0b4d-7912-aacd-d06a0a94f39b"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"{\"items\":[{\"dishonest\":false,\"rationale\":\"Asks to recall a user-provided label from the supplied history.\",\"id\":\"context2\",\"unclear\":false,\"hasAttempt\":false,\"activities\":[\"logistics\"]}]}"}}
+{"type":"turn.completed","usage":{"input_tokens":9028,"cached_input_tokens":0,"output_tokens":88,"reasoning_output_tokens":27}}

@@ -1,0 +1,112 @@
+{
+  "workspace" : "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-context-ef116956-f92f-4703-b02b-53e9425c94fc",
+  "sessionId" : "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+  "assignment" : "practice",
+  "policyDigest" : "0de4d7662d060c1be3d2e743785eeb5eb4d649ca87549b0fa0be8a0e85d681c6",
+  "model" : "openai/gpt-5.6-luna",
+  "engineSessionId" : "ses_f4ab81877ffeZE7Pi5k422DrXZ",
+  "pendingRequest" : "",
+  "responses" : [ {
+    "requestId" : "context1",
+    "sessionId" : "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+    "turn" : 1,
+    "engineSessionId" : "ses_f4ab81877ffeZE7Pi5k422DrXZ",
+    "status" : "completed",
+    "inferenceAttempted" : true,
+    "text" : "SYSTEMS-da6ce08b-6db7-446b-a3a3-3f6f72b89183: `fork` creates a process, while `exec` replaces its program.",
+    "error" : "",
+    "policy" : {
+      "requestId" : "context1",
+      "sessionId" : "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+      "turn" : 1,
+      "courseId" : "sys301",
+      "policyDigest" : "0de4d7662d060c1be3d2e743785eeb5eb4d649ca87549b0fa0be8a0e85d681c6",
+      "features" : {
+        "id" : "context1",
+        "activities" : [ "concept", "logistics" ],
+        "hasAttempt" : false,
+        "unclear" : false,
+        "dishonest" : false,
+        "rationale" : "Requests a one-sentence conceptual explanation of fork and exec, while also asking to remember and begin with a provided label."
+      },
+      "decision" : {
+        "action" : "allow",
+        "forward" : true,
+        "reason" : "policy_allows_activity",
+        "feedback" : "This request is within the selected assignment's assistance policy. Disclose AI use as required.",
+        "evidence" : [ {
+          "source" : "50-practice.md",
+          "quote" : "Students may request conceptual explanations, hints, debugging, test-design discussion, executable tests, pseudocode, implementation code, complete worked solutions, written explanations, and logistics."
+        } ]
+      }
+    }
+  }, {
+    "requestId" : "context2",
+    "sessionId" : "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+    "turn" : 2,
+    "engineSessionId" : "ses_f4ab81877ffeZE7Pi5k422DrXZ",
+    "status" : "completed",
+    "inferenceAttempted" : true,
+    "text" : "SYSTEMS-da6ce08b-6db7-446b-a3a3-3f6f72b89183",
+    "error" : "",
+    "policy" : {
+      "requestId" : "context2",
+      "sessionId" : "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+      "turn" : 2,
+      "courseId" : "sys301",
+      "policyDigest" : "0de4d7662d060c1be3d2e743785eeb5eb4d649ca87549b0fa0be8a0e85d681c6",
+      "features" : {
+        "id" : "context2",
+        "activities" : [ "logistics" ],
+        "hasAttempt" : false,
+        "unclear" : false,
+        "dishonest" : false,
+        "rationale" : "Asks to recall a user-provided label from the supplied history."
+      },
+      "decision" : {
+        "action" : "allow",
+        "forward" : true,
+        "reason" : "policy_allows_activity",
+        "feedback" : "This request is within the selected assignment's assistance policy. Disclose AI use as required.",
+        "evidence" : [ {
+          "source" : "50-practice.md",
+          "quote" : "Students may request conceptual explanations, hints, debugging, test-design discussion, executable tests, pseudocode, implementation code, complete worked solutions, written explanations, and logistics."
+        } ]
+      }
+    }
+  }, {
+    "requestId" : "context3",
+    "sessionId" : "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+    "turn" : 3,
+    "engineSessionId" : "ses_f4ab81877ffeZE7Pi5k422DrXZ",
+    "status" : "completed",
+    "inferenceAttempted" : true,
+    "text" : "SYSTEMS-da6ce08b-6db7-446b-a3a3-3f6f72b89183",
+    "error" : "",
+    "policy" : {
+      "requestId" : "context3",
+      "sessionId" : "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+      "turn" : 3,
+      "courseId" : "sys301",
+      "policyDigest" : "0de4d7662d060c1be3d2e743785eeb5eb4d649ca87549b0fa0be8a0e85d681c6",
+      "features" : {
+        "id" : "context3",
+        "activities" : [ "logistics" ],
+        "hasAttempt" : false,
+        "unclear" : false,
+        "dishonest" : false,
+        "rationale" : "Requests recalling and repeating a user-provided label from conversation history."
+      },
+      "decision" : {
+        "action" : "allow",
+        "forward" : true,
+        "reason" : "policy_allows_activity",
+        "feedback" : "This request is within the selected assignment's assistance policy. Disclose AI use as required.",
+        "evidence" : [ {
+          "source" : "50-practice.md",
+          "quote" : "Students may request conceptual explanations, hints, debugging, test-design discussion, executable tests, pseudocode, implementation code, complete worked solutions, written explanations, and logistics."
+        } ]
+      }
+    }
+  } ]
+}

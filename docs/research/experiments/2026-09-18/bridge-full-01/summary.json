@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "mode": "full",
+  "workspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-610156b7-7429-436d-a8fa-9ddc755e957b",
+  "sessionId": "hps_07e762c9453e44c68f53796c5f159183",
+  "engineSessionId": "ses_f4abe49abffetN5dE4TZKNXRuu",
+  "inferenceRuns": [
+    "turn-2",
+    "turn-1"
+  ],
+  "assertions": [
+    "allowed requests produce model answers",
+    "same engine session reused",
+    "denial invokes no inference",
+    "restart preserves session and response"
+  ]
+}

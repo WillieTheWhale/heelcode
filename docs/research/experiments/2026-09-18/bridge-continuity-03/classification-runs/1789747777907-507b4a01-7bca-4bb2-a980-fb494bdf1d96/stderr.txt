@@ -1,0 +1,7 @@
+2026-09-18T16:09:37.975820Z ERROR codex_models_manager::cache: failed to load models cache: missing field `base_instructions` at line 139 column 5
+2026-09-18T16:09:38.310780Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-18T16:09:38.311840Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-18T16:09:38.315735Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-18T16:09:38.316924Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-18T16:09:38.318583Z  WARN codex_rollout::list: state db discrepancy during find_thread_path_by_id_str_in_subdir: falling_back
+2026-09-18T16:09:42.366793Z  WARN codex_core::shell_snapshot: Failed to delete shell snapshot at AbsolutePathBuf("/Users/williamkeffer/.codex/shell_snapshots/01a0b547-d2fd-70b3-9867-c7f4454ceeab.1789747778302402000.sh"): Os { code: 2, kind: NotFound, message: "No such file or directory" }

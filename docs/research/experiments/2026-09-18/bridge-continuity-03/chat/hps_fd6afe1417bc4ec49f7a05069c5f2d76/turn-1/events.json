@@ -1,0 +1,56 @@
+[ {
+  "type" : "step_start",
+  "timestamp" : 1789747790630,
+  "sessionID" : "ses_f4ab81877ffeZE7Pi5k422DrXZ",
+  "part" : {
+    "id" : "prt_0b5480320001pygsiM8BvVMT7V",
+    "messageID" : "msg_0b547e981001VNMnjjOf62xWEY",
+    "sessionID" : "ses_f4ab81877ffeZE7Pi5k422DrXZ",
+    "snapshot" : "d16b108861864bbe8ba1ab1be1c51082602043b1",
+    "type" : "step-start"
+  }
+}, {
+  "type" : "text",
+  "timestamp" : 1789747792393,
+  "sessionID" : "ses_f4ab81877ffeZE7Pi5k422DrXZ",
+  "part" : {
+    "id" : "prt_0b5480730001DPrtYUiwLUKCOz",
+    "messageID" : "msg_0b547e981001VNMnjjOf62xWEY",
+    "sessionID" : "ses_f4ab81877ffeZE7Pi5k422DrXZ",
+    "type" : "text",
+    "text" : "SYSTEMS-da6ce08b-6db7-446b-a3a3-3f6f72b89183: `fork` creates a process, while `exec` replaces its program.",
+    "time" : {
+      "start" : 1789747791664,
+      "end" : 1789747792391
+    },
+    "metadata" : {
+      "openai" : {
+        "itemId" : "msg_0f7282c546238330016aad624fb4c087d1a3f868b31b0d0dbb",
+        "phase" : "final_answer"
+      }
+    }
+  }
+}, {
+  "type" : "step_finish",
+  "timestamp" : 1789747792446,
+  "sessionID" : "ses_f4ab81877ffeZE7Pi5k422DrXZ",
+  "part" : {
+    "id" : "prt_0b5480a3b001gNmw9Oh5jRbZuZ",
+    "reason" : "stop",
+    "snapshot" : "d16b108861864bbe8ba1ab1be1c51082602043b1",
+    "messageID" : "msg_0b547e981001VNMnjjOf62xWEY",
+    "sessionID" : "ses_f4ab81877ffeZE7Pi5k422DrXZ",
+    "type" : "step-finish",
+    "tokens" : {
+      "total" : 4559,
+      "input" : 4470,
+      "output" : 49,
+      "reasoning" : 40,
+      "cache" : {
+        "write" : 0,
+        "read" : 0
+      }
+    },
+    "cost" : 0
+  }
+} ]

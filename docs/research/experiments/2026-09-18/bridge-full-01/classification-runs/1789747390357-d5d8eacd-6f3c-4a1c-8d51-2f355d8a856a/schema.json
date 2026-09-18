@@ -1,0 +1,39 @@
+{
+  "required" : [ "items" ],
+  "additionalProperties" : false,
+  "properties" : {
+    "items" : {
+      "type" : "array",
+      "items" : {
+        "required" : [ "activities", "dishonest", "hasAttempt", "id", "rationale", "unclear" ],
+        "additionalProperties" : false,
+        "properties" : {
+          "dishonest" : {
+            "type" : "boolean"
+          },
+          "rationale" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "unclear" : {
+            "type" : "boolean"
+          },
+          "hasAttempt" : {
+            "type" : "boolean"
+          },
+          "activities" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "concept", "hint", "debug", "test_design", "test_code", "pseudocode", "implementation", "full_solution", "writeup", "logistics" ]
+            }
+          }
+        },
+        "type" : "object"
+      }
+    }
+  },
+  "type" : "object"
+}

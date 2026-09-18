@@ -1,0 +1,311 @@
+[
+  {
+    "workspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-context-ef116956-f92f-4703-b02b-53e9425c94fc",
+    "request": {
+      "requestId": "context1",
+      "sessionId": "",
+      "assignment": "practice",
+      "prompt": "For my ungraded systems practice notes, remember the label SYSTEMS-da6ce08b-6db7-446b-a3a3-3f6f72b89183. Explain in one sentence that fork creates a process and exec replaces its program. Begin with that exact label."
+    },
+    "response": {
+      "requestId": "context1",
+      "sessionId": "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+      "turn": 1,
+      "engineSessionId": "ses_f4ab81877ffeZE7Pi5k422DrXZ",
+      "status": "completed",
+      "inferenceAttempted": true,
+      "text": "SYSTEMS-da6ce08b-6db7-446b-a3a3-3f6f72b89183: `fork` creates a process, while `exec` replaces its program.",
+      "error": "",
+      "policy": {
+        "requestId": "context1",
+        "sessionId": "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+        "turn": 1,
+        "courseId": "sys301",
+        "policyDigest": "0de4d7662d060c1be3d2e743785eeb5eb4d649ca87549b0fa0be8a0e85d681c6",
+        "features": {
+          "id": "context1",
+          "activities": [
+            "concept",
+            "logistics"
+          ],
+          "hasAttempt": false,
+          "unclear": false,
+          "dishonest": false,
+          "rationale": "Requests a one-sentence conceptual explanation of fork and exec, while also asking to remember and begin with a provided label."
+        },
+        "decision": {
+          "action": "allow",
+          "forward": true,
+          "reason": "policy_allows_activity",
+          "feedback": "This request is within the selected assignment's assistance policy. Disclose AI use as required.",
+          "evidence": [
+            {
+              "source": "50-practice.md",
+              "quote": "Students may request conceptual explanations, hints, debugging, test-design discussion, executable tests, pseudocode, implementation code, complete worked solutions, written explanations, and logistics."
+            }
+          ]
+        }
+      }
+    },
+    "elapsedMs": 14900.218458000001
+  },
+  {
+    "workspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-context-ef116956-f92f-4703-b02b-53e9425c94fc",
+    "request": {
+      "requestId": "context2",
+      "sessionId": "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+      "assignment": "practice",
+      "prompt": "In these ungraded practice notes, what exact label did I give you? Reply only with that label."
+    },
+    "response": {
+      "requestId": "context2",
+      "sessionId": "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+      "turn": 2,
+      "engineSessionId": "ses_f4ab81877ffeZE7Pi5k422DrXZ",
+      "status": "completed",
+      "inferenceAttempted": true,
+      "text": "SYSTEMS-da6ce08b-6db7-446b-a3a3-3f6f72b89183",
+      "error": "",
+      "policy": {
+        "requestId": "context2",
+        "sessionId": "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+        "turn": 2,
+        "courseId": "sys301",
+        "policyDigest": "0de4d7662d060c1be3d2e743785eeb5eb4d649ca87549b0fa0be8a0e85d681c6",
+        "features": {
+          "id": "context2",
+          "activities": [
+            "logistics"
+          ],
+          "hasAttempt": false,
+          "unclear": false,
+          "dishonest": false,
+          "rationale": "Asks to recall a user-provided label from the supplied history."
+        },
+        "decision": {
+          "action": "allow",
+          "forward": true,
+          "reason": "policy_allows_activity",
+          "feedback": "This request is within the selected assignment's assistance policy. Disclose AI use as required.",
+          "evidence": [
+            {
+              "source": "50-practice.md",
+              "quote": "Students may request conceptual explanations, hints, debugging, test-design discussion, executable tests, pseudocode, implementation code, complete worked solutions, written explanations, and logistics."
+            }
+          ]
+        }
+      }
+    },
+    "elapsedMs": 12837.866125000002
+  },
+  {
+    "workspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-context-ef116956-f92f-4703-b02b-53e9425c94fc",
+    "exitCode": 0,
+    "stderr": ""
+  },
+  {
+    "workspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-context-ef116956-f92f-4703-b02b-53e9425c94fc",
+    "request": {
+      "requestId": "context3",
+      "sessionId": "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+      "assignment": "practice",
+      "prompt": "Without inventing a new label, recall the exact label from our earlier systems practice notes. Reply only with that label."
+    },
+    "response": {
+      "requestId": "context3",
+      "sessionId": "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+      "turn": 3,
+      "engineSessionId": "ses_f4ab81877ffeZE7Pi5k422DrXZ",
+      "status": "completed",
+      "inferenceAttempted": true,
+      "text": "SYSTEMS-da6ce08b-6db7-446b-a3a3-3f6f72b89183",
+      "error": "",
+      "policy": {
+        "requestId": "context3",
+        "sessionId": "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+        "turn": 3,
+        "courseId": "sys301",
+        "policyDigest": "0de4d7662d060c1be3d2e743785eeb5eb4d649ca87549b0fa0be8a0e85d681c6",
+        "features": {
+          "id": "context3",
+          "activities": [
+            "logistics"
+          ],
+          "hasAttempt": false,
+          "unclear": false,
+          "dishonest": false,
+          "rationale": "Requests recalling and repeating a user-provided label from conversation history."
+        },
+        "decision": {
+          "action": "allow",
+          "forward": true,
+          "reason": "policy_allows_activity",
+          "feedback": "This request is within the selected assignment's assistance policy. Disclose AI use as required.",
+          "evidence": [
+            {
+              "source": "50-practice.md",
+              "quote": "Students may request conceptual explanations, hints, debugging, test-design discussion, executable tests, pseudocode, implementation code, complete worked solutions, written explanations, and logistics."
+            }
+          ]
+        }
+      }
+    },
+    "elapsedMs": 13004.405792000001
+  },
+  {
+    "workspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-context-ef116956-f92f-4703-b02b-53e9425c94fc",
+    "request": {
+      "requestId": "context3",
+      "sessionId": "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+      "assignment": "practice",
+      "prompt": "Without inventing a new label, recall the exact label from our earlier systems practice notes. Reply only with that label."
+    },
+    "response": {
+      "requestId": "context3",
+      "sessionId": "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+      "turn": 3,
+      "engineSessionId": "ses_f4ab81877ffeZE7Pi5k422DrXZ",
+      "status": "completed",
+      "inferenceAttempted": true,
+      "text": "SYSTEMS-da6ce08b-6db7-446b-a3a3-3f6f72b89183",
+      "error": "",
+      "policy": {
+        "requestId": "context3",
+        "sessionId": "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+        "turn": 3,
+        "courseId": "sys301",
+        "policyDigest": "0de4d7662d060c1be3d2e743785eeb5eb4d649ca87549b0fa0be8a0e85d681c6",
+        "features": {
+          "id": "context3",
+          "activities": [
+            "logistics"
+          ],
+          "hasAttempt": false,
+          "unclear": false,
+          "dishonest": false,
+          "rationale": "Requests recalling and repeating a user-provided label from conversation history."
+        },
+        "decision": {
+          "action": "allow",
+          "forward": true,
+          "reason": "policy_allows_activity",
+          "feedback": "This request is within the selected assignment's assistance policy. Disclose AI use as required.",
+          "evidence": [
+            {
+              "source": "50-practice.md",
+              "quote": "Students may request conceptual explanations, hints, debugging, test-design discussion, executable tests, pseudocode, implementation code, complete worked solutions, written explanations, and logistics."
+            }
+          ]
+        }
+      }
+    },
+    "elapsedMs": 2.7979579999955604
+  },
+  {
+    "workspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-context-ef116956-f92f-4703-b02b-53e9425c94fc",
+    "request": {
+      "requestId": "context3",
+      "sessionId": "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+      "assignment": "practice",
+      "prompt": "Explain fork versus exec again."
+    },
+    "response": {
+      "forward": false,
+      "message": "Request ID reused with different content",
+      "error": "IllegalArgumentException",
+      "requestId": "context3"
+    },
+    "elapsedMs": 2.7942089999996824
+  },
+  {
+    "workspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-context-ef116956-f92f-4703-b02b-53e9425c94fc",
+    "request": {
+      "requestId": "different-scope",
+      "sessionId": "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+      "assignment": "a1",
+      "prompt": "Without inventing a new label, recall the exact label from our earlier systems practice notes. Reply only with that label."
+    },
+    "response": {
+      "forward": false,
+      "message": "Session scope or policy changed; start a new session",
+      "error": "IllegalArgumentException",
+      "requestId": "different-scope"
+    },
+    "elapsedMs": 2.308959000001778
+  },
+  {
+    "workspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-context-ef116956-f92f-4703-b02b-53e9425c94fc",
+    "request": {
+      "requestId": "isolated1",
+      "sessionId": "",
+      "assignment": "practice",
+      "prompt": "For this ungraded practice conversation, what label have I previously given you? If no label is present in this conversation, reply only UNKNOWN. Do not invent a label."
+    },
+    "response": {
+      "requestId": "isolated1",
+      "sessionId": "hps_281f98f00804485f8dbecad975fe4600",
+      "turn": 1,
+      "engineSessionId": "ses_f4ab77c9fffe5q74kAK92CQYYO",
+      "status": "completed",
+      "inferenceAttempted": true,
+      "text": "UNKNOWN",
+      "error": "",
+      "policy": {
+        "requestId": "isolated1",
+        "sessionId": "hps_281f98f00804485f8dbecad975fe4600",
+        "turn": 1,
+        "courseId": "sys301",
+        "policyDigest": "0de4d7662d060c1be3d2e743785eeb5eb4d649ca87549b0fa0be8a0e85d681c6",
+        "features": {
+          "id": "isolated1",
+          "activities": [
+            "logistics"
+          ],
+          "hasAttempt": false,
+          "unclear": false,
+          "dishonest": false,
+          "rationale": "Requests recalling a user-provided label, but no label appears in the supplied history."
+        },
+        "decision": {
+          "action": "allow",
+          "forward": true,
+          "reason": "policy_allows_activity",
+          "feedback": "This request is within the selected assignment's assistance policy. Disclose AI use as required.",
+          "evidence": [
+            {
+              "source": "50-practice.md",
+              "quote": "Students may request conceptual explanations, hints, debugging, test-design discussion, executable tests, pseudocode, implementation code, complete worked solutions, written explanations, and logistics."
+            }
+          ]
+        }
+      }
+    },
+    "elapsedMs": 11414.830500000004
+  },
+  {
+    "workspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-context-ef116956-f92f-4703-b02b-53e9425c94fc",
+    "exitCode": 0,
+    "stderr": "Policy request failed: Request ID reused with different content\nPolicy request failed: Session scope or policy changed; start a new session\n"
+  },
+  {
+    "workspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-context-ef116956-f92f-4703-b02b-53e9425c94fc-other",
+    "request": {
+      "requestId": "context3",
+      "sessionId": "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+      "assignment": "practice",
+      "prompt": "Without inventing a new label, recall the exact label from our earlier systems practice notes. Reply only with that label."
+    },
+    "response": {
+      "error": "IllegalArgumentException",
+      "message": "Session not found in this workspace",
+      "forward": false,
+      "requestId": "context3"
+    },
+    "elapsedMs": 162.3469580000019
+  },
+  {
+    "workspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-context-ef116956-f92f-4703-b02b-53e9425c94fc-other",
+    "exitCode": 0,
+    "stderr": "Policy request failed: Session not found in this workspace\n"
+  }
+]

@@ -1,0 +1,26 @@
+{
+  "status": "passed",
+  "model": "openai/gpt-5.6-luna",
+  "workspace": "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-session-test-uk0O52",
+  "first": {
+    "sessionId": "ses_f4abef969ffeeh2Wfsl4xaLYG4",
+    "text": "STORED",
+    "elapsedMs": 7742.69325
+  },
+  "second": {
+    "sessionId": "ses_f4abef969ffeeh2Wfsl4xaLYG4",
+    "text": "SYSTEMS-c09f76fb-8411-4ac4-9dfa-80b6b7fccf2f",
+    "elapsedMs": 4668.672292
+  },
+  "separate": {
+    "sessionId": "ses_f4abeca88ffeltany9EosUJUkg",
+    "text": "UNKNOWN",
+    "elapsedMs": 4876.839375
+  },
+  "assertions": [
+    "stdout is parseable JSONL",
+    "session ID survives process restart",
+    "follow-up retrieves random codeword from history",
+    "new session does not see codeword"
+  ]
+}

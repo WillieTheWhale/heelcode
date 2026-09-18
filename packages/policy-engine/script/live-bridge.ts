@@ -1,4 +1,4 @@
-import { mkdir, readdir } from "node:fs/promises"
+import { cp, mkdir, readdir } from "node:fs/promises"
 import { existsSync } from "node:fs"
 import path from "node:path"
 
@@ -62,6 +62,11 @@ try {
   await Bun.write(path.join(output,"summary.json"),JSON.stringify({status:"passed",mode,workspace,sessionId:first.sessionId,engineSessionId:first.engineSessionId,inferenceRuns,
     assertions:mode === "blocked-only" ? ["denial invokes no inference", "clarification invokes no inference", "same-pipe requests retain session ID", "restart replays identical blocked response", "no inference run directories created"] : ["allowed requests produce model answers", "same engine session reused", "denial invokes no inference", "restart preserves session and response"]},null,2))
   await Bun.write(path.join(output,"state.json"),await Bun.file(path.join(chatRoot,"state.json")).text())
+  await cp(path.join(workspace, ".heelcode-policy/runs"), path.join(output, "classification-runs"), { recursive: true })
+  await cp(chatRoot, path.join(output, "chat"), {
+    recursive: true,
+    filter: (source) => !source.includes(".private.") && !source.endsWith(".lock"),
+  })
   await Bun.write(path.join(output,"stderr.txt"),await errors)
   console.log(JSON.stringify({status:"passed",mode,output}))
 } finally {

@@ -1,0 +1,56 @@
+[ {
+  "type" : "step_start",
+  "timestamp" : 1789747400485,
+  "sessionID" : "ses_f4abe49abffetN5dE4TZKNXRuu",
+  "part" : {
+    "id" : "prt_0b5420f22001n6Hw3QD6v7GL56",
+    "messageID" : "msg_0b541f97600107GEU7k0bt6fI7",
+    "sessionID" : "ses_f4abe49abffetN5dE4TZKNXRuu",
+    "snapshot" : "d16b108861864bbe8ba1ab1be1c51082602043b1",
+    "type" : "step-start"
+  }
+}, {
+  "type" : "text",
+  "timestamp" : 1789747403588,
+  "sessionID" : "ses_f4abe49abffetN5dE4TZKNXRuu",
+  "part" : {
+    "id" : "prt_0b5421540001YbFxURjTvoastf",
+    "messageID" : "msg_0b541f97600107GEU7k0bt6fI7",
+    "sessionID" : "ses_f4abe49abffetN5dE4TZKNXRuu",
+    "type" : "text",
+    "text" : "Think of the shell as a restaurant manager:\n\n- `fork()` makes a new worker who starts with the manager’s current information.\n- `exec()` tells that worker to discard its current job and become a specialist, such as a cook or cashier.\n\nThe manager continues managing the restaurant, while the new worker runs the requested program.",
+    "time" : {
+      "start" : 1789747402048,
+      "end" : 1789747403578
+    },
+    "metadata" : {
+      "openai" : {
+        "itemId" : "msg_0d1d8b5802a87e6c016aad60ca130487d1bf275944005eb9d4",
+        "phase" : "final_answer"
+      }
+    }
+  }
+}, {
+  "type" : "step_finish",
+  "timestamp" : 1789747403619,
+  "sessionID" : "ses_f4abe49abffetN5dE4TZKNXRuu",
+  "part" : {
+    "id" : "prt_0b5421b60001ibrLgUEWipV07s",
+    "reason" : "stop",
+    "snapshot" : "d16b108861864bbe8ba1ab1be1c51082602043b1",
+    "messageID" : "msg_0b541f97600107GEU7k0bt6fI7",
+    "sessionID" : "ses_f4abe49abffetN5dE4TZKNXRuu",
+    "type" : "step-finish",
+    "tokens" : {
+      "total" : 5267,
+      "input" : 1308,
+      "output" : 72,
+      "reasoning" : 47,
+      "cache" : {
+        "write" : 0,
+        "read" : 3840
+      }
+    },
+    "cost" : 0
+  }
+} ]

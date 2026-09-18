@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/bin/heelcode",
+    "run",
+    "--pure",
+    "--format",
+    "json",
+    "--model",
+    "openai/gpt-5.6-luna",
+    "--agent",
+    "build"
+  ],
+  "workspace": "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-session-test-uk0O52",
+  "prompt": "What exact codeword did I give you in my previous message? If no codeword exists in this conversation, reply only UNKNOWN. Do not use tools.",
+  "elapsedMs": 4876.635375000002,
+  "code": 0
+}

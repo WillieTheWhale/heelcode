@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"01a0b548-3e20-7ae0-b05f-84d549479892"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"{\"items\":[{\"id\":\"context3\",\"rationale\":\"Requests recalling and repeating a user-provided label from conversation history.\",\"dishonest\":false,\"activities\":[\"logistics\"],\"hasAttempt\":false,\"unclear\":false}]}"}}
+{"type":"turn.completed","usage":{"input_tokens":9055,"cached_input_tokens":0,"output_tokens":82,"reasoning_output_tokens":22}}

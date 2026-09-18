@@ -1,0 +1,7 @@
+{
+  "command" : [ "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/bin/heelcode", "run", "--pure", "--format", "json", "--model", "openai/gpt-5.6-luna", "--agent", "build", "--session", "ses_f4ab81877ffeZE7Pi5k422DrXZ" ],
+  "model" : "openai/gpt-5.6-luna",
+  "startedAt" : "2026-09-18T16:09:56.897980Z",
+  "exitCode" : 0,
+  "elapsedMs" : 8578
+}

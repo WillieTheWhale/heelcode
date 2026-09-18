@@ -62,6 +62,10 @@ State is stored under `.heelcode-policy/chat/SESSION/state.json`. A durable pend
 
 `mvn test` is offline; `bun typecheck` checks the research scripts. `script/live-sessions.ts` runs real Luna inference through HeelCode and tests saved context across process restarts and isolation of a separate session. `script/live-policy-sessions.ts` tests the JSONL gate, follow-up context, amendment enforcement, and replay after restart. `script/live-bridge.ts` tests the actual bridge in `blocked-only` or `full` mode. Live scripts consume model allowance and save evidence; invoke explicitly with Bun from this package. Never rebuild the shaded JAR during a live Java model run. Do not run tests from the monorepo root.
 
+`script/live-bridge-continuity.ts NEW_OUTPUT POLICY_RUN` additionally checks random-label recall on the same pipe and after a bridge restart, exact answered-request replay without new model-run directories, independent-session memory isolation, and rejection of conflicting request IDs, assignment switches, and foreign-workspace session IDs. Public snapshots exclude raw `.private` provider logs.
+
+The [September 18 session-verification report](../../docs/research/experiments/2026-09-18/session-verification.md) records successful real Luna runs after provider reauthentication, as well as failed earlier attempts. A follow-up extraction-prompt clarification treats simple conversation bookkeeping as logistics without relabeling substantive repeated code/tests/solutions. Its Luna regression results are separate from the earlier frozen Luna/Terra comparison.
+
 The fictional sources are in `fixtures/systems/course`; gold cases are separately in `fixtures/systems/evaluation.json`. Model run directories preserve prompts, schema, outputs, events, metadata and errors. A new run must use a new directory. Research runs contain synthetic data; production prompt logging needs consent, retention, access controls and IRB review where applicable.
 
 ## Boundaries

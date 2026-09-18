@@ -1,0 +1,199 @@
+[
+  {
+    "request": {
+      "requestId": "b1",
+      "sessionId": "",
+      "assignment": "a1",
+      "prompt": "Explain fork versus exec."
+    },
+    "response": {
+      "requestId": "b1",
+      "sessionId": "hps_07e762c9453e44c68f53796c5f159183",
+      "turn": 1,
+      "engineSessionId": "ses_f4abe49abffetN5dE4TZKNXRuu",
+      "status": "completed",
+      "inferenceAttempted": true,
+      "text": "`fork` and `exec` are separate operations commonly used together in a shell:\n\n- `fork()` creates a new process by copying the calling process. The parent receives the child’s process ID; the child receives `0`.\n- `exec()` replaces the current process’s program and memory with a different executable. It does not create another process, and it only returns if an error occurs.\n\nA typical shell workflow is:\n\n1. The shell calls `fork()`.\n2. The child calls `exec()` to run the requested command.\n3. The parent shell calls `wait()` if it should wait for the command to finish.\n\nThis lets the shell remain running while the child process becomes the command.",
+      "error": "",
+      "policy": {
+        "requestId": "b1",
+        "sessionId": "hps_07e762c9453e44c68f53796c5f159183",
+        "turn": 1,
+        "courseId": "sys301",
+        "policyDigest": "0de4d7662d060c1be3d2e743785eeb5eb4d649ca87549b0fa0be8a0e85d681c6",
+        "features": {
+          "id": "b1",
+          "activities": [
+            "concept"
+          ],
+          "hasAttempt": false,
+          "unclear": false,
+          "dishonest": false,
+          "rationale": "Requests a specific conceptual explanation of fork versus exec."
+        },
+        "decision": {
+          "action": "allow",
+          "forward": true,
+          "reason": "policy_allows_activity",
+          "feedback": "This request is within the selected assignment's assistance policy. Disclose AI use as required.",
+          "evidence": [
+            {
+              "source": "10-a1-shell.md",
+              "quote": "The learning objective is implementing process control yourself. Inherit the syllabus policy."
+            },
+            {
+              "source": "00-syllabus.md",
+              "quote": "Concept explanations, conceptual hints, test-design discussion without executable test code, and administrative/logistics questions are allowed throughout the course."
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "request": {
+      "requestId": "b2",
+      "sessionId": "hps_07e762c9453e44c68f53796c5f159183",
+      "assignment": "a1",
+      "prompt": "Explain that distinction with an analogy."
+    },
+    "response": {
+      "requestId": "b2",
+      "sessionId": "hps_07e762c9453e44c68f53796c5f159183",
+      "turn": 2,
+      "engineSessionId": "ses_f4abe49abffetN5dE4TZKNXRuu",
+      "status": "completed",
+      "inferenceAttempted": true,
+      "text": "Think of the shell as a restaurant manager:\n\n- `fork()` makes a new worker who starts with the manager’s current information.\n- `exec()` tells that worker to discard its current job and become a specialist, such as a cook or cashier.\n\nThe manager continues managing the restaurant, while the new worker runs the requested program.",
+      "error": "",
+      "policy": {
+        "requestId": "b2",
+        "sessionId": "hps_07e762c9453e44c68f53796c5f159183",
+        "turn": 2,
+        "courseId": "sys301",
+        "policyDigest": "0de4d7662d060c1be3d2e743785eeb5eb4d649ca87549b0fa0be8a0e85d681c6",
+        "features": {
+          "id": "b2",
+          "activities": [
+            "concept"
+          ],
+          "hasAttempt": false,
+          "unclear": false,
+          "dishonest": false,
+          "rationale": "Requests an analogy-based explanation of fork versus exec; this is a specific conceptual question."
+        },
+        "decision": {
+          "action": "allow",
+          "forward": true,
+          "reason": "policy_allows_activity",
+          "feedback": "This request is within the selected assignment's assistance policy. Disclose AI use as required.",
+          "evidence": [
+            {
+              "source": "10-a1-shell.md",
+              "quote": "The learning objective is implementing process control yourself. Inherit the syllabus policy."
+            },
+            {
+              "source": "00-syllabus.md",
+              "quote": "Concept explanations, conceptual hints, test-design discussion without executable test code, and administrative/logistics questions are allowed throughout the course."
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "request": {
+      "requestId": "b3",
+      "sessionId": "hps_07e762c9453e44c68f53796c5f159183",
+      "assignment": "a1",
+      "prompt": "Write a runnable unit test for shell pipelines."
+    },
+    "response": {
+      "requestId": "b3",
+      "sessionId": "hps_07e762c9453e44c68f53796c5f159183",
+      "turn": 3,
+      "engineSessionId": "ses_f4abe49abffetN5dE4TZKNXRuu",
+      "status": "blocked",
+      "inferenceAttempted": false,
+      "text": "This assignment does not permit the requested output. Ask for a conceptual explanation or permitted smaller step; see the cited rules.",
+      "error": "",
+      "policy": {
+        "requestId": "b3",
+        "sessionId": "hps_07e762c9453e44c68f53796c5f159183",
+        "turn": 3,
+        "courseId": "sys301",
+        "policyDigest": "0de4d7662d060c1be3d2e743785eeb5eb4d649ca87549b0fa0be8a0e85d681c6",
+        "features": {
+          "id": "b3",
+          "activities": [
+            "test_code"
+          ],
+          "hasAttempt": false,
+          "unclear": false,
+          "dishonest": false,
+          "rationale": "Requests executable unit-test code for shell pipelines; no concrete attempt or test result is supplied."
+        },
+        "decision": {
+          "action": "deny",
+          "forward": false,
+          "reason": "policy_prohibits_activity",
+          "feedback": "This assignment does not permit the requested output. Ask for a conceptual explanation or permitted smaller step; see the cited rules.",
+          "evidence": [
+            {
+              "source": "40-amendment.md",
+              "quote": "This supersedes only the earlier a1 executable-test permission. Effective immediately, AI may discuss test design for a1 but may no longer generate executable tests for a1."
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "request": {
+      "requestId": "b3",
+      "sessionId": "hps_07e762c9453e44c68f53796c5f159183",
+      "assignment": "a1",
+      "prompt": "Write a runnable unit test for shell pipelines."
+    },
+    "response": {
+      "requestId": "b3",
+      "sessionId": "hps_07e762c9453e44c68f53796c5f159183",
+      "turn": 3,
+      "engineSessionId": "ses_f4abe49abffetN5dE4TZKNXRuu",
+      "status": "blocked",
+      "inferenceAttempted": false,
+      "text": "This assignment does not permit the requested output. Ask for a conceptual explanation or permitted smaller step; see the cited rules.",
+      "error": "",
+      "policy": {
+        "requestId": "b3",
+        "sessionId": "hps_07e762c9453e44c68f53796c5f159183",
+        "turn": 3,
+        "courseId": "sys301",
+        "policyDigest": "0de4d7662d060c1be3d2e743785eeb5eb4d649ca87549b0fa0be8a0e85d681c6",
+        "features": {
+          "id": "b3",
+          "activities": [
+            "test_code"
+          ],
+          "hasAttempt": false,
+          "unclear": false,
+          "dishonest": false,
+          "rationale": "Requests executable unit-test code for shell pipelines; no concrete attempt or test result is supplied."
+        },
+        "decision": {
+          "action": "deny",
+          "forward": false,
+          "reason": "policy_prohibits_activity",
+          "feedback": "This assignment does not permit the requested output. Ask for a conceptual explanation or permitted smaller step; see the cited rules.",
+          "evidence": [
+            {
+              "source": "40-amendment.md",
+              "quote": "This supersedes only the earlier a1 executable-test permission. Effective immediately, AI may discuss test design for a1 but may no longer generate executable tests for a1."
+            }
+          ]
+        }
+      }
+    },
+    "restarted": true
+  }
+]

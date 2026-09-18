@@ -1,0 +1,44 @@
+{
+  "status": "passed",
+  "classifier": "gpt-5.6-luna",
+  "inference": "openai/gpt-5.6-luna",
+  "workspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-context-ef116956-f92f-4703-b02b-53e9425c94fc",
+  "otherWorkspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-context-ef116956-f92f-4703-b02b-53e9425c94fc-other",
+  "sessionId": "hps_fd6afe1417bc4ec49f7a05069c5f2d76",
+  "engineSessionId": "ses_f4ab81877ffeZE7Pi5k422DrXZ",
+  "separateSessionId": "hps_281f98f00804485f8dbecad975fe4600",
+  "separateEngineSessionId": "ses_f4ab77c9fffe5q74kAK92CQYYO",
+  "beforeReplay": {
+    "classifiers": [
+      "1789747777907-507b4a01-7bca-4bb2-a980-fb494bdf1d96",
+      "1789747792648-05c7cee5-06b7-4ec7-af05-cb9cfdb8bfc3",
+      "1789747805661-9b55ba76-5104-4e3c-abd1-df48eb96cddb"
+    ],
+    "inference": [
+      "turn-1",
+      "turn-2",
+      "turn-3"
+    ]
+  },
+  "afterReplay": {
+    "classifiers": [
+      "1789747777907-507b4a01-7bca-4bb2-a980-fb494bdf1d96",
+      "1789747792648-05c7cee5-06b7-4ec7-af05-cb9cfdb8bfc3",
+      "1789747805661-9b55ba76-5104-4e3c-abd1-df48eb96cddb"
+    ],
+    "inference": [
+      "turn-1",
+      "turn-2",
+      "turn-3"
+    ]
+  },
+  "assertions": [
+    "two real answered requests share a live JSONL pipe and both session IDs",
+    "random label recalled on the same pipe and after a bridge process restart",
+    "exact retry returns identical answer without new classifier or inference run",
+    "conflicting request ID and assignment change fail without model work",
+    "independent policy and engine sessions cannot recall the random label",
+    "foreign workspace rejects the policy session without model work",
+    "published evidence excludes raw private provider logs"
+  ]
+}
