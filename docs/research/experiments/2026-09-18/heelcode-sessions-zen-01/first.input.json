@@ -1,0 +1,17 @@
+{
+  "command": [
+    "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/bin/heelcode",
+    "run",
+    "--pure",
+    "--format",
+    "json",
+    "--model",
+    "opencode/gpt-5.6-luna",
+    "--agent",
+    "build"
+  ],
+  "workspace": "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-session-test-GBG1CU",
+  "prompt": "Remember this exact codeword for our conversation: SYSTEMS-ed00c89c-2668-425b-98e3-6567a37fd09c. Reply only STORED. Do not use tools.",
+  "elapsedMs": 75911.69249999999,
+  "code": 1
+}

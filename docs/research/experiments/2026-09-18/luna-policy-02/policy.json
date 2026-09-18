@@ -1,0 +1,151 @@
+{
+  "courseId" : "sys301",
+  "version" : "Effective September 10, 2026 instructor amendment and assignment policies through September 4, 2026",
+  "scopes" : [ {
+    "id" : "*",
+    "title" : "Course baseline",
+    "rules" : [ {
+      "activities" : [ "concept", "hint", "test_design", "logistics" ],
+      "effect" : "allow",
+      "requireAttempt" : false,
+      "evidence" : [ {
+        "source" : "00-syllabus.md",
+        "quote" : "Concept explanations, conceptual hints, test-design discussion without executable test code, and administrative/logistics questions are allowed throughout the course."
+      } ]
+    }, {
+      "activities" : [ "debug" ],
+      "effect" : "allow",
+      "requireAttempt" : true,
+      "evidence" : [ {
+        "source" : "00-syllabus.md",
+        "quote" : "Debugging assistance is allowed only after the student supplies a concrete attempt, observation, failing test, or error message."
+      } ]
+    }, {
+      "activities" : [ "test_code", "pseudocode", "implementation", "full_solution", "writeup" ],
+      "effect" : "deny",
+      "requireAttempt" : false,
+      "evidence" : [ {
+        "source" : "00-syllabus.md",
+        "quote" : "For graded work, AI may not produce implementation code, pseudocode algorithms for the assigned solution, executable tests, a complete solution, or submission-ready written explanations."
+      } ]
+    } ]
+  }, {
+    "id" : "a1",
+    "title" : "Mini-shell",
+    "rules" : [ {
+      "activities" : [ "test_design" ],
+      "effect" : "allow",
+      "requireAttempt" : false,
+      "evidence" : [ {
+        "source" : "10-a1-shell.md",
+        "quote" : "Test-design discussion is also allowed."
+      }, {
+        "source" : "40-amendment.md",
+        "quote" : "Effective immediately, AI may discuss test design for a1 but may no longer generate executable tests for a1."
+      } ]
+    }, {
+      "activities" : [ "test_code", "pseudocode", "implementation", "full_solution", "writeup" ],
+      "effect" : "deny",
+      "requireAttempt" : false,
+      "evidence" : [ {
+        "source" : "10-a1-shell.md",
+        "quote" : "AI-generated implementation code, solution pseudocode, complete solutions, and submission-ready writeups remain prohibited."
+      }, {
+        "source" : "40-amendment.md",
+        "quote" : "All other a1 rules remain unchanged."
+      } ]
+    }, {
+      "activities" : [ "concept", "hint", "logistics" ],
+      "effect" : "allow",
+      "requireAttempt" : false,
+      "evidence" : [ {
+        "source" : "00-syllabus.md",
+        "quote" : "Concept explanations, conceptual hints, test-design discussion without executable test code, and administrative/logistics questions are allowed throughout the course."
+      } ]
+    }, {
+      "activities" : [ "debug" ],
+      "effect" : "allow",
+      "requireAttempt" : true,
+      "evidence" : [ {
+        "source" : "10-a1-shell.md",
+        "quote" : "Debugging requires a concrete attempt or observed failure."
+      } ]
+    } ]
+  }, {
+    "id" : "a2",
+    "title" : "Allocator tests",
+    "rules" : [ {
+      "activities" : [ "concept", "hint", "test_design", "logistics" ],
+      "effect" : "allow",
+      "requireAttempt" : false,
+      "evidence" : [ {
+        "source" : "20-a2-allocator.md",
+        "quote" : "AI can explain allocation concepts and discuss categories of edge cases without producing runnable tests."
+      } ]
+    }, {
+      "activities" : [ "debug" ],
+      "effect" : "allow",
+      "requireAttempt" : true,
+      "evidence" : [ {
+        "source" : "20-a2-allocator.md",
+        "quote" : "Debugging the student's own test requires the student's actual attempt or an observed failure."
+      } ]
+    }, {
+      "activities" : [ "test_code", "pseudocode", "implementation", "full_solution", "writeup" ],
+      "effect" : "deny",
+      "requireAttempt" : false,
+      "evidence" : [ {
+        "source" : "20-a2-allocator.md",
+        "quote" : "AI-generated test code, solution pseudocode, implementation code, whole solutions, and submission-ready rationales are prohibited."
+      } ]
+    } ]
+  }, {
+    "id" : "a3",
+    "title" : "Scheduling simulator",
+    "rules" : [ {
+      "activities" : [ "test_design", "test_code", "pseudocode", "implementation" ],
+      "effect" : "allow",
+      "requireAttempt" : false,
+      "evidence" : [ {
+        "source" : "30-a3-scheduler.md",
+        "quote" : "For a3, AI-generated implementation code, solution pseudocode, executable tests, and test-design discussion are permitted."
+      } ]
+    }, {
+      "activities" : [ "concept", "hint", "logistics" ],
+      "effect" : "allow",
+      "requireAttempt" : false,
+      "evidence" : [ {
+        "source" : "30-a3-scheduler.md",
+        "quote" : "Concepts, hints, logistics, and evidence-based debugging are permitted."
+      } ]
+    }, {
+      "activities" : [ "debug" ],
+      "effect" : "allow",
+      "requireAttempt" : true,
+      "evidence" : [ {
+        "source" : "30-a3-scheduler.md",
+        "quote" : "Debugging still requires an attempt or observed error."
+      } ]
+    }, {
+      "activities" : [ "full_solution", "writeup" ],
+      "effect" : "deny",
+      "requireAttempt" : false,
+      "evidence" : [ {
+        "source" : "30-a3-scheduler.md",
+        "quote" : "A complete submission including the written analysis, or any submission-ready analysis/writeup, is prohibited."
+      } ]
+    } ]
+  }, {
+    "id" : "practice",
+    "title" : "Ungraded systems playground",
+    "rules" : [ {
+      "activities" : [ "concept", "hint", "debug", "test_design", "test_code", "pseudocode", "implementation", "full_solution", "writeup", "logistics" ],
+      "effect" : "allow",
+      "requireAttempt" : false,
+      "evidence" : [ {
+        "source" : "50-practice.md",
+        "quote" : "Students may request conceptual explanations, hints, debugging, test-design discussion, executable tests, pseudocode, implementation code, complete worked solutions, written explanations, and logistics."
+      } ]
+    } ]
+  } ]
+}

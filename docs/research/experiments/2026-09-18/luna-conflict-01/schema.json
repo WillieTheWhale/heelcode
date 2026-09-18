@@ -1,0 +1,69 @@
+{
+  "properties" : {
+    "version" : {
+      "type" : "string"
+    },
+    "courseId" : {
+      "type" : "string"
+    },
+    "scopes" : {
+      "type" : "array",
+      "items" : {
+        "properties" : {
+          "rules" : {
+            "type" : "array",
+            "items" : {
+              "properties" : {
+                "activities" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string",
+                    "enum" : [ "concept", "hint", "debug", "test_design", "test_code", "pseudocode", "implementation", "full_solution", "writeup", "logistics" ]
+                  }
+                },
+                "evidence" : {
+                  "type" : "array",
+                  "items" : {
+                    "properties" : {
+                      "source" : {
+                        "type" : "string"
+                      },
+                      "quote" : {
+                        "type" : "string"
+                      }
+                    },
+                    "additionalProperties" : false,
+                    "required" : [ "quote", "source" ],
+                    "type" : "object"
+                  }
+                },
+                "requireAttempt" : {
+                  "type" : "boolean"
+                },
+                "effect" : {
+                  "type" : "string",
+                  "enum" : [ "allow", "deny", "clarify" ]
+                }
+              },
+              "additionalProperties" : false,
+              "required" : [ "activities", "effect", "evidence", "requireAttempt" ],
+              "type" : "object"
+            }
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string"
+          }
+        },
+        "additionalProperties" : false,
+        "required" : [ "id", "rules", "title" ],
+        "type" : "object"
+      }
+    }
+  },
+  "additionalProperties" : false,
+  "required" : [ "courseId", "scopes", "version" ],
+  "type" : "object"
+}

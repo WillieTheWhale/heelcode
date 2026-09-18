@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"01a0b538-a273-7021-a75e-46697ffaa85f"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"{\"items\":[{\"id\":\"conflict1\",\"unclear\":false,\"hasAttempt\":false,\"activities\":[\"test_code\"],\"dishonest\":false,\"rationale\":\"Requests executable tests for zero-byte allocation.\"}]}"}}
+{"type":"turn.completed","usage":{"input_tokens":8863,"cached_input_tokens":0,"output_tokens":55,"reasoning_output_tokens":0}}

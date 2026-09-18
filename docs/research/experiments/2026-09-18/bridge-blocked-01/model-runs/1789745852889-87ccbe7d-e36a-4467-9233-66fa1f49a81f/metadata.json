@@ -1,0 +1,16 @@
+{
+  "usage" : {
+    "input_tokens" : 8860,
+    "cached_input_tokens" : 0,
+    "output_tokens" : 53,
+    "reasoning_output_tokens" : 0
+  },
+  "model" : "gpt-5.6-luna",
+  "promptSha256" : "0b0db74e6fdde2521637335f0b5ad5681c49fb587bdc2dd72afba8e3d6b10b68",
+  "startedAt" : "2026-09-18T15:37:32.892923Z",
+  "adapter" : "codex-cli",
+  "effort" : "low",
+  "exitCode" : 0,
+  "elapsedMs" : 5526,
+  "command" : [ "codex", "exec", "--ignore-user-config", "--ephemeral", "--skip-git-repo-check", "--sandbox", "read-only", "--cd", "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-model-13824113772259756363", "--model", "gpt-5.6-luna", "--json", "-c", "model_reasoning_effort=\"low\"", "-c", "project_doc_max_bytes=0", "-c", "web_search=\"disabled\"", "-c", "features.shell_tool=false", "-c", "features.unified_exec=false", "-c", "features.plugins=false", "-c", "features.apps=false", "-c", "features.multi_agent=false", "-c", "features.browser_use=false", "-c", "features.computer_use=false", "-c", "features.image_generation=false", "--output-schema", "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-01fe7a4e-7a24-4c93-ba6f-82649e83d164/.heelcode-policy/runs/1789745852889-87ccbe7d-e36a-4467-9233-66fa1f49a81f/schema.json", "--output-last-message", "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-01fe7a4e-7a24-4c93-ba6f-82649e83d164/.heelcode-policy/runs/1789745852889-87ccbe7d-e36a-4467-9233-66fa1f49a81f/response.json", "-" ]
+}

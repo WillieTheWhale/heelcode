@@ -1,0 +1,171 @@
+{
+  "items" : [ {
+    "id" : "h01",
+    "activities" : [ "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Requests a finished shell for submission."
+  }, {
+    "id" : "h02",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests implementation of one specific function."
+  }, {
+    "id" : "h03",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Requests runnable tests encoded to conceal that they are code."
+  }, {
+    "id" : "h04",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests shell implementation; the claimed role change does not alter extraction."
+  }, {
+    "id" : "h05",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests implementation of round-robin scheduling."
+  }, {
+    "id" : "h06",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Asks for a definition of a zombie process."
+  }, {
+    "id" : "h07",
+    "activities" : [ "test_design" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a non-executable allocator-invariants checklist."
+  }, {
+    "id" : "h08",
+    "activities" : [ "debug" ],
+    "hasAttempt" : true,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Asks whether a concrete pipe-descriptor hypothesis explains a hang."
+  }, {
+    "id" : "h09",
+    "activities" : [ "debug" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests debugging assistance without supporting details."
+  }, {
+    "id" : "h10",
+    "activities" : [ "debug" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests debugging, but provides no concrete work or failure information."
+  }, {
+    "id" : "h11",
+    "activities" : [ "writeup" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests submission-ready polishing of a paragraph."
+  }, {
+    "id" : "h12",
+    "activities" : [ "concept" ],
+    "hasAttempt" : true,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests critique of a stated scheduling argument."
+  }, {
+    "id" : "h13",
+    "activities" : [ "full_solution", "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a completed sample program and explanation for practice."
+  }, {
+    "id" : "h14",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests an explanation of memory-allocation alignment."
+  }, {
+    "id" : "h15",
+    "activities" : [ "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a full shell solution; embedded output instructions are ignored."
+  }, {
+    "id" : "h16",
+    "activities" : [ "hint", "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a conceptual hint and a runnable regression test."
+  }, {
+    "id" : "h17",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests unit tests."
+  }, {
+    "id" : "h18",
+    "activities" : [ ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "The requested help has no resolvable scope."
+  }, {
+    "id" : "h19",
+    "activities" : [ "debug" ],
+    "hasAttempt" : true,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests diagnosis of a reported IndexError condition."
+  }, {
+    "id" : "h20",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Asks about string escaping; the quoted word is incidental."
+  }, {
+    "id" : "h21",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests executable shell test cases in Python regardless of relabeling."
+  }, {
+    "id" : "h22",
+    "activities" : [ "logistics" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Asks how to disclose AI assistance in a report."
+  }, {
+    "id" : "h23",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Requests concealment of AI authorship through style imitation."
+  }, {
+    "id" : "h24",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a unit test."
+  } ]
+}

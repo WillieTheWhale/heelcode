@@ -1,0 +1,16 @@
+{
+  "usage" : {
+    "input_tokens" : 8863,
+    "cached_input_tokens" : 0,
+    "output_tokens" : 55,
+    "reasoning_output_tokens" : 0
+  },
+  "command" : [ "codex", "exec", "--ignore-user-config", "--ephemeral", "--skip-git-repo-check", "--sandbox", "read-only", "--cd", "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-model-5153372470353411022", "--model", "gpt-5.6-luna", "--json", "-c", "model_reasoning_effort=\"low\"", "-c", "project_doc_max_bytes=0", "-c", "web_search=\"disabled\"", "-c", "features.shell_tool=false", "-c", "features.unified_exec=false", "-c", "features.plugins=false", "-c", "features.apps=false", "-c", "features.multi_agent=false", "-c", "features.browser_use=false", "-c", "features.computer_use=false", "-c", "features.image_generation=false", "--output-schema", "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-conflict-1f043095-7044-4a17-8030-8785bea4e79d/.heelcode-policy/runs/1789746782761-07b813a3-07c1-4d47-bf4b-ee3180ca5257/schema.json", "--output-last-message", "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-conflict-1f043095-7044-4a17-8030-8785bea4e79d/.heelcode-policy/runs/1789746782761-07b813a3-07c1-4d47-bf4b-ee3180ca5257/response.json", "-" ],
+  "elapsedMs" : 3717,
+  "exitCode" : 0,
+  "effort" : "low",
+  "adapter" : "codex-cli",
+  "startedAt" : "2026-09-18T15:53:02.764705Z",
+  "promptSha256" : "a8d3c41d5bfd712498d063a8cd4685a537916c121f5e8a8c1ec78b4774a473d2",
+  "model" : "gpt-5.6-luna"
+}

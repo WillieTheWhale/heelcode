@@ -32,3 +32,15 @@ Luna is the immediate priority. NotebookLM testing is deferred while the user co
 ## Experimental boundaries
 
 Only fictional course/student data. No grading, misconduct accusations, or hidden student profiling. A policy classifier checks a request against stated rules, not the student's mind. A vague request should normally ask for clarification rather than label a student as cheating. Generated policy citations are mechanically checked for source existence and exact quote presence; that check cannot establish semantic correctness. Production deployment still requires instructor review and security/IRB decisions.
+
+## Latest checkpoint: September 18
+
+See the [comparison report](experiments/2026-09-18/comparison-report.md) and its raw evidence.
+
+- Implemented: Java ingestion, generation, validation, activation, classification, durable admission sessions, and an explicit gated-chat bridge.
+- Verified offline: 18 Java tests and research-script type checks.
+- Verified with real model calls: two policy generations each for Luna and Terra; one extraction per model on each of two suites (60 cases total); rule-level scoring; cross-generator/controller scoring; source amendment and conflicting-notice behavior; persistent admission pipes; denial/clarification blocking inference and replaying across a restart.
+- Still unverified: successful real HeelCode inference-session memory/isolation and the bridge's allowed-answer path. OpenAI authentication/connection errors and OpenCode Zen insufficient funds prevented completion. Controlled test solvers do not fulfill this requirement.
+- Deferred: NotebookLM comparison pending the user's Google access. No substitute Gemini result is counted.
+- Research limitations: synthetic developer-authored cases, no independent instructor labels, no classroom or learning-effect claim. The current tie is a reason to strengthen evaluation, not a basis for claiming equal real-world quality.
+- Delivery: meaningful commits are pushed to `origin/codex/heelcode-refresh`; no overwrite of `dev` or the archived project.

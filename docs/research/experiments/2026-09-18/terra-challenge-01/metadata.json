@@ -1,0 +1,16 @@
+{
+  "promptSha256" : "d6968eabcb68c3f3ab56c47433cc8c873cc2521d3b1e7d4906371c174a72cb76",
+  "model" : "gpt-5.6-terra",
+  "usage" : {
+    "input_tokens" : 10677,
+    "cached_input_tokens" : 0,
+    "output_tokens" : 1222,
+    "reasoning_output_tokens" : 266
+  },
+  "command" : [ "codex", "exec", "--ignore-user-config", "--ephemeral", "--skip-git-repo-check", "--sandbox", "read-only", "--cd", "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-model-13923477877127799474", "--model", "gpt-5.6-terra", "--json", "-c", "model_reasoning_effort=\"low\"", "-c", "project_doc_max_bytes=0", "-c", "web_search=\"disabled\"", "-c", "features.shell_tool=false", "-c", "features.unified_exec=false", "-c", "features.plugins=false", "-c", "features.apps=false", "-c", "features.multi_agent=false", "-c", "features.browser_use=false", "-c", "features.computer_use=false", "-c", "features.image_generation=false", "--output-schema", "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/packages/policy-engine/../../docs/research/experiments/2026-09-18/terra-challenge-01/schema.json", "--output-last-message", "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/packages/policy-engine/../../docs/research/experiments/2026-09-18/terra-challenge-01/response.json", "-" ],
+  "elapsedMs" : 25450,
+  "exitCode" : 0,
+  "effort" : "low",
+  "adapter" : "codex-cli",
+  "startedAt" : "2026-09-18T15:41:34.121719Z"
+}

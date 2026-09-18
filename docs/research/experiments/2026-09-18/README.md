@@ -2,6 +2,8 @@
 
 Date: September 18, 2026. Status: **working prototype and initial Luna results; overall experiment remains incomplete**.
 
+**Later checkpoint:** [Luna/Terra comparison, guarded chat, and source-conflict results](comparison-report.md). It supersedes the pending Terra/bridge items and test counts below. This initial report is preserved as a dated experiment checkpoint; it is not the current completion checklist.
+
 ## What was built, in plain language
 
 The system has two jobs that should not be confused. First it reads the instructor's documents and writes a structured rulebook. Then it reads a student's request and checks that request against the appropriate part of the rulebook.

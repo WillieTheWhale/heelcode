@@ -1,0 +1,95 @@
+{
+  "policies": [
+    {
+      "generator": "luna-policy-01",
+      "cells": 50,
+      "correct": 50,
+      "extraScopes": []
+    },
+    {
+      "generator": "luna-policy-02",
+      "cells": 50,
+      "correct": 50,
+      "extraScopes": []
+    },
+    {
+      "generator": "terra-policy-01",
+      "cells": 50,
+      "correct": 50,
+      "extraScopes": []
+    },
+    {
+      "generator": "terra-policy-02",
+      "cells": 50,
+      "correct": 50,
+      "extraScopes": []
+    }
+  ],
+  "comparisons": [
+    {
+      "generator": "luna-policy-01",
+      "classifier": "luna",
+      "cases": 60,
+      "correct": 60,
+      "unsafeAllows": 0,
+      "falseDenials": 0
+    },
+    {
+      "generator": "luna-policy-01",
+      "classifier": "terra",
+      "cases": 60,
+      "correct": 60,
+      "unsafeAllows": 0,
+      "falseDenials": 0
+    },
+    {
+      "generator": "luna-policy-02",
+      "classifier": "luna",
+      "cases": 60,
+      "correct": 60,
+      "unsafeAllows": 0,
+      "falseDenials": 0
+    },
+    {
+      "generator": "luna-policy-02",
+      "classifier": "terra",
+      "cases": 60,
+      "correct": 60,
+      "unsafeAllows": 0,
+      "falseDenials": 0
+    },
+    {
+      "generator": "terra-policy-01",
+      "classifier": "luna",
+      "cases": 60,
+      "correct": 60,
+      "unsafeAllows": 0,
+      "falseDenials": 0
+    },
+    {
+      "generator": "terra-policy-01",
+      "classifier": "terra",
+      "cases": 60,
+      "correct": 60,
+      "unsafeAllows": 0,
+      "falseDenials": 0
+    },
+    {
+      "generator": "terra-policy-02",
+      "classifier": "luna",
+      "cases": 60,
+      "correct": 60,
+      "unsafeAllows": 0,
+      "falseDenials": 0
+    },
+    {
+      "generator": "terra-policy-02",
+      "classifier": "terra",
+      "cases": 60,
+      "correct": 60,
+      "unsafeAllows": 0,
+      "falseDenials": 0
+    }
+  ],
+  "caveat": "Two generated policies per model, but only one extraction per classifier/suite. Cross-products reuse the same 60 synthetic cases and are not independent trials. The rule oracle was authored after inspecting initial Luna output and is not independent annotation."
+}

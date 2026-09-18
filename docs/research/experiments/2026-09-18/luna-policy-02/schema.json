@@ -1,0 +1,69 @@
+{
+  "required" : [ "courseId", "scopes", "version" ],
+  "additionalProperties" : false,
+  "properties" : {
+    "courseId" : {
+      "type" : "string"
+    },
+    "version" : {
+      "type" : "string"
+    },
+    "scopes" : {
+      "type" : "array",
+      "items" : {
+        "required" : [ "id", "rules", "title" ],
+        "additionalProperties" : false,
+        "properties" : {
+          "rules" : {
+            "type" : "array",
+            "items" : {
+              "required" : [ "activities", "effect", "evidence", "requireAttempt" ],
+              "additionalProperties" : false,
+              "properties" : {
+                "requireAttempt" : {
+                  "type" : "boolean"
+                },
+                "evidence" : {
+                  "type" : "array",
+                  "items" : {
+                    "required" : [ "quote", "source" ],
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "source" : {
+                        "type" : "string"
+                      },
+                      "quote" : {
+                        "type" : "string"
+                      }
+                    },
+                    "type" : "object"
+                  }
+                },
+                "activities" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string",
+                    "enum" : [ "concept", "hint", "debug", "test_design", "test_code", "pseudocode", "implementation", "full_solution", "writeup", "logistics" ]
+                  }
+                },
+                "effect" : {
+                  "type" : "string",
+                  "enum" : [ "allow", "deny", "clarify" ]
+                }
+              },
+              "type" : "object"
+            }
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "title" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      }
+    }
+  },
+  "type" : "object"
+}
