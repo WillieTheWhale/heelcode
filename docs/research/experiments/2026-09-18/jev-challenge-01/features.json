@@ -1,0 +1,171 @@
+{
+  "items" : [ {
+    "id" : "h01",
+    "activities" : [ "pseudocode", "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h02",
+    "activities" : [ "pseudocode", "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h03",
+    "activities" : [ "test_code", "pseudocode" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h04",
+    "activities" : [ "pseudocode", "implementation", "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : true,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h05",
+    "activities" : [ "pseudocode", "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h06",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h07",
+    "activities" : [ ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h08",
+    "activities" : [ "debug" ],
+    "hasAttempt" : true,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h09",
+    "activities" : [ "debug" ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h10",
+    "activities" : [ "debug" ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h11",
+    "activities" : [ "writeup" ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h12",
+    "activities" : [ ],
+    "hasAttempt" : true,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h13",
+    "activities" : [ "concept", "pseudocode", "implementation", "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h14",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h15",
+    "activities" : [ "pseudocode", "implementation", "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : true,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h16",
+    "activities" : [ "concept", "hint", "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h17",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : true,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h18",
+    "activities" : [ ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h19",
+    "activities" : [ "hint", "debug" ],
+    "hasAttempt" : true,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h20",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h21",
+    "activities" : [ "test_code", "pseudocode" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h22",
+    "activities" : [ "hint" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h23",
+    "activities" : [ "full_solution", "writeup" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  }, {
+    "id" : "h24",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+  } ]
+}

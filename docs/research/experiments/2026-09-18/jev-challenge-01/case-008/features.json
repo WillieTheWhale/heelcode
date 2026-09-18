@@ -1,0 +1,8 @@
+{
+  "id" : "h08",
+  "activities" : [ "debug" ],
+  "hasAttempt" : true,
+  "unclear" : false,
+  "dishonest" : false,
+  "rationale" : "Code-derived from Jev Noul probabilities at >=0.5; no model-generated rationale. An empty activity set without dishonesty requests clarification."
+}

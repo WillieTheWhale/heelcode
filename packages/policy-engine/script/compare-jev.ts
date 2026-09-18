@@ -15,7 +15,7 @@ const suites = [
 ]
 const calls: { id: string; elapsedMs: number; inputTokens: number; outputTokens: number; model: string }[] = []
 const hashes: { file: string; sha256: string }[] = []
-const comparisons: object[] = []
+const comparisons = []
 
 function canonical(value: unknown): string {
   if (Array.isArray(value)) return "[" + value.map(canonical).join(",") + "]"
@@ -154,9 +154,12 @@ console.log(
     inputTokens: result.inputTokens,
     outputTokens: result.outputTokens,
     httpWallTimeMs: result.httpWallTimeMs,
-    comparisons: comparisons.map((item) => {
-      const { suites, ...summary } = item as { suites: unknown }
-      return summary
-    }),
+    comparisons: comparisons.map((item) => ({
+      generator: item.generator,
+      cases: item.cases,
+      correct: item.correct,
+      unsafeAllows: item.unsafeAllows,
+      falseDenials: item.falseDenials,
+    })),
   }),
 )
