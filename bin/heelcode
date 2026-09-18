@@ -1,0 +1,22 @@
+#!/bin/sh
+# Resolve the installed symlink without changing the caller's working directory.
+launcher=$0
+while [ -L "$launcher" ]; do
+  directory=$(CDPATH= cd -- "$(dirname -- "$launcher")" && pwd)
+  launcher=$(readlink "$launcher")
+  case "$launcher" in
+    /*) ;;
+    *) launcher=$directory/$launcher ;;
+  esac
+done
+root=$(CDPATH= cd -- "$(dirname -- "$launcher")/.." && pwd)
+if [ "${1:-}" = policy ]; then
+  shift
+  exec "$root/packages/policy-engine/run" "$@"
+fi
+if ! command -v bun >/dev/null 2>&1; then
+  printf '%s\n' 'HeelCode requires Bun on PATH. Install Bun, then run bun install in the HeelCode repository.' >&2
+  exit 127
+fi
+# Load the same Solid compiler used by the package's bunfig.toml, even outside the repo.
+exec bun run --preload "$root/packages/opencode/node_modules/@opentui/solid/scripts/preload.js" "$root/packages/opencode/src/index.ts" "$@"

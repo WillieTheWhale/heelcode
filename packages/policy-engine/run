@@ -1,0 +1,14 @@
+#!/bin/sh
+set -eu
+root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+if [ ! -f "$root/target/policy-engine-0.1.0-SNAPSHOT.jar" ]; then
+  printf '%s\n' "Build first: cd $root && mvn package" >&2
+  exit 1
+fi
+if [ -n "${HEELCODE_JAVA:-}" ]; then
+  exec "$HEELCODE_JAVA" -jar "$root/target/policy-engine-0.1.0-SNAPSHOT.jar" "$@"
+fi
+if [ -x /opt/homebrew/opt/openjdk/bin/java ]; then
+  exec /opt/homebrew/opt/openjdk/bin/java -jar "$root/target/policy-engine-0.1.0-SNAPSHOT.jar" "$@"
+fi
+exec java -jar "$root/target/policy-engine-0.1.0-SNAPSHOT.jar" "$@"
