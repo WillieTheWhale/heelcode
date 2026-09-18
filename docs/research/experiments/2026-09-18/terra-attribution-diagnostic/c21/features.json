@@ -1,0 +1,10 @@
+{
+  "items" : [ {
+    "id" : "c21",
+    "activities" : [ "writeup" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests submission-ready prose for a final analysis paragraph."
+  } ]
+}

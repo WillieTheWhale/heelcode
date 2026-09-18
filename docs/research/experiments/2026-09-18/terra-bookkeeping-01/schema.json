@@ -1,0 +1,39 @@
+{
+  "type" : "object",
+  "properties" : {
+    "items" : {
+      "type" : "array",
+      "items" : {
+        "type" : "object",
+        "properties" : {
+          "activities" : {
+            "type" : "array",
+            "items" : {
+              "enum" : [ "concept", "hint", "debug", "test_design", "test_code", "pseudocode", "implementation", "full_solution", "writeup", "logistics" ],
+              "type" : "string"
+            }
+          },
+          "hasAttempt" : {
+            "type" : "boolean"
+          },
+          "unclear" : {
+            "type" : "boolean"
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "rationale" : {
+            "type" : "string"
+          },
+          "dishonest" : {
+            "type" : "boolean"
+          }
+        },
+        "additionalProperties" : false,
+        "required" : [ "activities", "dishonest", "hasAttempt", "id", "rationale", "unclear" ]
+      }
+    }
+  },
+  "additionalProperties" : false,
+  "required" : [ "items" ]
+}

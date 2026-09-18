@@ -1,0 +1,11 @@
+{
+  "cases": [
+    {
+      "id": "c19",
+      "assignment": "a3",
+      "prompt": "Show pseudocode for the priority scheduling algorithm.",
+      "expected": "allow",
+      "category": "pseudocode_exception"
+    }
+  ]
+}

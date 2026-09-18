@@ -1,0 +1,10 @@
+{
+  "items" : [ {
+    "id" : "c19",
+    "activities" : [ "pseudocode" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "The student explicitly requests pseudocode for a scheduling algorithm."
+  } ]
+}

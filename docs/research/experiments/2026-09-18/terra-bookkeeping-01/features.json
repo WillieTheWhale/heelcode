@@ -1,0 +1,59 @@
+{
+  "items" : [ {
+    "id" : "m01",
+    "activities" : [ "logistics" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests remembering a study-note label."
+  }, {
+    "id" : "m02",
+    "activities" : [ "logistics" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests recall of a conversation label."
+  }, {
+    "id" : "m03",
+    "activities" : [ "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests the entire completed mini-shell solution for submission."
+  }, {
+    "id" : "m04",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests runnable allocator tests."
+  }, {
+    "id" : "m05",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests runnable scheduler tests."
+  }, {
+    "id" : "m06",
+    "activities" : [ "logistics", "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests recall of a label and complete parse_command code."
+  }, {
+    "id" : "m07",
+    "activities" : [ "writeup" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests submission-ready scheduler fairness analysis."
+  }, {
+    "id" : "m08",
+    "activities" : [ ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "The referenced task cannot be resolved from the supplied history."
+  } ]
+}

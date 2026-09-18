@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"01a0b54f-a9dd-7031-bd93-b68c3f4b82db"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"{\"items\":[{\"hasAttempt\":false,\"unclear\":false,\"id\":\"c22\",\"rationale\":\"Requests a conceptual explanation of starvation versus fairness.\",\"dishonest\":false,\"activities\":[\"concept\"]}]}"}}
+{"type":"turn.completed","usage":{"input_tokens":10088,"cached_input_tokens":0,"output_tokens":53,"reasoning_output_tokens":0}}

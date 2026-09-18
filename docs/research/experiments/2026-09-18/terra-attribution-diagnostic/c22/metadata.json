@@ -1,0 +1,16 @@
+{
+  "startedAt" : "2026-09-18T16:18:11.998070Z",
+  "adapter" : "codex-cli",
+  "effort" : "low",
+  "exitCode" : 0,
+  "elapsedMs" : 10679,
+  "command" : [ "codex", "exec", "--ignore-user-config", "--ephemeral", "--skip-git-repo-check", "--sandbox", "read-only", "--cd", "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-model-13268507346407705419", "--model", "gpt-5.6-terra", "--json", "-c", "model_reasoning_effort=\"low\"", "-c", "project_doc_max_bytes=0", "-c", "web_search=\"disabled\"", "-c", "features.shell_tool=false", "-c", "features.unified_exec=false", "-c", "features.plugins=false", "-c", "features.apps=false", "-c", "features.multi_agent=false", "-c", "features.browser_use=false", "-c", "features.computer_use=false", "-c", "features.image_generation=false", "--output-schema", "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/packages/policy-engine/../../docs/research/experiments/2026-09-18/terra-attribution-diagnostic/c22/schema.json", "--output-last-message", "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/packages/policy-engine/../../docs/research/experiments/2026-09-18/terra-attribution-diagnostic/c22/response.json", "-" ],
+  "usage" : {
+    "input_tokens" : 10088,
+    "cached_input_tokens" : 0,
+    "output_tokens" : 53,
+    "reasoning_output_tokens" : 0
+  },
+  "model" : "gpt-5.6-terra",
+  "promptSha256" : "4aab86bd14f34c2b5d8352224b18d3c536a3774d1a56de95ac3a1422f5a9111d"
+}

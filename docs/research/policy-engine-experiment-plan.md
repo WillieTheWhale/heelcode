@@ -35,13 +35,14 @@ Only fictional course/student data. No grading, misconduct accusations, or hidde
 
 ## Latest checkpoint: September 18
 
-See the [comparison report](experiments/2026-09-18/comparison-report.md) and subsequent [live session-verification report](experiments/2026-09-18/session-verification.md), with their raw evidence.
+See the [original comparison](experiments/2026-09-18/comparison-report.md), [live session-verification report](experiments/2026-09-18/session-verification.md), and [revised Luna/Terra comparison](experiments/2026-09-18/revised-comparison-report.md), with their raw evidence.
 
 - Implemented: Java ingestion, generation, validation, activation, classification, durable admission sessions, and an explicit gated-chat bridge.
 - Verified offline: 19 Java tests and research-script type checks.
 - Verified with real model calls: two policy generations each for Luna and Terra; one extraction per model on each of two suites (60 cases total); rule-level scoring; cross-generator/controller scoring; source amendment and conflicting-notice behavior; persistent admission pipes; denial/clarification blocking inference and replaying across a restart.
 - Now verified after user reauthentication: real Luna answers through raw HeelCode and the guarded bridge; memory across process restarts; same open JSONL pipe; policy-to-engine session mapping; exact answered-request replay without new model runs; independent-session isolation; rejection of conflicting IDs, assignment switches, and foreign-workspace sessions.
-- Corrected during live testing: a real empty-category classifier response on conversation-label recall failed closed. A narrow extraction-prompt clarification passed all 60 original Luna cases plus eight post-failure bookkeeping regressions. The earlier Luna/Terra comparison uses the prior prompt; Terra has not been rerun on the revised extraction prompt.
-- Deferred: NotebookLM comparison pending the user's Google access. No substitute Gemini result is counted.
-- Research limitations: synthetic developer-authored cases, no independent instructor labels, no classroom or learning-effect claim. The current tie is a reason to strengthen evaluation, not a basis for claiming equal real-world quality.
+- Corrected during live testing: a real empty-category classifier response on conversation-label recall failed closed. A narrow extraction-prompt clarification passed all 60 original Luna cases plus eight post-failure bookkeeping regressions.
+- Revised comparison: Luna 68/68; Terra 65/68, with one unsafe allowance and two false denials in the initial batch. Scores are identical across all four saved policies, locating the failures in extraction. One bounded repeat batch and three isolated Terra checks passed; they do not replace the failed primary run. Actual saved instruction/input equivalence and label exclusion were checked before scoring.
+- Deferred: NotebookLM comparison pending the user's Google access. Its [source-pinned browser comparison protocol](notebooklm-comparison-protocol.md) is prepared but not executed. No substitute Gemini result is counted.
+- Research limitations: synthetic developer-authored cases, no independent instructor labels, no classroom or learning-effect claim. Observed failures and variation require stronger evaluation; neither the original tie nor the revised difference proves a general quality ranking.
 - Delivery: meaningful commits are pushed to `origin/codex/heelcode-refresh`; no overwrite of `dev` or the archived project.

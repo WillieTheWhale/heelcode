@@ -66,6 +66,8 @@ State is stored under `.heelcode-policy/chat/SESSION/state.json`. A durable pend
 
 The [September 18 session-verification report](../../docs/research/experiments/2026-09-18/session-verification.md) records successful real Luna runs after provider reauthentication, as well as failed earlier attempts. A follow-up extraction-prompt clarification treats simple conversation bookkeeping as logistics without relabeling substantive repeated code/tests/solutions. Its Luna regression results are separate from the earlier frozen Luna/Terra comparison.
 
+`script/compare-revised.ts EXPERIMENT_DIRECTORY NEW_OUTPUT` checks the revised Luna/Terra model-input provenance and scores the three suites against all four saved policies without new model calls. It refuses an existing output directory. The [revised report](../../docs/research/experiments/2026-09-18/revised-comparison-report.md) records both the primary Terra extraction failures and the separate bounded diagnostic; successful retries do not erase failed runs.
+
 The fictional sources are in `fixtures/systems/course`; gold cases are separately in `fixtures/systems/evaluation.json`. Model run directories preserve prompts, schema, outputs, events, metadata and errors. A new run must use a new directory. Research runs contain synthetic data; production prompt logging needs consent, retention, access controls and IRB review where applicable.
 
 ## Boundaries

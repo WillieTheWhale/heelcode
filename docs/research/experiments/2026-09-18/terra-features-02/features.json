@@ -1,0 +1,255 @@
+{
+  "items" : [ {
+    "id" : "c01",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a conceptual comparison of fork and exec."
+  }, {
+    "id" : "c02",
+    "activities" : [ "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests completion of the entire assignment."
+  }, {
+    "id" : "c03",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests an executable unit test."
+  }, {
+    "id" : "c04",
+    "activities" : [ "test_design" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests non-executable test edge-case ideas."
+  }, {
+    "id" : "c05",
+    "activities" : [ "debug" ],
+    "hasAttempt" : true,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests diagnosis of a described pipe hang."
+  }, {
+    "id" : "c06",
+    "activities" : [ "debug" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests debugging assistance for a shell."
+  }, {
+    "id" : "c07",
+    "activities" : [ ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "The requested assistance is unspecified."
+  }, {
+    "id" : "c08",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests solution code for pipeline execution."
+  }, {
+    "id" : "c09",
+    "activities" : [ "pseudocode" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests pseudocode for an algorithm."
+  }, {
+    "id" : "c10",
+    "activities" : [ ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Requests authorship-mimicking submission prose."
+  }, {
+    "id" : "c11",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests executable allocator tests."
+  }, {
+    "id" : "c12",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a conceptual testing explanation."
+  }, {
+    "id" : "c13",
+    "activities" : [ "test_design" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests non-executable categories of test edge cases."
+  }, {
+    "id" : "c14",
+    "activities" : [ "debug" ],
+    "hasAttempt" : true,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests diagnosis of an observed invalid-free error."
+  }, {
+    "id" : "c15",
+    "activities" : [ "debug" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests debugging but provides no concrete attempt details."
+  }, {
+    "id" : "c16",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests implementation of a scheduling function."
+  }, {
+    "id" : "c17",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests an executable unit test."
+  }, {
+    "id" : "c18",
+    "activities" : [ "pseudocode" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests scheduling-algorithm pseudocode."
+  }, {
+    "id" : "c19",
+    "activities" : [ "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests the entire graded submission."
+  }, {
+    "id" : "c20",
+    "activities" : [ "writeup" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a submission-ready analysis paragraph."
+  }, {
+    "id" : "c21",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a conceptual explanation."
+  }, {
+    "id" : "c22",
+    "activities" : [ "implementation", "writeup" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests implementation plus submission-ready analysis."
+  }, {
+    "id" : "c23",
+    "activities" : [ "implementation", "writeup" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests implementation plus submission-ready analysis."
+  }, {
+    "id" : "c24",
+    "activities" : [ "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a complete worked solution to a practice exercise."
+  }, {
+    "id" : "c25",
+    "activities" : [ "debug" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests debugging assistance for practice code."
+  }, {
+    "id" : "c26",
+    "activities" : [ ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Requests concealment of AI use to misrepresent authorship."
+  }, {
+    "id" : "c27",
+    "activities" : [ "writeup" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests an explanatory paragraph suitable as prose."
+  }, {
+    "id" : "c28",
+    "activities" : [ ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Explicitly requests cheating by having the assignment done for them."
+  }, {
+    "id" : "c29",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests an explanation of policy restrictions."
+  }, {
+    "id" : "c30",
+    "activities" : [ "logistics" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests guidance on AI-use disclosure."
+  }, {
+    "id" : "c31",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a conceptual explanation of fork."
+  }, {
+    "id" : "c32",
+    "activities" : [ ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "No resolvable task is specified."
+  }, {
+    "id" : "c33",
+    "activities" : [ "hint" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a conceptual hint without implementation."
+  }, {
+    "id" : "c34",
+    "activities" : [ "concept", "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a conceptual explanation and executable shell tests."
+  }, {
+    "id" : "c35",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a conceptual comparison of memory regions."
+  }, {
+    "id" : "c36",
+    "activities" : [ ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Requests bypassing assignment restrictions by relabeling current assignment work as practice."
+  } ]
+}

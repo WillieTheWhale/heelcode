@@ -2,6 +2,8 @@
 
 September 18, 2026. **The previously blocked live inference-session requirement now passes on macOS.** The user logged into HeelCode again with their ChatGPT subscription. Subsequent real calls to `openai/gpt-5.6-luna` succeeded without changing credentials manually, adding funds, or modifying provider code. This resolves the immediate test blocker; it does not establish the exact cause of the earlier provider errors.
 
+**Later comparison:** [Terra has now been rerun on the revised prompt](revised-comparison-report.md). That report supersedes the pending-Terra statement below; it does not change these live Luna session results.
+
 ## What now works
 
 | Requirement | Observed result | Evidence |

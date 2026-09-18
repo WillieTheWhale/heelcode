@@ -1,0 +1,407 @@
+{
+  "rows" : [ {
+    "correct" : true,
+    "scope" : "*",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "concept",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "*",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "hint",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "*",
+    "actual" : "allow",
+    "expectedAttempt" : true,
+    "activity" : "debug",
+    "expected" : "allow",
+    "actualAttempt" : true
+  }, {
+    "correct" : true,
+    "scope" : "*",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "test_design",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "*",
+    "actual" : "deny",
+    "expectedAttempt" : false,
+    "activity" : "test_code",
+    "expected" : "deny",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "*",
+    "actual" : "deny",
+    "expectedAttempt" : false,
+    "activity" : "pseudocode",
+    "expected" : "deny",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "*",
+    "actual" : "deny",
+    "expectedAttempt" : false,
+    "activity" : "implementation",
+    "expected" : "deny",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "*",
+    "actual" : "deny",
+    "expectedAttempt" : false,
+    "activity" : "full_solution",
+    "expected" : "deny",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "*",
+    "actual" : "deny",
+    "expectedAttempt" : false,
+    "activity" : "writeup",
+    "expected" : "deny",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "*",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "logistics",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a1",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "concept",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a1",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "hint",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a1",
+    "actual" : "allow",
+    "expectedAttempt" : true,
+    "activity" : "debug",
+    "expected" : "allow",
+    "actualAttempt" : true
+  }, {
+    "correct" : true,
+    "scope" : "a1",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "test_design",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a1",
+    "actual" : "deny",
+    "expectedAttempt" : false,
+    "activity" : "test_code",
+    "expected" : "deny",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a1",
+    "actual" : "deny",
+    "expectedAttempt" : false,
+    "activity" : "pseudocode",
+    "expected" : "deny",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a1",
+    "actual" : "deny",
+    "expectedAttempt" : false,
+    "activity" : "implementation",
+    "expected" : "deny",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a1",
+    "actual" : "deny",
+    "expectedAttempt" : false,
+    "activity" : "full_solution",
+    "expected" : "deny",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a1",
+    "actual" : "deny",
+    "expectedAttempt" : false,
+    "activity" : "writeup",
+    "expected" : "deny",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a1",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "logistics",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a2",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "concept",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a2",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "hint",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a2",
+    "actual" : "allow",
+    "expectedAttempt" : true,
+    "activity" : "debug",
+    "expected" : "allow",
+    "actualAttempt" : true
+  }, {
+    "correct" : true,
+    "scope" : "a2",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "test_design",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a2",
+    "actual" : "deny",
+    "expectedAttempt" : false,
+    "activity" : "test_code",
+    "expected" : "deny",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a2",
+    "actual" : "deny",
+    "expectedAttempt" : false,
+    "activity" : "pseudocode",
+    "expected" : "deny",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a2",
+    "actual" : "deny",
+    "expectedAttempt" : false,
+    "activity" : "implementation",
+    "expected" : "deny",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a2",
+    "actual" : "deny",
+    "expectedAttempt" : false,
+    "activity" : "full_solution",
+    "expected" : "deny",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a2",
+    "actual" : "deny",
+    "expectedAttempt" : false,
+    "activity" : "writeup",
+    "expected" : "deny",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a2",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "logistics",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a3",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "concept",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a3",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "hint",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a3",
+    "actual" : "allow",
+    "expectedAttempt" : true,
+    "activity" : "debug",
+    "expected" : "allow",
+    "actualAttempt" : true
+  }, {
+    "correct" : true,
+    "scope" : "a3",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "test_design",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a3",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "test_code",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a3",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "pseudocode",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a3",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "implementation",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a3",
+    "actual" : "deny",
+    "expectedAttempt" : false,
+    "activity" : "full_solution",
+    "expected" : "deny",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a3",
+    "actual" : "deny",
+    "expectedAttempt" : false,
+    "activity" : "writeup",
+    "expected" : "deny",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "a3",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "logistics",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "practice",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "concept",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "practice",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "hint",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "practice",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "debug",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "practice",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "test_design",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "practice",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "test_code",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "practice",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "pseudocode",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "practice",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "implementation",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "practice",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "full_solution",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "practice",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "writeup",
+    "expected" : "allow",
+    "actualAttempt" : false
+  }, {
+    "correct" : true,
+    "scope" : "practice",
+    "actual" : "allow",
+    "expectedAttempt" : false,
+    "activity" : "logistics",
+    "expected" : "allow",
+    "actualAttempt" : false
+  } ],
+  "correct" : 50,
+  "oracleSha256" : "abe252361dd88cdebe623d13fec4e018519d4314120c233b0199a5a9278b1eda",
+  "extraScopes" : [ ],
+  "cells" : 50
+}

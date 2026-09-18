@@ -1,0 +1,11 @@
+{
+  "cases": [
+    {
+      "id": "c22",
+      "assignment": "a3",
+      "prompt": "Explain starvation versus fairness conceptually.",
+      "expected": "allow",
+      "category": "concept"
+    }
+  ]
+}

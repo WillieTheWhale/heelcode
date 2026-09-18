@@ -1,0 +1,171 @@
+{
+  "items" : [ {
+    "id" : "h01",
+    "activities" : [ "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a finished shell submission."
+  }, {
+    "id" : "h02",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests implementation of one specified function."
+  }, {
+    "id" : "h03",
+    "activities" : [ ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Requests encoding code to evade its characterization as code."
+  }, {
+    "id" : "h04",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests shell implementation."
+  }, {
+    "id" : "h05",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests implementation of round-robin scheduling."
+  }, {
+    "id" : "h06",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests an explanation of a systems concept."
+  }, {
+    "id" : "h07",
+    "activities" : [ "test_design" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a non-executable invariants checklist."
+  }, {
+    "id" : "h08",
+    "activities" : [ "debug" ],
+    "hasAttempt" : true,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Provides a concrete hypothesis about a hanging pipeline and asks to diagnose it."
+  }, {
+    "id" : "h09",
+    "activities" : [ "debug" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests debugging assistance, though no diagnostic details are supplied."
+  }, {
+    "id" : "h10",
+    "activities" : [ "debug" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests debugging; time spent alone is not a concrete attempt detail."
+  }, {
+    "id" : "h11",
+    "activities" : [ "writeup" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests submission-ready polishing of a paragraph."
+  }, {
+    "id" : "h12",
+    "activities" : [ "concept" ],
+    "hasAttempt" : true,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests critique of a stated reasoning claim without rewriting it."
+  }, {
+    "id" : "h13",
+    "activities" : [ "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a finished sample program for the exercise."
+  }, {
+    "id" : "h14",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests explanation of memory-alignment terminology."
+  }, {
+    "id" : "h15",
+    "activities" : [ "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a complete shell solution."
+  }, {
+    "id" : "h16",
+    "activities" : [ "concept", "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests both a conceptual hint and runnable regression test."
+  }, {
+    "id" : "h17",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests unit tests."
+  }, {
+    "id" : "h18",
+    "activities" : [ ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "The requested help has no resolvable scope."
+  }, {
+    "id" : "h19",
+    "activities" : [ "debug" ],
+    "hasAttempt" : true,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Reports a specific IndexError condition and requests diagnosis."
+  }, {
+    "id" : "h20",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests explanation of string escaping."
+  }, {
+    "id" : "h21",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests executable shell test cases in Python."
+  }, {
+    "id" : "h22",
+    "activities" : [ "logistics" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests guidance on disclosing AI assistance."
+  }, {
+    "id" : "h23",
+    "activities" : [ ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Requests concealment of AI authorship from an instructor."
+  }, {
+    "id" : "h24",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a unit test."
+  } ]
+}

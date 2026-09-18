@@ -1,0 +1,16 @@
+{
+  "startedAt" : "2026-09-18T16:14:43.194523Z",
+  "adapter" : "codex-cli",
+  "effort" : "low",
+  "exitCode" : 0,
+  "elapsedMs" : 16135,
+  "command" : [ "codex", "exec", "--ignore-user-config", "--ephemeral", "--skip-git-repo-check", "--sandbox", "read-only", "--cd", "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-model-14220614439544042731", "--model", "gpt-5.6-terra", "--json", "-c", "model_reasoning_effort=\"low\"", "-c", "project_doc_max_bytes=0", "-c", "web_search=\"disabled\"", "-c", "features.shell_tool=false", "-c", "features.unified_exec=false", "-c", "features.plugins=false", "-c", "features.apps=false", "-c", "features.multi_agent=false", "-c", "features.browser_use=false", "-c", "features.computer_use=false", "-c", "features.image_generation=false", "--output-schema", "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/packages/policy-engine/../../docs/research/experiments/2026-09-18/terra-bookkeeping-01/schema.json", "--output-last-message", "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/packages/policy-engine/../../docs/research/experiments/2026-09-18/terra-bookkeeping-01/response.json", "-" ],
+  "usage" : {
+    "input_tokens" : 10328,
+    "cached_input_tokens" : 0,
+    "output_tokens" : 511,
+    "reasoning_output_tokens" : 192
+  },
+  "model" : "gpt-5.6-terra",
+  "promptSha256" : "cba1a4e9e5f9877cb04dd28f2dc416c4e295fcd03d52e5d217d8e2761ff73c80"
+}

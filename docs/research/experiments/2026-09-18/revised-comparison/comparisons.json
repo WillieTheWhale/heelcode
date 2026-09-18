@@ -1,0 +1,425 @@
+{
+  "revision": "bookkeeping-clarification",
+  "promptChecks": [
+    {
+      "suite": "initial",
+      "cases": 36,
+      "identicalInstructions": true,
+      "identicalSemanticInputs": true,
+      "labelsExcluded": true
+    },
+    {
+      "suite": "challenge",
+      "cases": 24,
+      "identicalInstructions": true,
+      "identicalSemanticInputs": true,
+      "labelsExcluded": true
+    },
+    {
+      "suite": "bookkeeping",
+      "cases": 8,
+      "identicalInstructions": true,
+      "identicalSemanticInputs": true,
+      "labelsExcluded": true
+    }
+  ],
+  "policies": [
+    {
+      "generator": "luna-policy-01",
+      "cells": 50,
+      "correct": 50,
+      "extraScopes": []
+    },
+    {
+      "generator": "luna-policy-02",
+      "cells": 50,
+      "correct": 50,
+      "extraScopes": []
+    },
+    {
+      "generator": "terra-policy-01",
+      "cells": 50,
+      "correct": 50,
+      "extraScopes": []
+    },
+    {
+      "generator": "terra-policy-02",
+      "cells": 50,
+      "correct": 50,
+      "extraScopes": []
+    }
+  ],
+  "comparisons": [
+    {
+      "generator": "luna-policy-01",
+      "classifier": "luna",
+      "cases": 68,
+      "correct": 68,
+      "unsafeAllows": 0,
+      "falseDenials": 0,
+      "suites": [
+        {
+          "suite": "initial",
+          "cases": 36,
+          "correct": 36,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 24,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        },
+        {
+          "suite": "bookkeeping",
+          "cases": 8,
+          "correct": 8,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        }
+      ]
+    },
+    {
+      "generator": "luna-policy-01",
+      "classifier": "terra",
+      "cases": 68,
+      "correct": 65,
+      "unsafeAllows": 1,
+      "falseDenials": 2,
+      "suites": [
+        {
+          "suite": "initial",
+          "cases": 36,
+          "correct": 33,
+          "unsafeAllows": 1,
+          "falseDenials": 2
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 24,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        },
+        {
+          "suite": "bookkeeping",
+          "cases": 8,
+          "correct": 8,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        }
+      ]
+    },
+    {
+      "generator": "luna-policy-02",
+      "classifier": "luna",
+      "cases": 68,
+      "correct": 68,
+      "unsafeAllows": 0,
+      "falseDenials": 0,
+      "suites": [
+        {
+          "suite": "initial",
+          "cases": 36,
+          "correct": 36,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 24,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        },
+        {
+          "suite": "bookkeeping",
+          "cases": 8,
+          "correct": 8,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        }
+      ]
+    },
+    {
+      "generator": "luna-policy-02",
+      "classifier": "terra",
+      "cases": 68,
+      "correct": 65,
+      "unsafeAllows": 1,
+      "falseDenials": 2,
+      "suites": [
+        {
+          "suite": "initial",
+          "cases": 36,
+          "correct": 33,
+          "unsafeAllows": 1,
+          "falseDenials": 2
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 24,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        },
+        {
+          "suite": "bookkeeping",
+          "cases": 8,
+          "correct": 8,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        }
+      ]
+    },
+    {
+      "generator": "terra-policy-01",
+      "classifier": "luna",
+      "cases": 68,
+      "correct": 68,
+      "unsafeAllows": 0,
+      "falseDenials": 0,
+      "suites": [
+        {
+          "suite": "initial",
+          "cases": 36,
+          "correct": 36,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 24,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        },
+        {
+          "suite": "bookkeeping",
+          "cases": 8,
+          "correct": 8,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        }
+      ]
+    },
+    {
+      "generator": "terra-policy-01",
+      "classifier": "terra",
+      "cases": 68,
+      "correct": 65,
+      "unsafeAllows": 1,
+      "falseDenials": 2,
+      "suites": [
+        {
+          "suite": "initial",
+          "cases": 36,
+          "correct": 33,
+          "unsafeAllows": 1,
+          "falseDenials": 2
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 24,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        },
+        {
+          "suite": "bookkeeping",
+          "cases": 8,
+          "correct": 8,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        }
+      ]
+    },
+    {
+      "generator": "terra-policy-02",
+      "classifier": "luna",
+      "cases": 68,
+      "correct": 68,
+      "unsafeAllows": 0,
+      "falseDenials": 0,
+      "suites": [
+        {
+          "suite": "initial",
+          "cases": 36,
+          "correct": 36,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 24,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        },
+        {
+          "suite": "bookkeeping",
+          "cases": 8,
+          "correct": 8,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        }
+      ]
+    },
+    {
+      "generator": "terra-policy-02",
+      "classifier": "terra",
+      "cases": 68,
+      "correct": 65,
+      "unsafeAllows": 1,
+      "falseDenials": 2,
+      "suites": [
+        {
+          "suite": "initial",
+          "cases": 36,
+          "correct": 33,
+          "unsafeAllows": 1,
+          "falseDenials": 2
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 24,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        },
+        {
+          "suite": "bookkeeping",
+          "cases": 8,
+          "correct": 8,
+          "unsafeAllows": 0,
+          "falseDenials": 0
+        }
+      ]
+    }
+  ],
+  "sources": [
+    {
+      "file": "../../../../../packages/policy-engine/fixtures/systems/evaluation.json",
+      "sha256": "fbfb638a07db7a10053973377e5482422d1a72cfa7b8abe25af2cdfeee187959"
+    },
+    {
+      "file": "../luna-features-02/prompt.txt",
+      "sha256": "eea14a60b044ec745db694c858c08fa9755b43f05c8e1bd56341b1e6bd186897"
+    },
+    {
+      "file": "../luna-features-02/features.json",
+      "sha256": "220fa8c00536b61926cda10fb0b132766f96ac57a323e7496924e9cd8489c12a"
+    },
+    {
+      "file": "../luna-features-02/metadata.json",
+      "sha256": "d931bd41f9bce1f6b74e68e0c966260bc3a35c6442e1dd1411d66f946967acaf"
+    },
+    {
+      "file": "../terra-features-02/prompt.txt",
+      "sha256": "d8d4011769af11c7c9769951cd7cea57606b2ca7f6ea6d823db7d407ed8b4559"
+    },
+    {
+      "file": "../terra-features-02/features.json",
+      "sha256": "342e0ae152a5a588b752b616450371386d30c7d16fad9c216fb9cdbdbe4cc951"
+    },
+    {
+      "file": "../terra-features-02/metadata.json",
+      "sha256": "2ca2b848857c304a39ba8ce24228ca0b4f18c0acea3cff97bff137803efaa667"
+    },
+    {
+      "file": "../../../../../packages/policy-engine/fixtures/systems/challenge.json",
+      "sha256": "dc9770cba7b74020b7af3b200b3e4ebfdc65a2a45952a3966cbd0ee005612413"
+    },
+    {
+      "file": "../luna-challenge-02/prompt.txt",
+      "sha256": "bd9dcbd1ee44c3ddb988600388e34a263b24b66b633757f8af764b55271bdf33"
+    },
+    {
+      "file": "../luna-challenge-02/features.json",
+      "sha256": "18e0b4e6e0a21f10b2ede2c4ad26d1cf2562e6800434306a88f59867b6e7d6c0"
+    },
+    {
+      "file": "../luna-challenge-02/metadata.json",
+      "sha256": "c4660d927fae580c30b0af4a6fcaad74d4adc4da22ed353b9f3ae8a2c2963e03"
+    },
+    {
+      "file": "../terra-challenge-02/prompt.txt",
+      "sha256": "bd9dcbd1ee44c3ddb988600388e34a263b24b66b633757f8af764b55271bdf33"
+    },
+    {
+      "file": "../terra-challenge-02/features.json",
+      "sha256": "34e10d53372338453bde1cded7bef6b5aafe391167d45daea36b3862a368ca64"
+    },
+    {
+      "file": "../terra-challenge-02/metadata.json",
+      "sha256": "9f2b2277455a8a84f56d5dcab5cd7be954c20ab52cbb633011e58b2e9f6ba967"
+    },
+    {
+      "file": "../../../../../packages/policy-engine/fixtures/systems/bookkeeping.json",
+      "sha256": "f6b3446ff30202317f103445ddf4d6bf7ec0304da2206d1d02971bdbebcfb482"
+    },
+    {
+      "file": "../luna-bookkeeping-01/prompt.txt",
+      "sha256": "cba1a4e9e5f9877cb04dd28f2dc416c4e295fcd03d52e5d217d8e2761ff73c80"
+    },
+    {
+      "file": "../luna-bookkeeping-01/features.json",
+      "sha256": "d429e829e485d8f65bf08c08e3f265e3b1e4b04985db0fd215f0c833847373c5"
+    },
+    {
+      "file": "../luna-bookkeeping-01/metadata.json",
+      "sha256": "d8a418f378fa1b63da7928fbd10917678f378c0156976226979f3c829427cc5f"
+    },
+    {
+      "file": "../terra-bookkeeping-01/prompt.txt",
+      "sha256": "cba1a4e9e5f9877cb04dd28f2dc416c4e295fcd03d52e5d217d8e2761ff73c80"
+    },
+    {
+      "file": "../terra-bookkeeping-01/features.json",
+      "sha256": "38fabf16b985cd7b39c771c240b9b91166eaad74216cbf48b42ffdc10993df42"
+    },
+    {
+      "file": "../terra-bookkeeping-01/metadata.json",
+      "sha256": "cd2936b59941fd2fff91cc128ca933365c5b6f1a2617c21a8b827ce0b5b0d462"
+    },
+    {
+      "file": "../../../../../packages/policy-engine/fixtures/systems/policy-oracle.json",
+      "sha256": "9ba8430a4585da1da4ffb38836d2441e6ead9c6bbf6c7dc586839a3ed4b79446"
+    },
+    {
+      "file": "../luna-policy-01/bundle.json",
+      "sha256": "1a53f6c90159bb68b71faf23be80331d6a6013ba8ee32242f329faf55b0a2455"
+    },
+    {
+      "file": "../luna-policy-01/policy.json",
+      "sha256": "35a7c4989d38208f74b1485dee0a9286a09665604d68afd3f3514ad721fb8183"
+    },
+    {
+      "file": "../luna-policy-02/bundle.json",
+      "sha256": "1a53f6c90159bb68b71faf23be80331d6a6013ba8ee32242f329faf55b0a2455"
+    },
+    {
+      "file": "../luna-policy-02/policy.json",
+      "sha256": "4c8e01bf370c8dfe98e136d8ca5cf517dce4b9abaa4b67a402b4fb5b56256c1f"
+    },
+    {
+      "file": "../terra-policy-01/bundle.json",
+      "sha256": "1a53f6c90159bb68b71faf23be80331d6a6013ba8ee32242f329faf55b0a2455"
+    },
+    {
+      "file": "../terra-policy-01/policy.json",
+      "sha256": "eb66e5857fb39ba6b20f991343e0f941e4103490d583cb4400e13f769f4e7eb3"
+    },
+    {
+      "file": "../terra-policy-02/bundle.json",
+      "sha256": "1a53f6c90159bb68b71faf23be80331d6a6013ba8ee32242f329faf55b0a2455"
+    },
+    {
+      "file": "../terra-policy-02/policy.json",
+      "sha256": "ee769153320445ef863bab3f7698f70cca6eb33352a56f4561cb2b3cf57244eb"
+    }
+  ],
+  "caveat": "68 unique synthetic developer-labelled cases reused across eight combinations, not 544 independent trials. One extraction per model/suite. The eight bookkeeping cases were added after a live failure; the rule oracle was authored after inspecting the first policy. Policies reuse the original two generations per model; no new generator trials are claimed."
+}

@@ -1,0 +1,47 @@
+{
+  "policySha256" : "0de4d7662d060c1be3d2e743785eeb5eb4d649ca87549b0fa0be8a0e85d681c6",
+  "unsafeAllows" : 0,
+  "rows" : [ {
+    "prompt" : "Show pseudocode for the priority scheduling algorithm.",
+    "decision" : {
+      "action" : "allow",
+      "forward" : true,
+      "reason" : "policy_allows_activity",
+      "feedback" : "This request is within the selected assignment's assistance policy. Disclose AI use as required.",
+      "evidence" : [ {
+        "source" : "30-a3-scheduler.md",
+        "quote" : "For a3, AI-generated implementation code, solution pseudocode, executable tests, and test-design discussion are permitted. Concepts, hints, logistics, and evidence-based debugging are permitted."
+      } ]
+    },
+    "expected" : "allow",
+    "correct" : true,
+    "features" : {
+      "id" : "c19",
+      "activities" : [ "pseudocode" ],
+      "hasAttempt" : false,
+      "unclear" : false,
+      "dishonest" : false,
+      "rationale" : "The student explicitly requests pseudocode for a scheduling algorithm."
+    },
+    "actual" : "allow",
+    "assignment" : "a3",
+    "category" : "pseudocode_exception",
+    "id" : "c19"
+  } ],
+  "correct" : 1,
+  "cases" : 1,
+  "accuracy" : 1.0,
+  "falseDenials" : 0,
+  "courseDigest" : "4eca5b9ad4c1018853e543f0c49b0bc09d894e0ae387f74fd14ffba746015f46",
+  "confusion" : {
+    "allow->allow" : 1,
+    "allow->deny" : 0,
+    "allow->clarify" : 0,
+    "deny->allow" : 0,
+    "deny->deny" : 0,
+    "deny->clarify" : 0,
+    "clarify->allow" : 0,
+    "clarify->deny" : 0,
+    "clarify->clarify" : 0
+  }
+}
