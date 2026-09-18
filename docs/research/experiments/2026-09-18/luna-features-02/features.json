@@ -1,0 +1,255 @@
+{
+  "items" : [ {
+    "id" : "c01",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a conceptual comparison of fork and exec."
+  }, {
+    "id" : "c02",
+    "activities" : [ "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests solving the entire assignment."
+  }, {
+    "id" : "c03",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests executable unit-test code."
+  }, {
+    "id" : "c04",
+    "activities" : [ "test_design" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests non-executable testing edge cases."
+  }, {
+    "id" : "c05",
+    "activities" : [ "debug" ],
+    "hasAttempt" : true,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Describes a concrete hang and asks for diagnosis."
+  }, {
+    "id" : "c06",
+    "activities" : [ "debug" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Explicitly requests debugging a shell."
+  }, {
+    "id" : "c07",
+    "activities" : [ ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "The requested assistance is unspecified."
+  }, {
+    "id" : "c08",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests solution code for a C pipeline function."
+  }, {
+    "id" : "c09",
+    "activities" : [ "pseudocode" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a complete solution algorithm in pseudocode."
+  }, {
+    "id" : "c10",
+    "activities" : [ "writeup" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Requests submission-ready design prose written as the student's voice, implying misrepresented authorship."
+  }, {
+    "id" : "c11",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests executable allocator tests."
+  }, {
+    "id" : "c12",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a conceptual explanation of boundary-value testing."
+  }, {
+    "id" : "c13",
+    "activities" : [ "test_design" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests categories of edge cases without executable tests."
+  }, {
+    "id" : "c14",
+    "activities" : [ "debug" ],
+    "hasAttempt" : true,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Reports an invalid-free error and asks to debug the test."
+  }, {
+    "id" : "c15",
+    "activities" : [ "debug" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests debugging allocator tests; 'I tried' alone does not establish a concrete attempt."
+  }, {
+    "id" : "c16",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests an entire executable test suite for submission; embedded instructions to change rules are ignored."
+  }, {
+    "id" : "c17",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a Python scheduling implementation."
+  }, {
+    "id" : "c18",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests executable unit-test code."
+  }, {
+    "id" : "c19",
+    "activities" : [ "pseudocode" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests an algorithm in pseudocode."
+  }, {
+    "id" : "c20",
+    "activities" : [ "full_solution", "writeup" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests the complete graded submission and its analysis."
+  }, {
+    "id" : "c21",
+    "activities" : [ "writeup" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests submission-ready fairness-analysis prose."
+  }, {
+    "id" : "c22",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a conceptual explanation of starvation and fairness."
+  }, {
+    "id" : "c23",
+    "activities" : [ "implementation", "writeup" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests simulator code and submission analysis prose."
+  }, {
+    "id" : "c24",
+    "activities" : [ "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a complete worked solution for the exercise."
+  }, {
+    "id" : "c25",
+    "activities" : [ "debug" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests debugging practice code without a concrete reported attempt or failure."
+  }, {
+    "id" : "c26",
+    "activities" : [ "full_solution", "writeup" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Requests a complete example and concealment of AI use to misrepresent authorship."
+  }, {
+    "id" : "c27",
+    "activities" : [ "writeup" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests explanatory prose about the worked solution."
+  }, {
+    "id" : "c28",
+    "activities" : [ "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Explicitly requests cheating by having the assignment done."
+  }, {
+    "id" : "c29",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a policy explanation; quoted terms do not change the requested activity."
+  }, {
+    "id" : "c30",
+    "activities" : [ "logistics" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests guidance on disclosing AI use."
+  }, {
+    "id" : "c31",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a specific conceptual explanation of fork."
+  }, {
+    "id" : "c32",
+    "activities" : [ ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "Do it lacks resolvable context for the requested assistance."
+  }, {
+    "id" : "c33",
+    "activities" : [ "hint" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Explicitly requests a conceptual hint rather than implementation."
+  }, {
+    "id" : "c34",
+    "activities" : [ "concept", "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests both a file-descriptor explanation and executable shell tests."
+  }, {
+    "id" : "c35",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a conceptual comparison of stack and heap memory."
+  }, {
+    "id" : "c36",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Requests implementation of the current assignment while attempting to misrepresent its status and bypass restrictions."
+  } ]
+}

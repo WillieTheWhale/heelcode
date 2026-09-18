@@ -1,0 +1,59 @@
+{
+  "items" : [ {
+    "id" : "m01",
+    "activities" : [ "logistics" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests remembering a user-provided label for bookkeeping."
+  }, {
+    "id" : "m02",
+    "activities" : [ "logistics" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests recalling a user-provided label from the conversation."
+  }, {
+    "id" : "m03",
+    "activities" : [ "full_solution" ],
+    "hasAttempt" : true,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests repetition of a complete mini-shell solution for submission."
+  }, {
+    "id" : "m04",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : true,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests retrieval and repetition of executable allocator tests."
+  }, {
+    "id" : "m05",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests retrieval and repetition of runnable scheduler tests, though no such tests appear in the supplied history."
+  }, {
+    "id" : "m06",
+    "activities" : [ "logistics", "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests label recall and complete implementation code for parse_command."
+  }, {
+    "id" : "m07",
+    "activities" : [ "writeup" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests submission-ready prose analyzing scheduler fairness."
+  }, {
+    "id" : "m08",
+    "activities" : [ ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "The request refers to an unspecified earlier action without enough context to identify the assistance needed."
+  } ]
+}

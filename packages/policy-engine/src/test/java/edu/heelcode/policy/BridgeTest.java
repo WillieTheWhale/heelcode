@@ -2,6 +2,7 @@ package edu.heelcode.policy;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.nio.file.Files;
@@ -80,6 +81,43 @@ class BridgeTest {
     assertEquals(2, unclear.turn());
     assertFalse(
         Files.exists(workspace.resolve(".heelcode-policy/chat/" + denied.sessionId() + "/turn-1")));
+  }
+
+  @Test
+  void uncategorizedClearRequestCannotReachInferenceOrAdvanceSession() throws Exception {
+    var workspace = workspace();
+    var solver = Bridge.heelcode(root.resolve("missing").toString(), "openai/gpt-5.6-luna");
+    var first =
+        Bridge.chat(
+            workspace,
+            new Workspace.Request("r1", "", "a1", "Write tests"),
+            extraction("test_code", false),
+            "openai/gpt-5.6-luna",
+            solver);
+    assertThrows(
+        IllegalArgumentException.class,
+        () ->
+            Bridge.chat(
+                workspace,
+                new Workspace.Request("r2", first.sessionId(), "a1", "Recall my label"),
+                extraction("", false),
+                "openai/gpt-5.6-luna",
+                solver));
+    assertEquals(
+        1,
+        Json.read(
+                workspace.resolve(".heelcode-policy/sessions/" + first.sessionId() + ".json"),
+                Workspace.Session.class)
+            .turns()
+            .size());
+    var state =
+        Json.read(
+            workspace.resolve(".heelcode-policy/chat/" + first.sessionId() + "/state.json"),
+            Bridge.State.class);
+    assertEquals(1, state.responses().size());
+    assertEquals("", state.pendingRequest());
+    assertFalse(
+        Files.exists(workspace.resolve(".heelcode-policy/chat/" + first.sessionId() + "/turn-2")));
   }
 
   @Test

@@ -1,0 +1,4 @@
+{"type":"thread.started","thread_id":"01a0b545-0546-7300-a4fd-01287ba37e67"}
+{"type":"turn.started"}
+{"type":"item.completed","item":{"id":"item_0","type":"agent_message","text":"{\"items\":[{\"dishonest\":false,\"rationale\":\"Requests a one-sentence conceptual explanation of fork and exec, with a formatting constraint.\",\"id\":\"context1\",\"unclear\":false,\"hasAttempt\":false,\"activities\":[\"concept\"]}]}"}}
+{"type":"turn.completed","usage":{"input_tokens":8905,"cached_input_tokens":0,"output_tokens":92,"reasoning_output_tokens":29}}

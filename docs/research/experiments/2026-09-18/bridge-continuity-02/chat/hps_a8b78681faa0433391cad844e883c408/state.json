@@ -1,0 +1,44 @@
+{
+  "workspace" : "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-context-f7f47f75-8d66-4b8d-8fca-793184525870",
+  "sessionId" : "hps_a8b78681faa0433391cad844e883c408",
+  "assignment" : "practice",
+  "policyDigest" : "0de4d7662d060c1be3d2e743785eeb5eb4d649ca87549b0fa0be8a0e85d681c6",
+  "model" : "openai/gpt-5.6-luna",
+  "engineSessionId" : "ses_f4abae26affe1aHWgHSImmRSk7",
+  "pendingRequest" : "",
+  "responses" : [ {
+    "requestId" : "context1",
+    "sessionId" : "hps_a8b78681faa0433391cad844e883c408",
+    "turn" : 1,
+    "engineSessionId" : "ses_f4abae26affe1aHWgHSImmRSk7",
+    "status" : "completed",
+    "inferenceAttempted" : true,
+    "text" : "SYSTEMS-73f00fa7-ee71-446e-afe3-cc575d28c334: `fork` creates a process, and `exec` replaces its program.",
+    "error" : "",
+    "policy" : {
+      "requestId" : "context1",
+      "sessionId" : "hps_a8b78681faa0433391cad844e883c408",
+      "turn" : 1,
+      "courseId" : "sys301",
+      "policyDigest" : "0de4d7662d060c1be3d2e743785eeb5eb4d649ca87549b0fa0be8a0e85d681c6",
+      "features" : {
+        "id" : "context1",
+        "activities" : [ "concept" ],
+        "hasAttempt" : false,
+        "unclear" : false,
+        "dishonest" : false,
+        "rationale" : "Requests a one-sentence conceptual explanation of fork and exec, with a formatting constraint."
+      },
+      "decision" : {
+        "action" : "allow",
+        "forward" : true,
+        "reason" : "policy_allows_activity",
+        "feedback" : "This request is within the selected assignment's assistance policy. Disclose AI use as required.",
+        "evidence" : [ {
+          "source" : "50-practice.md",
+          "quote" : "Students may request conceptual explanations, hints, debugging, test-design discussion, executable tests, pseudocode, implementation code, complete worked solutions, written explanations, and logistics."
+        } ]
+      }
+    }
+  } ]
+}

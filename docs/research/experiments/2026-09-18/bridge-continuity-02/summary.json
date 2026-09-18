@@ -1,0 +1,6 @@
+{
+  "status": "failed",
+  "workspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-context-f7f47f75-8d66-4b8d-8fca-793184525870",
+  "otherWorkspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-context-f7f47f75-8d66-4b8d-8fca-793184525870-other",
+  "error": "Expected successful real inference: {\"forward\":false,\"requestId\":\"context2\",\"error\":\"IllegalArgumentException\",\"message\":\"Invalid classifier features\"}"
+}
