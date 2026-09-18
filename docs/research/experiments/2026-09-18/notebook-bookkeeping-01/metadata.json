@@ -1,0 +1,21 @@
+{
+  "product": "Gemini Notebook (NotebookLM browser workflow)",
+  "model": "unknown",
+  "notebookTitle": "HeelCode Classifier Bookkeeping 8",
+  "startedAt": "2026-09-18T17:09:51.498Z",
+  "completedObservedAt": "2026-09-18T17:11:32.218Z",
+  "elapsedUpperBoundMs": 100720,
+  "latencyCaveat": "Time to observation of completed reply, including observation delay; not server latency",
+  "sources": ["bookkeeping-requests.md"],
+  "sourceSelection": "One selected uploaded source; no course documents, policy, gold labels, or model results",
+  "browserPromptCharacters": 2857,
+  "browserPromptFNV1a32": "393796cc",
+  "rawResponseCharacters": 13,
+  "rawResponseFNV1a32": "43c521db",
+  "capture": "Browser Copy model response control; captured literally as an empty items array",
+  "normalization": "No code fence; trailing LF added to features.json only",
+  "repairRequests": 0,
+  "tokenUsage": null,
+  "cost": null,
+  "outcome": "unusable batch: zero of eight requested IDs returned; no semantic score assigned"
+}

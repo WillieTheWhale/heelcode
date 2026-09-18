@@ -1,0 +1,23 @@
+{
+  "product": "Gemini Notebook (NotebookLM browser workflow)",
+  "model": "unknown",
+  "accountTier": "not verified",
+  "notebookTitle": "HeelCode SYS301 Policy Experiment 02",
+  "startedAt": "2026-09-18T16:58:42.311Z",
+  "completedObservedAt": "2026-09-18T17:01:15.836Z",
+  "elapsedUpperBoundMs": 153525,
+  "latencyCaveat": "Time to observation of completed reply; includes observation delay, not exact service latency. Source upload time excluded.",
+  "uploadedSources": ["00-syllabus.md", "10-a1-shell.md", "20-a2-allocator.md", "30-a3-scheduler.md", "40-amendment.md", "50-practice.md"],
+  "sourceSelection": "All six sources selected before submission",
+  "browserPromptCharacters": 2576,
+  "rawResponseCharacters": 7902,
+  "browserPromptFNV1a32": "1869be61",
+  "rawResponseFNV1a32": "4ee64b23",
+  "capture": "Copy model response to clipboard via browser UI; serialized transcription matches observed clipboard text length and FNV-1a checksum. UI interaction transcript retains source selection and completed reply evidence.",
+  "normalization": "response.json adds one trailing LF to raw-response.txt; no semantic edits or citation stripping",
+  "attempt": 2,
+  "repairRequests": 0,
+  "tokenUsage": null,
+  "cost": null,
+  "comparisonCaveat": "Fresh notebook with identical six sources and identical shortened prompt. Backend model and retrieval internals unknown."
+}

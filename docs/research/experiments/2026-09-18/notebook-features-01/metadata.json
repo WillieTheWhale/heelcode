@@ -1,0 +1,20 @@
+{
+  "product": "Gemini Notebook (NotebookLM browser workflow)",
+  "model": "unknown",
+  "notebookTitle": "HeelCode Classifier Initial 36",
+  "startedAt": "2026-09-18T17:03:55.559Z",
+  "completedObservedAt": "2026-09-18T17:05:20.262Z",
+  "elapsedUpperBoundMs": 84703,
+  "latencyCaveat": "Time to observation of completed reply, including observation delay; not server latency",
+  "sources": ["evaluation-requests.md"],
+  "sourceSelection": "One selected uploaded source; no course documents, policy, gold labels, or model results",
+  "browserPromptCharacters": 2857,
+  "browserPromptFNV1a32": "393796cc",
+  "rawResponseCharacters": 9145,
+  "rawResponseFNV1a32": "1c414e1",
+  "capture": "Browser Copy model response control; initial immediate clipboard read was stale prompt text and was discarded. Subsequent clipboard read matched completed JSON response. Serialized transcription checked against observed length and FNV-1a checksum.",
+  "normalization": "One outer Markdown json code fence removed; no semantic edits",
+  "repairRequests": 0,
+  "tokenUsage": null,
+  "cost": null
+}

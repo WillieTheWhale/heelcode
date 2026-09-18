@@ -1,6 +1,6 @@
-# NotebookLM comparison protocol — prepared, not executed
+# NotebookLM comparison protocol
 
-Prepared September 18, 2026. **Do not begin the live NotebookLM run until the user confirms that Google access is ready.** No NotebookLM score, source upload, or generation is claimed by this document.
+Prepared September 18, 2026; browser procedure amended before generation. The signed-in browser is usable, and the user's original authorization expressly permits browser testing. The earlier assumption that student verification blocked all access was unnecessary. Six fictional source files are now uploaded. No consumer API access or paid upgrade is assumed.
 
 ## Question and comparison boundary
 
@@ -27,7 +27,9 @@ The course ID is `sys301`; the Java course digest is `4eca5b9ad4c1018853e543f0c4
 
 The common generation instructions and complete source JSON are preserved in [the original prompt](experiments/2026-09-18/luna-policy-01/prompt.txt), SHA-256 `b7a2e0c0fab79b68b96172ceb2812c452bffd9eb65af86a8dcf9b734e4ce405d`. The output schema is [schema.json](experiments/2026-09-18/luna-policy-01/schema.json), file SHA-256 `412390735f560fb89aebe41b37737d6002327e7266850ea5e86a4de46215e761`.
 
-For the browser, submit the common prompt followed by an explicit `OUTPUT JSON SCHEMA:` block containing that schema. Preserve the complete actual submitted text as `browser-prompt.txt`. Keep the unmodified common portion separately as `prompt.txt` for the existing source-validation command. Do not describe those two files as byte-identical. The schema-as-text and duplicate availability of source text (uploads plus inline course JSON) are declared interface differences from the Codex runs.
+The initially prepared 8,299-character prompt (full course JSON plus schema) left the browser Submit button disabled, including after filling the input again. No generation was submitted with it. Before the first generation, adapt both planned runs to the 2,576-character prompt: retain the common instruction prefix before `COURSE JSON`, then specify `Course ID: sys301. Use the six selected uploaded sources; source IDs are their exact filenames.`, followed by `OUTPUT JSON SCHEMA:` and the compact schema. This enables Submit. The exact maximum input length was not investigated or claimed.
+
+Preserve the complete actual submitted text as `browser-prompt.txt`. Keep the unmodified original prompt separately as `prompt.txt` for the existing source-validation command. Do not describe those files as byte-identical. The schema-as-text and source retrieval from uploads rather than inline course JSON are declared interface differences from the Codex runs.
 
 ## Live procedure once access is ready
 

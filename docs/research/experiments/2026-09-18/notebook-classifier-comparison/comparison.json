@@ -1,0 +1,517 @@
+{
+  "classifier": "Gemini Notebook browser; backend unknown",
+  "comparisons": [
+    {
+      "generator": "luna-policy-01",
+      "scoredCases": 60,
+      "unavailableCases": 8,
+      "complete": false,
+      "correct": 60,
+      "unsafeAllows": 0,
+      "falseDenials": 0,
+      "suites": [
+        {
+          "suite": "evaluation",
+          "cases": 36,
+          "correct": 36,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 17,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 0,
+            "deny->deny": 14,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 5
+          },
+          "failures": []
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 24,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 10,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 0,
+            "deny->deny": 10,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 4
+          },
+          "failures": []
+        }
+      ],
+      "unavailable": [
+        {
+          "suite": "bookkeeping",
+          "status": "unusable",
+          "expectedCases": 8,
+          "returnedCases": 0,
+          "error": "Missing, extra, or duplicated evaluation IDs",
+          "semanticScore": null
+        }
+      ]
+    },
+    {
+      "generator": "luna-policy-02",
+      "scoredCases": 60,
+      "unavailableCases": 8,
+      "complete": false,
+      "correct": 60,
+      "unsafeAllows": 0,
+      "falseDenials": 0,
+      "suites": [
+        {
+          "suite": "evaluation",
+          "cases": 36,
+          "correct": 36,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 17,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 0,
+            "deny->deny": 14,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 5
+          },
+          "failures": []
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 24,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 10,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 0,
+            "deny->deny": 10,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 4
+          },
+          "failures": []
+        }
+      ],
+      "unavailable": [
+        {
+          "suite": "bookkeeping",
+          "status": "unusable",
+          "expectedCases": 8,
+          "returnedCases": 0,
+          "error": "Missing, extra, or duplicated evaluation IDs",
+          "semanticScore": null
+        }
+      ]
+    },
+    {
+      "generator": "terra-policy-01",
+      "scoredCases": 60,
+      "unavailableCases": 8,
+      "complete": false,
+      "correct": 60,
+      "unsafeAllows": 0,
+      "falseDenials": 0,
+      "suites": [
+        {
+          "suite": "evaluation",
+          "cases": 36,
+          "correct": 36,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 17,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 0,
+            "deny->deny": 14,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 5
+          },
+          "failures": []
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 24,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 10,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 0,
+            "deny->deny": 10,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 4
+          },
+          "failures": []
+        }
+      ],
+      "unavailable": [
+        {
+          "suite": "bookkeeping",
+          "status": "unusable",
+          "expectedCases": 8,
+          "returnedCases": 0,
+          "error": "Missing, extra, or duplicated evaluation IDs",
+          "semanticScore": null
+        }
+      ]
+    },
+    {
+      "generator": "terra-policy-02",
+      "scoredCases": 60,
+      "unavailableCases": 8,
+      "complete": false,
+      "correct": 60,
+      "unsafeAllows": 0,
+      "falseDenials": 0,
+      "suites": [
+        {
+          "suite": "evaluation",
+          "cases": 36,
+          "correct": 36,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 17,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 0,
+            "deny->deny": 14,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 5
+          },
+          "failures": []
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 24,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 10,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 0,
+            "deny->deny": 10,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 4
+          },
+          "failures": []
+        }
+      ],
+      "unavailable": [
+        {
+          "suite": "bookkeeping",
+          "status": "unusable",
+          "expectedCases": 8,
+          "returnedCases": 0,
+          "error": "Missing, extra, or duplicated evaluation IDs",
+          "semanticScore": null
+        }
+      ]
+    },
+    {
+      "generator": "notebook-policy-01",
+      "scoredCases": 60,
+      "unavailableCases": 8,
+      "complete": false,
+      "correct": 59,
+      "unsafeAllows": 0,
+      "falseDenials": 0,
+      "suites": [
+        {
+          "suite": "evaluation",
+          "cases": 36,
+          "correct": 35,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 16,
+            "allow->deny": 0,
+            "allow->clarify": 1,
+            "deny->allow": 0,
+            "deny->deny": 14,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 5
+          },
+          "failures": [
+            {
+              "id": "c25",
+              "expected": "allow",
+              "actual": "clarify"
+            }
+          ]
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 24,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 10,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 0,
+            "deny->deny": 10,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 4
+          },
+          "failures": []
+        }
+      ],
+      "unavailable": [
+        {
+          "suite": "bookkeeping",
+          "status": "unusable",
+          "expectedCases": 8,
+          "returnedCases": 0,
+          "error": "Missing, extra, or duplicated evaluation IDs",
+          "semanticScore": null
+        }
+      ]
+    },
+    {
+      "generator": "notebook-policy-02",
+      "scoredCases": 60,
+      "unavailableCases": 8,
+      "complete": false,
+      "correct": 57,
+      "unsafeAllows": 3,
+      "falseDenials": 0,
+      "suites": [
+        {
+          "suite": "evaluation",
+          "cases": 36,
+          "correct": 34,
+          "unsafeAllows": 2,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 17,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 2,
+            "deny->deny": 12,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 5
+          },
+          "failures": [
+            {
+              "id": "c03",
+              "expected": "deny",
+              "actual": "allow"
+            },
+            {
+              "id": "c34",
+              "expected": "deny",
+              "actual": "allow"
+            }
+          ]
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 23,
+          "unsafeAllows": 1,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 10,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 1,
+            "deny->deny": 9,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 4
+          },
+          "failures": [
+            {
+              "id": "h16",
+              "expected": "deny",
+              "actual": "allow"
+            }
+          ]
+        }
+      ],
+      "unavailable": [
+        {
+          "suite": "bookkeeping",
+          "status": "unusable",
+          "expectedCases": 8,
+          "returnedCases": 0,
+          "error": "Missing, extra, or duplicated evaluation IDs",
+          "semanticScore": null
+        }
+      ]
+    }
+  ],
+  "hashes": [
+    {
+      "file": "../../../../../packages/policy-engine/fixtures/systems/evaluation.json",
+      "sha256": "fbfb638a07db7a10053973377e5482422d1a72cfa7b8abe25af2cdfeee187959"
+    },
+    {
+      "file": "../notebook-classifier-inputs/evaluation-requests.md",
+      "sha256": "d92e4f1e7af90238576dbfd0a4fe583166328cafa25ec4b445eadb2965033544"
+    },
+    {
+      "file": "../notebook-features-01/browser-prompt.txt",
+      "sha256": "f41db603fbdd9bb523c53e188f17655b53430ebc1d71e0a63eb414b76410ea72"
+    },
+    {
+      "file": "../notebook-features-01/raw-response.txt",
+      "sha256": "90c55701b925a71207d1525fb23439f8d0eac23020377df064f7f646c10b8b5e"
+    },
+    {
+      "file": "../notebook-features-01/metadata.json",
+      "sha256": "79743526d9d06d35ebfdc35afd533092d3eac050ba03ecb321bdc67dee826bd8"
+    },
+    {
+      "file": "../notebook-features-01/features.json",
+      "sha256": "b098fd1e57f725e4150bc90f677862c10c7084b5f74ebedf6f9a3db1e47f293e"
+    },
+    {
+      "file": "../notebook-classifier-inputs/evaluation-browser-prompt.txt",
+      "sha256": "f41db603fbdd9bb523c53e188f17655b53430ebc1d71e0a63eb414b76410ea72"
+    },
+    {
+      "file": "../../../../../packages/policy-engine/fixtures/systems/challenge.json",
+      "sha256": "dc9770cba7b74020b7af3b200b3e4ebfdc65a2a45952a3966cbd0ee005612413"
+    },
+    {
+      "file": "../notebook-classifier-inputs/challenge-requests.md",
+      "sha256": "3e850a8bdbc924cc8f21a841df1248dcfad64917e886e75757e1a8cb9b0d735f"
+    },
+    {
+      "file": "../notebook-challenge-01/browser-prompt.txt",
+      "sha256": "f41db603fbdd9bb523c53e188f17655b53430ebc1d71e0a63eb414b76410ea72"
+    },
+    {
+      "file": "../notebook-challenge-01/raw-response.txt",
+      "sha256": "645c485e5ddc5ef512c6ce515d7598e000ecdd4bfb326d9be9113f530060330e"
+    },
+    {
+      "file": "../notebook-challenge-01/metadata.json",
+      "sha256": "6040092d6213fb81d6f500d3410beae5c2ab9be47d0836d4e4a2710cb74655e5"
+    },
+    {
+      "file": "../notebook-challenge-01/features.json",
+      "sha256": "6c2dc563e7aea0317a7441a0d430466d8bbfb32f4db93b9f854a4d2b56836228"
+    },
+    {
+      "file": "../notebook-classifier-inputs/challenge-browser-prompt.txt",
+      "sha256": "f41db603fbdd9bb523c53e188f17655b53430ebc1d71e0a63eb414b76410ea72"
+    },
+    {
+      "file": "../../../../../packages/policy-engine/fixtures/systems/bookkeeping.json",
+      "sha256": "f6b3446ff30202317f103445ddf4d6bf7ec0304da2206d1d02971bdbebcfb482"
+    },
+    {
+      "file": "../notebook-classifier-inputs/bookkeeping-requests.md",
+      "sha256": "5ff50170569a8b67b7ee03fba8b51656615754b3ec7baca61844f1eccd1d74b8"
+    },
+    {
+      "file": "../notebook-bookkeeping-01/browser-prompt.txt",
+      "sha256": "f41db603fbdd9bb523c53e188f17655b53430ebc1d71e0a63eb414b76410ea72"
+    },
+    {
+      "file": "../notebook-bookkeeping-01/raw-response.txt",
+      "sha256": "eeb85c2675888473ec64b7580aa0c76c6fd6b2bd51828870286ef202ad89dae2"
+    },
+    {
+      "file": "../notebook-bookkeeping-01/metadata.json",
+      "sha256": "4dd049f4a5fed0626c005e504aa28dae199c51706fff3bdd9464555f0e12f642"
+    },
+    {
+      "file": "../notebook-bookkeeping-01/features.json",
+      "sha256": "bcedc7da27dca581475b9342c5e857428e8fac347fbab59c5a048fdb1b3e8f0d"
+    },
+    {
+      "file": "../notebook-classifier-inputs/bookkeeping-browser-prompt.txt",
+      "sha256": "f41db603fbdd9bb523c53e188f17655b53430ebc1d71e0a63eb414b76410ea72"
+    },
+    {
+      "file": "../luna-policy-01/bundle.json",
+      "sha256": "1a53f6c90159bb68b71faf23be80331d6a6013ba8ee32242f329faf55b0a2455"
+    },
+    {
+      "file": "../luna-policy-01/policy.json",
+      "sha256": "35a7c4989d38208f74b1485dee0a9286a09665604d68afd3f3514ad721fb8183"
+    },
+    {
+      "file": "../luna-policy-02/bundle.json",
+      "sha256": "1a53f6c90159bb68b71faf23be80331d6a6013ba8ee32242f329faf55b0a2455"
+    },
+    {
+      "file": "../luna-policy-02/policy.json",
+      "sha256": "4c8e01bf370c8dfe98e136d8ca5cf517dce4b9abaa4b67a402b4fb5b56256c1f"
+    },
+    {
+      "file": "../terra-policy-01/bundle.json",
+      "sha256": "1a53f6c90159bb68b71faf23be80331d6a6013ba8ee32242f329faf55b0a2455"
+    },
+    {
+      "file": "../terra-policy-01/policy.json",
+      "sha256": "eb66e5857fb39ba6b20f991343e0f941e4103490d583cb4400e13f769f4e7eb3"
+    },
+    {
+      "file": "../terra-policy-02/bundle.json",
+      "sha256": "1a53f6c90159bb68b71faf23be80331d6a6013ba8ee32242f329faf55b0a2455"
+    },
+    {
+      "file": "../terra-policy-02/policy.json",
+      "sha256": "ee769153320445ef863bab3f7698f70cca6eb33352a56f4561cb2b3cf57244eb"
+    },
+    {
+      "file": "../notebook-policy-01/bundle.json",
+      "sha256": "1a53f6c90159bb68b71faf23be80331d6a6013ba8ee32242f329faf55b0a2455"
+    },
+    {
+      "file": "../notebook-policy-01/policy.json",
+      "sha256": "2c6a2023281cd7ff76aac236bafd249bf1239964b0b44b23d6358ba9b5075aaa"
+    },
+    {
+      "file": "../notebook-policy-02/bundle.json",
+      "sha256": "1a53f6c90159bb68b71faf23be80331d6a6013ba8ee32242f329faf55b0a2455"
+    },
+    {
+      "file": "../notebook-policy-02/policy.json",
+      "sha256": "ede00bd7b2739cf738ca1c7dfc995df4b2bbec54562838ceeed1d8237f9a2cf1"
+    }
+  ],
+  "caveat": "68 unique synthetic cases, one browser extraction per suite, reused across six policies; not 408 independent trials. No semantic repair."
+}

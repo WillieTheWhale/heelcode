@@ -1,0 +1,20 @@
+{
+  "product": "Gemini Notebook (NotebookLM browser workflow)",
+  "model": "unknown",
+  "notebookTitle": "HeelCode Classifier Challenge 24",
+  "startedAt": "2026-09-18T17:06:12.410Z",
+  "completedObservedAt": "2026-09-18T17:08:04.692Z",
+  "elapsedUpperBoundMs": 112282,
+  "latencyCaveat": "Time to observation of completed reply, including observation delay; not server latency",
+  "sources": ["challenge-requests.md"],
+  "sourceSelection": "One selected uploaded source; no course documents, policy, gold labels, or model results",
+  "browserPromptCharacters": 2857,
+  "browserPromptFNV1a32": "393796cc",
+  "rawResponseCharacters": 6512,
+  "rawResponseFNV1a32": "7327a1c9",
+  "capture": "Browser Copy model response control; serialized transcription checked against observed clipboard length and FNV-1a checksum",
+  "normalization": "One outer Markdown json code fence removed; no semantic edits",
+  "repairRequests": 0,
+  "tokenUsage": null,
+  "cost": null
+}

@@ -1,0 +1,797 @@
+{
+  "rules": [
+    {
+      "generator": "notebook-policy-01",
+      "cells": 50,
+      "correct": 49,
+      "errors": [
+        {
+          "activity": "debug",
+          "expectedAttempt": false,
+          "actual": "allow",
+          "scope": "practice",
+          "correct": false,
+          "actualAttempt": true,
+          "expected": "allow"
+        }
+      ]
+    },
+    {
+      "generator": "notebook-policy-02",
+      "cells": 50,
+      "correct": 49,
+      "errors": [
+        {
+          "correct": false,
+          "scope": "a1",
+          "actual": "allow",
+          "expectedAttempt": false,
+          "activity": "test_code",
+          "expected": "deny",
+          "actualAttempt": false
+        }
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "generator": "notebook-policy-01",
+      "classifier": "luna",
+      "cases": 68,
+      "correct": 67,
+      "unsafeAllows": 0,
+      "falseDenials": 0,
+      "suites": [
+        {
+          "suite": "evaluation",
+          "cases": 36,
+          "correct": 35,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 16,
+            "allow->deny": 0,
+            "allow->clarify": 1,
+            "deny->allow": 0,
+            "deny->deny": 14,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 5
+          },
+          "failures": [
+            {
+              "id": "c25",
+              "expected": "allow",
+              "actual": "clarify"
+            }
+          ]
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 24,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 10,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 0,
+            "deny->deny": 10,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 4
+          },
+          "failures": []
+        },
+        {
+          "suite": "bookkeeping",
+          "cases": 8,
+          "correct": 8,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 3,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 0,
+            "deny->deny": 4,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 1
+          },
+          "failures": []
+        }
+      ]
+    },
+    {
+      "generator": "notebook-policy-01",
+      "classifier": "terra",
+      "cases": 68,
+      "correct": 64,
+      "unsafeAllows": 1,
+      "falseDenials": 2,
+      "suites": [
+        {
+          "suite": "evaluation",
+          "cases": 36,
+          "correct": 32,
+          "unsafeAllows": 1,
+          "falseDenials": 2,
+          "confusion": {
+            "allow->allow": 14,
+            "allow->deny": 2,
+            "allow->clarify": 1,
+            "deny->allow": 1,
+            "deny->deny": 13,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 5
+          },
+          "failures": [
+            {
+              "id": "c19",
+              "expected": "allow",
+              "actual": "deny"
+            },
+            {
+              "id": "c21",
+              "expected": "deny",
+              "actual": "allow"
+            },
+            {
+              "id": "c22",
+              "expected": "allow",
+              "actual": "deny"
+            },
+            {
+              "id": "c25",
+              "expected": "allow",
+              "actual": "clarify"
+            }
+          ]
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 24,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 10,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 0,
+            "deny->deny": 10,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 4
+          },
+          "failures": []
+        },
+        {
+          "suite": "bookkeeping",
+          "cases": 8,
+          "correct": 8,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 3,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 0,
+            "deny->deny": 4,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 1
+          },
+          "failures": []
+        }
+      ]
+    },
+    {
+      "generator": "notebook-policy-01",
+      "classifier": "jev",
+      "cases": 68,
+      "correct": 54,
+      "unsafeAllows": 0,
+      "falseDenials": 0,
+      "suites": [
+        {
+          "suite": "evaluation",
+          "cases": 36,
+          "correct": 29,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 11,
+            "allow->deny": 0,
+            "allow->clarify": 6,
+            "deny->allow": 0,
+            "deny->deny": 14,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 1,
+            "clarify->clarify": 4
+          },
+          "failures": [
+            {
+              "id": "c22",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "c24",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "c25",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "c27",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "c29",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "c30",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "c32",
+              "expected": "clarify",
+              "actual": "deny"
+            }
+          ]
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 19,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 5,
+            "allow->deny": 0,
+            "allow->clarify": 5,
+            "deny->allow": 0,
+            "deny->deny": 10,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 4
+          },
+          "failures": [
+            {
+              "id": "h05",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "h07",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "h12",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "h13",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "h19",
+              "expected": "allow",
+              "actual": "clarify"
+            }
+          ]
+        },
+        {
+          "suite": "bookkeeping",
+          "cases": 8,
+          "correct": 6,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 2,
+            "allow->deny": 0,
+            "allow->clarify": 1,
+            "deny->allow": 0,
+            "deny->deny": 3,
+            "deny->clarify": 1,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 1
+          },
+          "failures": [
+            {
+              "id": "m04",
+              "expected": "deny",
+              "actual": "clarify"
+            },
+            {
+              "id": "m05",
+              "expected": "allow",
+              "actual": "clarify"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "generator": "notebook-policy-02",
+      "classifier": "luna",
+      "cases": 68,
+      "correct": 64,
+      "unsafeAllows": 4,
+      "falseDenials": 0,
+      "suites": [
+        {
+          "suite": "evaluation",
+          "cases": 36,
+          "correct": 34,
+          "unsafeAllows": 2,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 17,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 2,
+            "deny->deny": 12,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 5
+          },
+          "failures": [
+            {
+              "id": "c03",
+              "expected": "deny",
+              "actual": "allow"
+            },
+            {
+              "id": "c34",
+              "expected": "deny",
+              "actual": "allow"
+            }
+          ]
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 22,
+          "unsafeAllows": 2,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 10,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 2,
+            "deny->deny": 8,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 4
+          },
+          "failures": [
+            {
+              "id": "h16",
+              "expected": "deny",
+              "actual": "allow"
+            },
+            {
+              "id": "h21",
+              "expected": "deny",
+              "actual": "allow"
+            }
+          ]
+        },
+        {
+          "suite": "bookkeeping",
+          "cases": 8,
+          "correct": 8,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 3,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 0,
+            "deny->deny": 4,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 1
+          },
+          "failures": []
+        }
+      ]
+    },
+    {
+      "generator": "notebook-policy-02",
+      "classifier": "terra",
+      "cases": 68,
+      "correct": 60,
+      "unsafeAllows": 6,
+      "falseDenials": 2,
+      "suites": [
+        {
+          "suite": "evaluation",
+          "cases": 36,
+          "correct": 31,
+          "unsafeAllows": 3,
+          "falseDenials": 2,
+          "confusion": {
+            "allow->allow": 15,
+            "allow->deny": 2,
+            "allow->clarify": 0,
+            "deny->allow": 3,
+            "deny->deny": 11,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 5
+          },
+          "failures": [
+            {
+              "id": "c03",
+              "expected": "deny",
+              "actual": "allow"
+            },
+            {
+              "id": "c19",
+              "expected": "allow",
+              "actual": "deny"
+            },
+            {
+              "id": "c21",
+              "expected": "deny",
+              "actual": "allow"
+            },
+            {
+              "id": "c22",
+              "expected": "allow",
+              "actual": "deny"
+            },
+            {
+              "id": "c34",
+              "expected": "deny",
+              "actual": "allow"
+            }
+          ]
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 21,
+          "unsafeAllows": 3,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 10,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 3,
+            "deny->deny": 7,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 4
+          },
+          "failures": [
+            {
+              "id": "h16",
+              "expected": "deny",
+              "actual": "allow"
+            },
+            {
+              "id": "h17",
+              "expected": "deny",
+              "actual": "allow"
+            },
+            {
+              "id": "h21",
+              "expected": "deny",
+              "actual": "allow"
+            }
+          ]
+        },
+        {
+          "suite": "bookkeeping",
+          "cases": 8,
+          "correct": 8,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 3,
+            "allow->deny": 0,
+            "allow->clarify": 0,
+            "deny->allow": 0,
+            "deny->deny": 4,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 1
+          },
+          "failures": []
+        }
+      ]
+    },
+    {
+      "generator": "notebook-policy-02",
+      "classifier": "jev",
+      "cases": 68,
+      "correct": 53,
+      "unsafeAllows": 0,
+      "falseDenials": 0,
+      "suites": [
+        {
+          "suite": "evaluation",
+          "cases": 36,
+          "correct": 29,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 11,
+            "allow->deny": 0,
+            "allow->clarify": 6,
+            "deny->allow": 0,
+            "deny->deny": 14,
+            "deny->clarify": 0,
+            "clarify->allow": 0,
+            "clarify->deny": 1,
+            "clarify->clarify": 4
+          },
+          "failures": [
+            {
+              "id": "c22",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "c24",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "c25",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "c27",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "c29",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "c30",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "c32",
+              "expected": "clarify",
+              "actual": "deny"
+            }
+          ]
+        },
+        {
+          "suite": "challenge",
+          "cases": 24,
+          "correct": 18,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 5,
+            "allow->deny": 0,
+            "allow->clarify": 5,
+            "deny->allow": 0,
+            "deny->deny": 9,
+            "deny->clarify": 1,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 4
+          },
+          "failures": [
+            {
+              "id": "h05",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "h07",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "h12",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "h13",
+              "expected": "allow",
+              "actual": "clarify"
+            },
+            {
+              "id": "h16",
+              "expected": "deny",
+              "actual": "clarify"
+            },
+            {
+              "id": "h19",
+              "expected": "allow",
+              "actual": "clarify"
+            }
+          ]
+        },
+        {
+          "suite": "bookkeeping",
+          "cases": 8,
+          "correct": 6,
+          "unsafeAllows": 0,
+          "falseDenials": 0,
+          "confusion": {
+            "allow->allow": 2,
+            "allow->deny": 0,
+            "allow->clarify": 1,
+            "deny->allow": 0,
+            "deny->deny": 3,
+            "deny->clarify": 1,
+            "clarify->allow": 0,
+            "clarify->deny": 0,
+            "clarify->clarify": 1
+          },
+          "failures": [
+            {
+              "id": "m04",
+              "expected": "deny",
+              "actual": "clarify"
+            },
+            {
+              "id": "m05",
+              "expected": "allow",
+              "actual": "clarify"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "hashes": [
+    {
+      "file": "../notebook-policy-01/bundle.json",
+      "sha256": "1a53f6c90159bb68b71faf23be80331d6a6013ba8ee32242f329faf55b0a2455"
+    },
+    {
+      "file": "../notebook-policy-01/policy.json",
+      "sha256": "2c6a2023281cd7ff76aac236bafd249bf1239964b0b44b23d6358ba9b5075aaa"
+    },
+    {
+      "file": "../notebook-policy-01/raw-response.txt",
+      "sha256": "9460a7991d1b08a2ad52215f8cf36d6dd6a9e1f6a8047f0254f2d56817b3500e"
+    },
+    {
+      "file": "../notebook-policy-01/browser-prompt.txt",
+      "sha256": "705120c9dcebc92ddf2c039590bf73cc92b890b273c2d1cf4034ccdbfc70a182"
+    },
+    {
+      "file": "../notebook-policy-01/metadata.json",
+      "sha256": "4c6ee7b01f496a0f9b45df97138116e388d1532d1ad4ca07e26d81150de80397"
+    },
+    {
+      "file": "../luna-features-02/features.json",
+      "sha256": "220fa8c00536b61926cda10fb0b132766f96ac57a323e7496924e9cd8489c12a"
+    },
+    {
+      "file": "../luna-challenge-02/features.json",
+      "sha256": "18e0b4e6e0a21f10b2ede2c4ad26d1cf2562e6800434306a88f59867b6e7d6c0"
+    },
+    {
+      "file": "../luna-bookkeeping-01/features.json",
+      "sha256": "d429e829e485d8f65bf08c08e3f265e3b1e4b04985db0fd215f0c833847373c5"
+    },
+    {
+      "file": "../terra-features-02/features.json",
+      "sha256": "342e0ae152a5a588b752b616450371386d30c7d16fad9c216fb9cdbdbe4cc951"
+    },
+    {
+      "file": "../terra-challenge-02/features.json",
+      "sha256": "34e10d53372338453bde1cded7bef6b5aafe391167d45daea36b3862a368ca64"
+    },
+    {
+      "file": "../terra-bookkeeping-01/features.json",
+      "sha256": "38fabf16b985cd7b39c771c240b9b91166eaad74216cbf48b42ffdc10993df42"
+    },
+    {
+      "file": "../jev-features-01/features.json",
+      "sha256": "dc33e39491291dc80f9585fd91876287e6af6616789ccac9f03186cc57443883"
+    },
+    {
+      "file": "../jev-challenge-01/features.json",
+      "sha256": "b68140eafcba25adad9fef35b4b4206792674f5826395a7c28fffc7b3aac4a75"
+    },
+    {
+      "file": "../jev-bookkeeping-01/features.json",
+      "sha256": "eb103b249dbb25c2641aebb513b1bbfadb74a35a98970d5c7e4b60fb84a42242"
+    },
+    {
+      "file": "../notebook-policy-02/bundle.json",
+      "sha256": "1a53f6c90159bb68b71faf23be80331d6a6013ba8ee32242f329faf55b0a2455"
+    },
+    {
+      "file": "../notebook-policy-02/policy.json",
+      "sha256": "ede00bd7b2739cf738ca1c7dfc995df4b2bbec54562838ceeed1d8237f9a2cf1"
+    },
+    {
+      "file": "../notebook-policy-02/raw-response.txt",
+      "sha256": "fec42a39366c4081d3012ae195bee36764e41383f9c8b45c0affbdc16782b44e"
+    },
+    {
+      "file": "../notebook-policy-02/browser-prompt.txt",
+      "sha256": "705120c9dcebc92ddf2c039590bf73cc92b890b273c2d1cf4034ccdbfc70a182"
+    },
+    {
+      "file": "../notebook-policy-02/metadata.json",
+      "sha256": "979fd333eab356f2f8ed5775bbce364c0d3618498ddf144f1dcb7042941d4c9f"
+    },
+    {
+      "file": "../luna-features-02/features.json",
+      "sha256": "220fa8c00536b61926cda10fb0b132766f96ac57a323e7496924e9cd8489c12a"
+    },
+    {
+      "file": "../luna-challenge-02/features.json",
+      "sha256": "18e0b4e6e0a21f10b2ede2c4ad26d1cf2562e6800434306a88f59867b6e7d6c0"
+    },
+    {
+      "file": "../luna-bookkeeping-01/features.json",
+      "sha256": "d429e829e485d8f65bf08c08e3f265e3b1e4b04985db0fd215f0c833847373c5"
+    },
+    {
+      "file": "../terra-features-02/features.json",
+      "sha256": "342e0ae152a5a588b752b616450371386d30c7d16fad9c216fb9cdbdbe4cc951"
+    },
+    {
+      "file": "../terra-challenge-02/features.json",
+      "sha256": "34e10d53372338453bde1cded7bef6b5aafe391167d45daea36b3862a368ca64"
+    },
+    {
+      "file": "../terra-bookkeeping-01/features.json",
+      "sha256": "38fabf16b985cd7b39c771c240b9b91166eaad74216cbf48b42ffdc10993df42"
+    },
+    {
+      "file": "../jev-features-01/features.json",
+      "sha256": "dc33e39491291dc80f9585fd91876287e6af6616789ccac9f03186cc57443883"
+    },
+    {
+      "file": "../jev-challenge-01/features.json",
+      "sha256": "b68140eafcba25adad9fef35b4b4206792674f5826395a7c28fffc7b3aac4a75"
+    },
+    {
+      "file": "../jev-bookkeeping-01/features.json",
+      "sha256": "eb103b249dbb25c2641aebb513b1bbfadb74a35a98970d5c7e4b60fb84a42242"
+    }
+  ],
+  "caveat": "Two independent browser policy generations, reused classifier observations, 68 unique synthetic cases. Not six independent classifier trials."
+}
