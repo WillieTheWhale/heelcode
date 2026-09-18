@@ -2,7 +2,7 @@
 
 September 18, 2026. **The previously blocked live inference-session requirement now passes on macOS.** The user logged into HeelCode again with their ChatGPT subscription. Subsequent real calls to `openai/gpt-5.6-luna` succeeded without changing credentials manually, adding funds, or modifying provider code. This resolves the immediate test blocker; it does not establish the exact cause of the earlier provider errors.
 
-**Later comparison:** [Terra has now been rerun on the revised prompt](revised-comparison-report.md). That report supersedes the pending-Terra statement below; it does not change these live Luna session results.
+**Later comparisons:** [Terra has now been rerun on the revised prompt](revised-comparison-report.md), and the [final consolidated report](final-report.md) includes actual Jev and NotebookLM experiments. Those reports supersede the historical pending-model statements below; they do not change these live Luna session results.
 
 ## What now works
 
@@ -94,4 +94,4 @@ Bridge times include classification plus answer inference and local work. These 
 - No production provider/session code was changed to make authentication succeed. The user reauthenticated, then real calls passed. The implementation change was the narrow classification-prompt clarification.
 - Windows remains untested. There is no output-content classifier, global TUI gate, malicious-local-user protection, or guarantee of exactly-once remote execution after a crash. The durable pending-marker behavior and bounded history limits still apply.
 
-This completes the currently requested Luna piping/session test milestone. The broader comparative research goal remains open for NotebookLM, independent instructor review/annotation, and a final consolidated report.
+This completed the Luna piping/session test milestone. The later consolidated report completes the requested comparative prototype experiment. Independent instructor annotation and classroom research remain future work, not claimed results.

@@ -1,6 +1,6 @@
 # Jev classifier: first-pass findings
 
-September 18, 2026. Jev was tested **only as the request classifier**, never as a policy generator. Its output feeds the same Java policy controller used with Luna and Terra. NotebookLM classification is a separate, still-pending experiment; a policy-generation result cannot stand in for it.
+September 18, 2026. Jev was tested **only as the request classifier**, never as a policy generator. Its output feeds the same Java policy controller used with Luna and Terra. The later [consolidated report](final-report.md) now includes the separate NotebookLM classifier experiment: 60 correct returned decisions and eight unavailable cases due to an empty output batch. A policy-generation result cannot stand in for classification.
 
 ## Result
 
@@ -9,7 +9,7 @@ September 18, 2026. Jev was tested **only as the request classifier**, never as 
 | Luna, revised batch prompt | 36 | 24 | 8 | 68/68 | 0 | 0 | 0 |
 | Terra, revised primary batch | 33 | 24 | 8 | 65/68 | 1 | 2 | 0 |
 | Jev 1.13.0, first-pass Noul adapter | 29 | 19 | 6 | 54/68 | 0 | 0 | 12 |
-| NotebookLM classifier | pending | pending | pending | not measured | — | — | — |
+| NotebookLM classifier | 36 | 24 | unusable empty batch | 60 correct; 8 unavailable | 0 among returned cases | 0 among returned cases | 0 among returned cases |
 
 All four existing generated policies produce the same Jev scores. This locates the difference in feature extraction and its composition with the controller, not policy generation. The four cross-products reuse 68 cases; they are not 272 independent trials. The [complete computed comparison](jev-comparison/comparison.json) includes raw-input hashes and every error. The [Luna/Terra report](revised-comparison-report.md) preserves Terra's primary errors and successful *separate* diagnostics.
 
@@ -57,4 +57,4 @@ At the published rate checked September 18, 2026 ($0.042 per million input token
 
 The TypeSafe skill influenced the design directly: independent Noul questions preserve multiple requested activities and keep the policy decision in code. See [Noul](https://docs.typesafe.ai/primitives/noul), the [HTTP API](https://docs.typesafe.ai/api), and the [guardrails cookbook](https://docs.typesafe.ai/cookbooks/llm_guardrails). Vendor claims about calibration or jailbreak resistance were not assumed proven by these tests.
 
-Next, finish the independent NotebookLM classifier comparison. A later Jev iteration should separate unknown activity from missing answer material, strengthen repetition semantics, and use new instructor-labeled validation data for threshold calibration. Keep this baseline intact. Synthetic developer-authored regression cases cannot establish student understanding, classroom learning, or a general ranking among model families.
+The independent NotebookLM classifier comparison is now recorded in the consolidated report. A later Jev iteration should separate unknown activity from missing answer material, strengthen repetition semantics, and use new instructor-labeled validation data for threshold calibration. Keep this baseline intact. Synthetic developer-authored regression cases cannot establish student understanding, classroom learning, or a general ranking among model families.

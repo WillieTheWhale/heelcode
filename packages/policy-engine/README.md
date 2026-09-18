@@ -74,7 +74,13 @@ The fictional sources are in `fixtures/systems/course`; gold cases are separatel
 
 `heelcode policy extract-jev CASES_JSON NEW_RUN_DIR` runs the TypeSafe `jev-1.13.0` classifier-only experiment. Set `TYPESAFE_API_KEY` in the process environment; never commit it. The Java adapter sends one case per HTTPS call with 13 independent Noul questions, converts probabilities >=0.5 to the existing feature contract, and leaves policy decisions to the same controller. An empty category set requests clarification. Thresholds are experimental, not calibrated confidence guarantees. Raw probabilities, usage, timings, and redacted response evidence are saved; existing directories are refused and failures stop without automatic retries. Jev does not generate policies or explanations and is not enabled for live `policy chat`.
 
-`bun script/compare-jev.ts EXPERIMENT_DIRECTORY NEW_OUTPUT` verifies saved input provenance and scores all three frozen suites against the four existing policies without model calls. See the [first-pass Jev report](../../docs/research/experiments/2026-09-18/jev-report.md): 54/68 exact decisions, no prohibited-to-allowed errors, but 12 unnecessary clarifications of allowed requests. NotebookLM classification is still separate and pending.
+`bun script/compare-jev.ts EXPERIMENT_DIRECTORY NEW_OUTPUT` verifies saved input provenance and scores all three frozen suites against the four existing policies without model calls. See the [first-pass Jev report](../../docs/research/experiments/2026-09-18/jev-report.md): 54/68 exact decisions, no prohibited-to-allowed errors, but 12 unnecessary clarifications of allowed requests.
+
+## Completed browser comparison and consolidated results
+
+The [final experiment report](../../docs/research/experiments/2026-09-18/final-report.md) explains each component, policy-generation and classifier comparisons, timings, live session evidence, failures, and limitations. Two NotebookLM policies each scored 49/50 rule settings, with different consequential mistakes. Its separate classifier returned correct features-to-decisions for 60 cases, but returned an empty list for the remaining eight; that batch is recorded as unusable, not silently retried or credited as correct.
+
+`script/prepare-notebook-classifier.ts` creates unlabeled browser inputs. `script/compare-notebook-policies.ts` evaluates the two captured policies with saved Luna/Terra/Jev features. `script/compare-notebook-classifier.ts` checks source/prompt/output provenance and evaluates the captured NotebookLM features across all six policies, preserving unusable-batch errors separately from semantic scores. Each takes `EXPERIMENT_DIRECTORY NEW_OUTPUT` and refuses overwriting existing output. Browser captures are real user-authorized product interactions, not generic Gemini API substitutes.
 
 ## Boundaries
 

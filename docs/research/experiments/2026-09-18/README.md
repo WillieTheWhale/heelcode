@@ -1,5 +1,7 @@
 # Luna-first policy experiment — interim results
 
+**Final results:** [Consolidated experiment report](final-report.md). The prototype, real Luna session tests, Luna/Terra comparisons, added Jev classifier baseline, and actual NotebookLM policy/classifier experiments are now complete, including recorded failures. The text below is a historical checkpoint; its pending status is superseded by that report.
+
 Date: September 18, 2026. Status: **working prototype and initial Luna results; overall experiment remains incomplete**.
 
 **Current model comparison:** [Revised Luna/Terra results](revised-comparison-report.md). With the bookkeeping clarification, the primary run matched 68/68 cases for Luna and 65/68 for Terra, including one unsafe allowance. The report preserves those errors and separately describes a successful bounded repeat diagnostic. NotebookLM remains pending.
