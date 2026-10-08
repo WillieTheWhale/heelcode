@@ -285,9 +285,11 @@ export const RunCommand = effectCmd({
         throw error
       }
 
-      let message = [...args.message, ...(args["--"] || [])]
-        .map((arg) => (arg.includes(" ") ? `"${arg.replace(/"/g, '\\"')}"` : arg))
-        .join(" ")
+      let message = args.command
+        ? [...args.message, ...(args["--"] || [])]
+            .map((arg) => (arg.includes(" ") ? `"${arg.replace(/"/g, '\\"')}"` : arg))
+            .join(" ")
+        : rawMessage
 
       if (interactive && args.command) {
         die("--mini cannot be used with --command")

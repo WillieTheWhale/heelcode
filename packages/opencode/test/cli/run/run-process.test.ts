@@ -9,6 +9,34 @@ import { reply } from "../../lib/llm-server"
 import { cliIt } from "../../lib/cli-process"
 
 describe("opencode run (non-interactive subprocess)", () => {
+  cliIt.concurrent(
+    "preserves quoted text and Unicode when combining prompt arguments with stdin",
+    ({ llm, opencode }) =>
+      Effect.gen(function* () {
+        yield* llm.text("received")
+        const result = yield* opencode.run('Read "café" 🧪:', {
+          stdin: "First line\nSecond line ✓\n",
+        })
+        opencode.expectExit(result, 0)
+        const inputs = yield* llm.inputs
+        expect(JSON.stringify(inputs)).toContain(JSON.stringify('Read "café" 🧪:\nFirst line\nSecond line ✓\n'))
+        expect(JSON.stringify(inputs)).not.toContain(JSON.stringify('"Read \\"café\\" 🧪:"'))
+      }),
+    60_000,
+  )
+
+  cliIt.concurrent(
+    "accepts an stdin-only prompt without adding quotes or trimming it",
+    ({ llm, opencode }) =>
+      Effect.gen(function* () {
+        yield* llm.text("received")
+        const result = yield* opencode.run("", { stdin: "  Synthetic README\nDo not solve.\n" })
+        opencode.expectExit(result, 0)
+        expect(JSON.stringify(yield* llm.inputs)).toContain(JSON.stringify("  Synthetic README\nDo not solve.\n"))
+      }),
+    60_000,
+  )
+
   // Happy path: prompt completes, output reaches stdout, process exits 0.
   // If this fails, all the others likely will too — debug here first.
   cliIt.concurrent(
