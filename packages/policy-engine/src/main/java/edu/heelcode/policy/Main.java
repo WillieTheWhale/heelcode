@@ -1,6 +1,9 @@
 package edu.heelcode.policy;
 
-import java.io.InputStreamReader;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Map;
@@ -87,26 +90,41 @@ public final class Main {
                 : null;
         if (args[0].equals("check")) {
           var bytes = System.in.readNBytes(128_001);
-          if (bytes.length > 128_000) throw new IllegalArgumentException("Request too large");
-          reply(new String(bytes, StandardCharsets.UTF_8), workspace, model, "", null);
+          if (bytes.length > 128_000) {
+            requestError("", new IllegalArgumentException("Request too large (limit 128,000 bytes)"));
+            return;
+          }
+          reply(bytes, workspace, model, "", null);
           return;
         }
         // Newline is the framing boundary, not EOF. Keep stdout strictly one JSON object per line.
-        try (var reader = new InputStreamReader(System.in, StandardCharsets.UTF_8)) {
-          var line = new StringBuilder();
+        // Bound bytes before decoding, and discard an oversized frame through its boundary.
+        try (var reader = new BufferedInputStream(System.in)) {
+          var line = new ByteArrayOutputStream();
+          var oversized = false;
           int value;
           while ((value = reader.read()) != -1) {
             if (value == '\n') {
-              reply(line.toString(), workspace, model, solver == null ? "" : args[3], solver);
-              line.setLength(0);
+              if (oversized)
+                requestError("", new IllegalArgumentException("JSONL frame too large (limit 128,000 bytes)"));
+              if (!oversized)
+                reply(line.toByteArray(), workspace, model, solver == null ? "" : args[3], solver);
+              line.reset();
+              oversized = false;
               continue;
             }
-            if (line.length() >= 128_000)
-              throw new IllegalArgumentException("JSONL frame too large");
-            line.append((char) value);
+            if (oversized) continue;
+            if (line.size() >= 128_000) {
+              oversized = true;
+              line.reset();
+              continue;
+            }
+            line.write(value);
           }
-          if (!line.isEmpty())
-            reply(line.toString(), workspace, model, solver == null ? "" : args[3], solver);
+          if (oversized)
+            requestError("", new IllegalArgumentException("JSONL frame too large (limit 128,000 bytes)"));
+          if (line.size() > 0)
+            reply(line.toByteArray(), workspace, model, solver == null ? "" : args[3], solver);
         }
       }
       case "extract" -> {
@@ -158,7 +176,7 @@ public final class Main {
   }
 
   static void reply(
-      String text,
+      byte[] bytes,
       Path workspace,
       Workspace.Extractor model,
       String inferenceModel,
@@ -166,6 +184,7 @@ public final class Main {
       throws Exception {
     var requestId = "";
     try {
+      var text = StandardCharsets.UTF_8.newDecoder().decode(ByteBuffer.wrap(bytes)).toString();
       var request = Json.MAPPER.readValue(text, Workspace.Request.class);
       requestId = request.requestId();
       emit(
@@ -173,18 +192,17 @@ public final class Main {
               ? Workspace.check(workspace, request, model)
               : Bridge.chat(workspace, request, model, inferenceModel, solver));
     } catch (Exception error) {
-      System.err.println("Policy request failed: " + error.getMessage());
-      emit(
-          Map.of(
-              "requestId",
-              requestId,
-              "error",
-              error.getClass().getSimpleName(),
-              "message",
-              error.getMessage() == null ? "Request failed" : error.getMessage(),
-              "forward",
-              false));
+      requestError(requestId, error);
     }
+  }
+
+  private static void requestError(String requestId, Exception error) throws Exception {
+    var message =
+        error instanceof CharacterCodingException
+            ? "Request is not valid UTF-8"
+            : error.getMessage() == null ? "Request failed" : error.getMessage();
+    System.err.println("Policy request failed: " + message);
+    emit(Map.of("requestId", requestId, "error", error.getClass().getSimpleName(), "message", message, "forward", false));
   }
 
   static void emit(Object value) throws Exception {
