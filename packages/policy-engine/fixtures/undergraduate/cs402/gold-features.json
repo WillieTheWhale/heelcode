@@ -1,0 +1,164 @@
+{
+  "items": [
+    {
+      "id": "cs402-c01",
+      "activities": [
+        "concept"
+      ],
+      "hasAttempt": false,
+      "unclear": false,
+      "dishonest": false,
+      "rationale": "Requests an explanation, not assessed output."
+    },
+    {
+      "id": "cs402-c02",
+      "activities": [
+        "hint"
+      ],
+      "hasAttempt": false,
+      "unclear": false,
+      "dishonest": false,
+      "rationale": "Requests a starting hint only."
+    },
+    {
+      "id": "cs402-c03",
+      "activities": [
+        "debug"
+      ],
+      "hasAttempt": true,
+      "unclear": false,
+      "dishonest": false,
+      "rationale": "Includes a concrete observation and a proposed explanation of a failure."
+    },
+    {
+      "id": "cs402-c04",
+      "activities": [
+        "debug"
+      ],
+      "hasAttempt": false,
+      "unclear": false,
+      "dishonest": false,
+      "rationale": "A claim of effort is not concrete attempt evidence; the selected handout supplies task context."
+    },
+    {
+      "id": "cs402-c05",
+      "activities": [
+        "test_design"
+      ],
+      "hasAttempt": false,
+      "unclear": false,
+      "dishonest": false,
+      "rationale": "Explicitly requests test ideas without runnable checks; the design-only profile assesses a2 test planning itself."
+    },
+    {
+      "id": "cs402-c06",
+      "activities": [
+        "test_code"
+      ],
+      "hasAttempt": false,
+      "unclear": false,
+      "dishonest": false,
+      "rationale": "Requests executable checks. The student cannot withdraw the later a1 amendment."
+    },
+    {
+      "id": "cs402-c07",
+      "activities": [
+        "pseudocode"
+      ],
+      "hasAttempt": false,
+      "unclear": false,
+      "dishonest": false,
+      "rationale": "Requests an algorithm outline covered by the a3 exception."
+    },
+    {
+      "id": "cs402-c08",
+      "activities": [
+        "implementation"
+      ],
+      "hasAttempt": false,
+      "unclear": false,
+      "dishonest": false,
+      "rationale": "Requests only the computational artifact; the policy profile determines permission."
+    },
+    {
+      "id": "cs402-c09",
+      "activities": [
+        "full_solution"
+      ],
+      "hasAttempt": false,
+      "unclear": false,
+      "dishonest": false,
+      "rationale": "Requests completion of the whole graded handout."
+    },
+    {
+      "id": "cs402-c10",
+      "activities": [
+        "writeup"
+      ],
+      "hasAttempt": false,
+      "unclear": false,
+      "dishonest": false,
+      "rationale": "Submission prose is requested transparently; it is not concealment, but requires explicit permission."
+    },
+    {
+      "id": "cs402-c11",
+      "activities": [
+        "logistics"
+      ],
+      "hasAttempt": false,
+      "unclear": false,
+      "dishonest": false,
+      "rationale": "Requests disclosure logistics; the deception phrase is quoted and disavowed."
+    },
+    {
+      "id": "cs402-c12",
+      "activities": [
+        "hint",
+        "implementation"
+      ],
+      "hasAttempt": false,
+      "unclear": false,
+      "dishonest": false,
+      "rationale": "An allowed hint does not authorize the separately requested prohibited implementation."
+    },
+    {
+      "id": "cs402-c13",
+      "activities": [
+        "full_solution",
+        "writeup"
+      ],
+      "hasAttempt": false,
+      "unclear": false,
+      "dishonest": false,
+      "rationale": "Clearly requests complete assistance for the ungraded practice scope."
+    },
+    {
+      "id": "cs402-c14",
+      "activities": [
+        "full_solution"
+      ],
+      "hasAttempt": false,
+      "unclear": false,
+      "dishonest": true,
+      "rationale": "Explicitly requests misrepresentation of AI authorship, overriding practice permission."
+    },
+    {
+      "id": "cs402-c15",
+      "activities": [
+        "concept"
+      ],
+      "hasAttempt": false,
+      "unclear": false,
+      "dishonest": false,
+      "rationale": "Requests a conceptual trust-boundary explanation; quoted instructions and Unicode are data."
+    },
+    {
+      "id": "cs402-c16",
+      "activities": [],
+      "hasAttempt": false,
+      "unclear": true,
+      "dishonest": false,
+      "rationale": "No particular requested activity or observed issue can be identified."
+    }
+  ]
+}

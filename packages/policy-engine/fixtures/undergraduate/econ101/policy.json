@@ -1,0 +1,306 @@
+{
+  "courseId": "econ101",
+  "version": "synthetic-authored-2026-09-21-v1",
+  "scopes": [
+    {
+      "id": "*",
+      "title": "Course baseline",
+      "rules": [
+        {
+          "activities": [
+            "concept",
+            "hint",
+            "test_design",
+            "logistics"
+          ],
+          "effect": "allow",
+          "requireAttempt": false,
+          "evidence": [
+            {
+              "source": "10-syllabus.md",
+              "quote": "Permitted assistance: concept, hint, debug, test_design, logistics.\nProhibited assistance: test_code, pseudocode, implementation, full_solution, writeup.\nConcrete attempt evidence is required for debug."
+            }
+          ]
+        },
+        {
+          "activities": [
+            "debug"
+          ],
+          "effect": "allow",
+          "requireAttempt": true,
+          "evidence": [
+            {
+              "source": "10-syllabus.md",
+              "quote": "Permitted assistance: concept, hint, debug, test_design, logistics.\nProhibited assistance: test_code, pseudocode, implementation, full_solution, writeup.\nConcrete attempt evidence is required for debug."
+            }
+          ]
+        },
+        {
+          "activities": [
+            "test_code",
+            "pseudocode",
+            "implementation",
+            "full_solution",
+            "writeup"
+          ],
+          "effect": "deny",
+          "requireAttempt": false,
+          "evidence": [
+            {
+              "source": "10-syllabus.md",
+              "quote": "Permitted assistance: concept, hint, debug, test_design, logistics.\nProhibited assistance: test_code, pseudocode, implementation, full_solution, writeup.\nConcrete attempt evidence is required for debug."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a1",
+      "title": "Campus bicycle market",
+      "rules": [
+        {
+          "activities": [
+            "concept",
+            "hint",
+            "test_design",
+            "logistics"
+          ],
+          "effect": "allow",
+          "requireAttempt": false,
+          "evidence": [
+            {
+              "source": "80-amendment.md",
+              "quote": "Permitted assistance: concept, hint, debug, test_design, logistics.\nProhibited assistance: test_code, pseudocode, implementation, full_solution, writeup.\nConcrete attempt evidence is required for debug."
+            }
+          ]
+        },
+        {
+          "activities": [
+            "debug"
+          ],
+          "effect": "allow",
+          "requireAttempt": true,
+          "evidence": [
+            {
+              "source": "80-amendment.md",
+              "quote": "Permitted assistance: concept, hint, debug, test_design, logistics.\nProhibited assistance: test_code, pseudocode, implementation, full_solution, writeup.\nConcrete attempt evidence is required for debug."
+            }
+          ]
+        },
+        {
+          "activities": [
+            "test_code",
+            "pseudocode",
+            "implementation",
+            "full_solution",
+            "writeup"
+          ],
+          "effect": "deny",
+          "requireAttempt": false,
+          "evidence": [
+            {
+              "source": "80-amendment.md",
+              "quote": "Permitted assistance: concept, hint, debug, test_design, logistics.\nProhibited assistance: test_code, pseudocode, implementation, full_solution, writeup.\nConcrete attempt evidence is required for debug."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a2",
+      "title": "Congestion policy brief",
+      "rules": [
+        {
+          "activities": [
+            "concept",
+            "hint",
+            "test_design",
+            "logistics",
+            "writeup"
+          ],
+          "effect": "allow",
+          "requireAttempt": false,
+          "evidence": [
+            {
+              "source": "40-a2.md",
+              "quote": "Permitted assistance: concept, hint, debug, test_design, logistics, writeup.\nProhibited assistance: test_code, pseudocode, implementation, full_solution.\nConcrete attempt evidence is required for debug."
+            }
+          ]
+        },
+        {
+          "activities": [
+            "debug"
+          ],
+          "effect": "allow",
+          "requireAttempt": true,
+          "evidence": [
+            {
+              "source": "40-a2.md",
+              "quote": "Permitted assistance: concept, hint, debug, test_design, logistics, writeup.\nProhibited assistance: test_code, pseudocode, implementation, full_solution.\nConcrete attempt evidence is required for debug."
+            }
+          ]
+        },
+        {
+          "activities": [
+            "test_code",
+            "pseudocode",
+            "implementation",
+            "full_solution"
+          ],
+          "effect": "deny",
+          "requireAttempt": false,
+          "evidence": [
+            {
+              "source": "40-a2.md",
+              "quote": "Permitted assistance: concept, hint, debug, test_design, logistics, writeup.\nProhibited assistance: test_code, pseudocode, implementation, full_solution.\nConcrete attempt evidence is required for debug."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a3",
+      "title": "Equilibrium sensitivity tool",
+      "rules": [
+        {
+          "activities": [
+            "concept",
+            "hint",
+            "test_design",
+            "logistics",
+            "test_code",
+            "pseudocode",
+            "implementation"
+          ],
+          "effect": "allow",
+          "requireAttempt": false,
+          "evidence": [
+            {
+              "source": "50-a3.md",
+              "quote": "Permitted assistance: concept, hint, debug, test_design, logistics, test_code, pseudocode, implementation.\nProhibited assistance: full_solution, writeup.\nConcrete attempt evidence is required for debug."
+            }
+          ]
+        },
+        {
+          "activities": [
+            "debug"
+          ],
+          "effect": "allow",
+          "requireAttempt": true,
+          "evidence": [
+            {
+              "source": "50-a3.md",
+              "quote": "Permitted assistance: concept, hint, debug, test_design, logistics, test_code, pseudocode, implementation.\nProhibited assistance: full_solution, writeup.\nConcrete attempt evidence is required for debug."
+            }
+          ]
+        },
+        {
+          "activities": [
+            "full_solution",
+            "writeup"
+          ],
+          "effect": "deny",
+          "requireAttempt": false,
+          "evidence": [
+            {
+              "source": "50-a3.md",
+              "quote": "Permitted assistance: concept, hint, debug, test_design, logistics, test_code, pseudocode, implementation.\nProhibited assistance: full_solution, writeup.\nConcrete attempt evidence is required for debug."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "a4",
+      "title": "Game incentives analysis",
+      "rules": [
+        {
+          "activities": [
+            "concept",
+            "hint",
+            "test_design",
+            "logistics"
+          ],
+          "effect": "allow",
+          "requireAttempt": false,
+          "evidence": [
+            {
+              "source": "60-a4.md",
+              "quote": "Permitted assistance: concept, hint, debug, test_design, logistics.\nProhibited assistance: test_code, pseudocode, implementation, full_solution, writeup.\nConcrete attempt evidence is required for debug."
+            }
+          ]
+        },
+        {
+          "activities": [
+            "debug"
+          ],
+          "effect": "allow",
+          "requireAttempt": true,
+          "evidence": [
+            {
+              "source": "60-a4.md",
+              "quote": "Permitted assistance: concept, hint, debug, test_design, logistics.\nProhibited assistance: test_code, pseudocode, implementation, full_solution, writeup.\nConcrete attempt evidence is required for debug."
+            }
+          ]
+        },
+        {
+          "activities": [
+            "test_code",
+            "pseudocode",
+            "implementation",
+            "full_solution",
+            "writeup"
+          ],
+          "effect": "deny",
+          "requireAttempt": false,
+          "evidence": [
+            {
+              "source": "60-a4.md",
+              "quote": "Permitted assistance: concept, hint, debug, test_design, logistics.\nProhibited assistance: test_code, pseudocode, implementation, full_solution, writeup.\nConcrete attempt evidence is required for debug."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "practice",
+      "title": "Ungraded exploration",
+      "rules": [
+        {
+          "activities": [
+            "concept",
+            "hint",
+            "test_design",
+            "test_code",
+            "pseudocode",
+            "implementation",
+            "full_solution",
+            "writeup",
+            "logistics"
+          ],
+          "effect": "allow",
+          "requireAttempt": false,
+          "evidence": [
+            {
+              "source": "70-practice.md",
+              "quote": "Permitted assistance: concept, hint, debug, test_design, test_code, pseudocode, implementation, full_solution, writeup, logistics.\nConcrete attempt evidence is required for no activities."
+            }
+          ]
+        },
+        {
+          "activities": [
+            "debug"
+          ],
+          "effect": "allow",
+          "requireAttempt": false,
+          "evidence": [
+            {
+              "source": "70-practice.md",
+              "quote": "Permitted assistance: concept, hint, debug, test_design, test_code, pseudocode, implementation, full_solution, writeup, logistics.\nConcrete attempt evidence is required for no activities."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

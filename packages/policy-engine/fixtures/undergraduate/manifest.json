@@ -1,0 +1,2033 @@
+{
+  "version": 1,
+  "synthetic": true,
+  "fictionalInstitution": "Northbridge Undergraduate College",
+  "counts": {
+    "semesters": 8,
+    "courses": 32,
+    "gradedAssignments": 128,
+    "ungradedPractice": 32,
+    "sourceFiles": 288,
+    "cases": 512
+  },
+  "activities": [
+    "concept",
+    "hint",
+    "debug",
+    "test_design",
+    "test_code",
+    "pseudocode",
+    "implementation",
+    "full_solution",
+    "writeup",
+    "logistics"
+  ],
+  "courseSplit": {
+    "train": [
+      "cs101",
+      "mth101",
+      "eng101",
+      "bio101",
+      "mth102",
+      "hist101",
+      "cs201",
+      "cs202",
+      "mth201",
+      "econ101",
+      "cs203",
+      "cs204",
+      "cs301",
+      "cs302",
+      "stat301",
+      "phil201",
+      "cs303",
+      "cs304",
+      "cs401",
+      "cs402",
+      "cs403",
+      "soc301",
+      "cs404",
+      "envs301"
+    ],
+    "development": [
+      "cs102",
+      "stat201",
+      "cs305",
+      "cs405"
+    ],
+    "test": [
+      "phys101",
+      "chem101",
+      "art201",
+      "comm301"
+    ]
+  },
+  "assignmentHoldout": {
+    "description": "Alternative benchmark independent of courseSplit: hold out complete assignment scopes. Never mix this alternative with claims of held-out-course generalization. Exclude unknown and * scopes from this benchmark.",
+    "train": [
+      "a1",
+      "a2",
+      "practice"
+    ],
+    "development": [
+      "a3"
+    ],
+    "test": [
+      "a4"
+    ]
+  },
+  "courses": [
+    {
+      "id": "cs101",
+      "title": "Programming and Computational Thinking",
+      "semester": 1,
+      "area": "computer-science",
+      "profile": "guided",
+      "split": "train",
+      "directory": "cs101",
+      "sourceDirectory": "cs101/course",
+      "bundle": "cs101/bundle.json",
+      "policy": "cs101/policy.json",
+      "oracle": "cs101/policy-oracle.json",
+      "cases": "cs101/evaluation.json",
+      "goldFeatures": "cs101/gold-features.json",
+      "classifierInput": "cs101/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Transit fare calculator",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Library inventory reconciliation",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Route record parser",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Greenhouse watering log",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "cs101-c01",
+        "cs101-c02",
+        "cs101-c03",
+        "cs101-c04",
+        "cs101-c05",
+        "cs101-c06",
+        "cs101-c07",
+        "cs101-c08",
+        "cs101-c09",
+        "cs101-c10",
+        "cs101-c11",
+        "cs101-c12",
+        "cs101-c13",
+        "cs101-c14",
+        "cs101-c15",
+        "cs101-c16"
+      ]
+    },
+    {
+      "id": "mth101",
+      "title": "Calculus I: Change and Approximation",
+      "semester": 1,
+      "area": "mathematics",
+      "profile": "draft-feedback",
+      "split": "train",
+      "directory": "mth101",
+      "sourceDirectory": "mth101/course",
+      "bundle": "mth101/bundle.json",
+      "policy": "mth101/policy.json",
+      "oracle": "mth101/policy-oracle.json",
+      "cases": "mth101/evaluation.json",
+      "goldFeatures": "mth101/gold-features.json",
+      "classifierInput": "mth101/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Walking pace measurements",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Tank shape and fill rate",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Derivative estimation notebook",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Accessible ramp optimization",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "mth101-c01",
+        "mth101-c02",
+        "mth101-c03",
+        "mth101-c04",
+        "mth101-c05",
+        "mth101-c06",
+        "mth101-c07",
+        "mth101-c08",
+        "mth101-c09",
+        "mth101-c10",
+        "mth101-c11",
+        "mth101-c12",
+        "mth101-c13",
+        "mth101-c14",
+        "mth101-c15",
+        "mth101-c16"
+      ]
+    },
+    {
+      "id": "eng101",
+      "title": "Academic Writing and Argument",
+      "semester": 1,
+      "area": "humanities",
+      "profile": "design-only",
+      "split": "train",
+      "directory": "eng101",
+      "sourceDirectory": "eng101/course",
+      "bundle": "eng101/bundle.json",
+      "policy": "eng101/policy.json",
+      "oracle": "eng101/policy-oracle.json",
+      "cases": "eng101/evaluation.json",
+      "goldFeatures": "eng101/gold-features.json",
+      "classifierInput": "eng101/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Campus space argument",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Source comparison essay",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Citation inventory study",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Revision portfolio",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "eng101-c01",
+        "eng101-c02",
+        "eng101-c03",
+        "eng101-c04",
+        "eng101-c05",
+        "eng101-c06",
+        "eng101-c07",
+        "eng101-c08",
+        "eng101-c09",
+        "eng101-c10",
+        "eng101-c11",
+        "eng101-c12",
+        "eng101-c13",
+        "eng101-c14",
+        "eng101-c15",
+        "eng101-c16"
+      ]
+    },
+    {
+      "id": "bio101",
+      "title": "Cells, Genes, and Experimental Evidence",
+      "semester": 1,
+      "area": "science",
+      "profile": "computational",
+      "split": "train",
+      "directory": "bio101",
+      "sourceDirectory": "bio101/course",
+      "bundle": "bio101/bundle.json",
+      "policy": "bio101/policy.json",
+      "oracle": "bio101/policy-oracle.json",
+      "cases": "bio101/evaluation.json",
+      "goldFeatures": "bio101/gold-features.json",
+      "classifierInput": "bio101/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Osmosis in model tissue",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Inheritance evidence map",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Cell-count quality audit",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Membrane transport study design",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "bio101-c01",
+        "bio101-c02",
+        "bio101-c03",
+        "bio101-c04",
+        "bio101-c05",
+        "bio101-c06",
+        "bio101-c07",
+        "bio101-c08",
+        "bio101-c09",
+        "bio101-c10",
+        "bio101-c11",
+        "bio101-c12",
+        "bio101-c13",
+        "bio101-c14",
+        "bio101-c15",
+        "bio101-c16"
+      ]
+    },
+    {
+      "id": "cs102",
+      "title": "Data Structures and Data Modeling",
+      "semester": 2,
+      "area": "computer-science",
+      "profile": "draft-feedback",
+      "split": "development",
+      "directory": "cs102",
+      "sourceDirectory": "cs102/course",
+      "bundle": "cs102/bundle.json",
+      "policy": "cs102/policy.json",
+      "oracle": "cs102/policy-oracle.json",
+      "cases": "cs102/evaluation.json",
+      "goldFeatures": "cs102/gold-features.json",
+      "classifierInput": "cs102/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Reservation queue",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Event calendar index",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Tree range query",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Sparse seating map",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "cs102-c01",
+        "cs102-c02",
+        "cs102-c03",
+        "cs102-c04",
+        "cs102-c05",
+        "cs102-c06",
+        "cs102-c07",
+        "cs102-c08",
+        "cs102-c09",
+        "cs102-c10",
+        "cs102-c11",
+        "cs102-c12",
+        "cs102-c13",
+        "cs102-c14",
+        "cs102-c15",
+        "cs102-c16"
+      ]
+    },
+    {
+      "id": "mth102",
+      "title": "Calculus II: Accumulation and Series",
+      "semester": 2,
+      "area": "mathematics",
+      "profile": "design-only",
+      "split": "train",
+      "directory": "mth102",
+      "sourceDirectory": "mth102/course",
+      "bundle": "mth102/bundle.json",
+      "policy": "mth102/policy.json",
+      "oracle": "mth102/policy-oracle.json",
+      "cases": "mth102/evaluation.json",
+      "goldFeatures": "mth102/gold-features.json",
+      "classifierInput": "mth102/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Reservoir accumulation",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Convergence dossier",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Irregular quadrature investigation",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Improper tail model",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "mth102-c01",
+        "mth102-c02",
+        "mth102-c03",
+        "mth102-c04",
+        "mth102-c05",
+        "mth102-c06",
+        "mth102-c07",
+        "mth102-c08",
+        "mth102-c09",
+        "mth102-c10",
+        "mth102-c11",
+        "mth102-c12",
+        "mth102-c13",
+        "mth102-c14",
+        "mth102-c15",
+        "mth102-c16"
+      ]
+    },
+    {
+      "id": "phys101",
+      "title": "Mechanics and Measurement",
+      "semester": 2,
+      "area": "science",
+      "profile": "computational",
+      "split": "test",
+      "directory": "phys101",
+      "sourceDirectory": "phys101/course",
+      "bundle": "phys101/bundle.json",
+      "policy": "phys101/policy.json",
+      "oracle": "phys101/policy-oracle.json",
+      "cases": "phys101/evaluation.json",
+      "goldFeatures": "phys101/gold-features.json",
+      "classifierInput": "phys101/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Cart acceleration lab",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Collision evidence report",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Motion fitting toolkit",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Pendulum model comparison",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "phys101-c01",
+        "phys101-c02",
+        "phys101-c03",
+        "phys101-c04",
+        "phys101-c05",
+        "phys101-c06",
+        "phys101-c07",
+        "phys101-c08",
+        "phys101-c09",
+        "phys101-c10",
+        "phys101-c11",
+        "phys101-c12",
+        "phys101-c13",
+        "phys101-c14",
+        "phys101-c15",
+        "phys101-c16"
+      ]
+    },
+    {
+      "id": "hist101",
+      "title": "Global Histories and Primary Sources",
+      "semester": 2,
+      "area": "humanities",
+      "profile": "guided",
+      "split": "train",
+      "directory": "hist101",
+      "sourceDirectory": "hist101/course",
+      "bundle": "hist101/bundle.json",
+      "policy": "hist101/policy.json",
+      "oracle": "hist101/policy-oracle.json",
+      "cases": "hist101/evaluation.json",
+      "goldFeatures": "hist101/gold-features.json",
+      "classifierInput": "hist101/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Port diary source analysis",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Trade route comparison",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Chronology audit",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Museum label debate",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "hist101-c01",
+        "hist101-c02",
+        "hist101-c03",
+        "hist101-c04",
+        "hist101-c05",
+        "hist101-c06",
+        "hist101-c07",
+        "hist101-c08",
+        "hist101-c09",
+        "hist101-c10",
+        "hist101-c11",
+        "hist101-c12",
+        "hist101-c13",
+        "hist101-c14",
+        "hist101-c15",
+        "hist101-c16"
+      ]
+    },
+    {
+      "id": "cs201",
+      "title": "Discrete Structures and Proof",
+      "semester": 3,
+      "area": "computer-science",
+      "profile": "design-only",
+      "split": "train",
+      "directory": "cs201",
+      "sourceDirectory": "cs201/course",
+      "bundle": "cs201/bundle.json",
+      "policy": "cs201/policy.json",
+      "oracle": "cs201/policy-oracle.json",
+      "cases": "cs201/evaluation.json",
+      "goldFeatures": "cs201/gold-features.json",
+      "classifierInput": "cs201/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Recursive tiling proof",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Counting club schedules",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Graph layering verifier",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Logic specification review",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "cs201-c01",
+        "cs201-c02",
+        "cs201-c03",
+        "cs201-c04",
+        "cs201-c05",
+        "cs201-c06",
+        "cs201-c07",
+        "cs201-c08",
+        "cs201-c09",
+        "cs201-c10",
+        "cs201-c11",
+        "cs201-c12",
+        "cs201-c13",
+        "cs201-c14",
+        "cs201-c15",
+        "cs201-c16"
+      ]
+    },
+    {
+      "id": "cs202",
+      "title": "Systems Programming and Unix Interfaces",
+      "semester": 3,
+      "area": "computer-science",
+      "profile": "computational",
+      "split": "train",
+      "directory": "cs202",
+      "sourceDirectory": "cs202/course",
+      "bundle": "cs202/bundle.json",
+      "policy": "cs202/policy.json",
+      "oracle": "cs202/policy-oracle.json",
+      "cases": "cs202/evaluation.json",
+      "goldFeatures": "cs202/gold-features.json",
+      "classifierInput": "cs202/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Two-command pipeline",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Owned buffer library",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Line-oriented record reader",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Process supervisor",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "cs202-c01",
+        "cs202-c02",
+        "cs202-c03",
+        "cs202-c04",
+        "cs202-c05",
+        "cs202-c06",
+        "cs202-c07",
+        "cs202-c08",
+        "cs202-c09",
+        "cs202-c10",
+        "cs202-c11",
+        "cs202-c12",
+        "cs202-c13",
+        "cs202-c14",
+        "cs202-c15",
+        "cs202-c16"
+      ]
+    },
+    {
+      "id": "mth201",
+      "title": "Linear Algebra and Modeling",
+      "semester": 3,
+      "area": "mathematics",
+      "profile": "guided",
+      "split": "train",
+      "directory": "mth201",
+      "sourceDirectory": "mth201/course",
+      "bundle": "mth201/bundle.json",
+      "policy": "mth201/policy.json",
+      "oracle": "mth201/policy-oracle.json",
+      "cases": "mth201/evaluation.json",
+      "goldFeatures": "mth201/gold-features.json",
+      "classifierInput": "mth201/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Sensor calibration system",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Transformation gallery",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Numerical rank experiment",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Migration equilibrium model",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "mth201-c01",
+        "mth201-c02",
+        "mth201-c03",
+        "mth201-c04",
+        "mth201-c05",
+        "mth201-c06",
+        "mth201-c07",
+        "mth201-c08",
+        "mth201-c09",
+        "mth201-c10",
+        "mth201-c11",
+        "mth201-c12",
+        "mth201-c13",
+        "mth201-c14",
+        "mth201-c15",
+        "mth201-c16"
+      ]
+    },
+    {
+      "id": "econ101",
+      "title": "Microeconomics and Public Choices",
+      "semester": 3,
+      "area": "social-science",
+      "profile": "draft-feedback",
+      "split": "train",
+      "directory": "econ101",
+      "sourceDirectory": "econ101/course",
+      "bundle": "econ101/bundle.json",
+      "policy": "econ101/policy.json",
+      "oracle": "econ101/policy-oracle.json",
+      "cases": "econ101/evaluation.json",
+      "goldFeatures": "econ101/gold-features.json",
+      "classifierInput": "econ101/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Campus bicycle market",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Congestion policy brief",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Equilibrium sensitivity tool",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Game incentives analysis",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "econ101-c01",
+        "econ101-c02",
+        "econ101-c03",
+        "econ101-c04",
+        "econ101-c05",
+        "econ101-c06",
+        "econ101-c07",
+        "econ101-c08",
+        "econ101-c09",
+        "econ101-c10",
+        "econ101-c11",
+        "econ101-c12",
+        "econ101-c13",
+        "econ101-c14",
+        "econ101-c15",
+        "econ101-c16"
+      ]
+    },
+    {
+      "id": "cs203",
+      "title": "Algorithms and Complexity",
+      "semester": 4,
+      "area": "computer-science",
+      "profile": "computational",
+      "split": "train",
+      "directory": "cs203",
+      "sourceDirectory": "cs203/course",
+      "bundle": "cs203/bundle.json",
+      "policy": "cs203/policy.json",
+      "oracle": "cs203/policy-oracle.json",
+      "cases": "cs203/evaluation.json",
+      "goldFeatures": "cs203/gold-features.json",
+      "classifierInput": "cs203/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Weighted room scheduling",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Network cable comparison",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Scheduling implementation audit",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Reduction dossier",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "cs203-c01",
+        "cs203-c02",
+        "cs203-c03",
+        "cs203-c04",
+        "cs203-c05",
+        "cs203-c06",
+        "cs203-c07",
+        "cs203-c08",
+        "cs203-c09",
+        "cs203-c10",
+        "cs203-c11",
+        "cs203-c12",
+        "cs203-c13",
+        "cs203-c14",
+        "cs203-c15",
+        "cs203-c16"
+      ]
+    },
+    {
+      "id": "cs204",
+      "title": "Computer Architecture and Representation",
+      "semester": 4,
+      "area": "computer-science",
+      "profile": "guided",
+      "split": "train",
+      "directory": "cs204",
+      "sourceDirectory": "cs204/course",
+      "bundle": "cs204/bundle.json",
+      "policy": "cs204/policy.json",
+      "oracle": "cs204/policy-oracle.json",
+      "cases": "cs204/evaluation.json",
+      "goldFeatures": "cs204/gold-features.json",
+      "classifierInput": "cs204/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Cache trace lab",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Pipeline hazard analysis",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Configurable cache simulator",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Instruction encoding review",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "cs204-c01",
+        "cs204-c02",
+        "cs204-c03",
+        "cs204-c04",
+        "cs204-c05",
+        "cs204-c06",
+        "cs204-c07",
+        "cs204-c08",
+        "cs204-c09",
+        "cs204-c10",
+        "cs204-c11",
+        "cs204-c12",
+        "cs204-c13",
+        "cs204-c14",
+        "cs204-c15",
+        "cs204-c16"
+      ]
+    },
+    {
+      "id": "stat201",
+      "title": "Probability and Random Models",
+      "semester": 4,
+      "area": "statistics",
+      "profile": "draft-feedback",
+      "split": "development",
+      "directory": "stat201",
+      "sourceDirectory": "stat201/course",
+      "bundle": "stat201/bundle.json",
+      "policy": "stat201/policy.json",
+      "oracle": "stat201/policy-oracle.json",
+      "cases": "stat201/evaluation.json",
+      "goldFeatures": "stat201/gold-features.json",
+      "classifierInput": "stat201/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Conditional transit delays",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Random-variable comparison",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Conditional simulation study",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Reliability model critique",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "stat201-c01",
+        "stat201-c02",
+        "stat201-c03",
+        "stat201-c04",
+        "stat201-c05",
+        "stat201-c06",
+        "stat201-c07",
+        "stat201-c08",
+        "stat201-c09",
+        "stat201-c10",
+        "stat201-c11",
+        "stat201-c12",
+        "stat201-c13",
+        "stat201-c14",
+        "stat201-c15",
+        "stat201-c16"
+      ]
+    },
+    {
+      "id": "chem101",
+      "title": "Chemical Models and Quantitative Reasoning",
+      "semester": 4,
+      "area": "science",
+      "profile": "design-only",
+      "split": "test",
+      "directory": "chem101",
+      "sourceDirectory": "chem101/course",
+      "bundle": "chem101/bundle.json",
+      "policy": "chem101/policy.json",
+      "oracle": "chem101/policy-oracle.json",
+      "cases": "chem101/evaluation.json",
+      "goldFeatures": "chem101/gold-features.json",
+      "classifierInput": "chem101/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Dilution record audit",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Limiting-reagent models",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Unit-aware worksheet checker",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Equilibrium perturbation memo",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "chem101-c01",
+        "chem101-c02",
+        "chem101-c03",
+        "chem101-c04",
+        "chem101-c05",
+        "chem101-c06",
+        "chem101-c07",
+        "chem101-c08",
+        "chem101-c09",
+        "chem101-c10",
+        "chem101-c11",
+        "chem101-c12",
+        "chem101-c13",
+        "chem101-c14",
+        "chem101-c15",
+        "chem101-c16"
+      ]
+    },
+    {
+      "id": "cs301",
+      "title": "Database Systems and Information Integrity",
+      "semester": 5,
+      "area": "computer-science",
+      "profile": "guided",
+      "split": "train",
+      "directory": "cs301",
+      "sourceDirectory": "cs301/course",
+      "bundle": "cs301/bundle.json",
+      "policy": "cs301/policy.json",
+      "oracle": "cs301/policy-oracle.json",
+      "cases": "cs301/evaluation.json",
+      "goldFeatures": "cs301/gold-features.json",
+      "classifierInput": "cs301/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Enrollment schema",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Transaction interleaving dossier",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Orphan-record audit",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Query-plan investigation",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "cs301-c01",
+        "cs301-c02",
+        "cs301-c03",
+        "cs301-c04",
+        "cs301-c05",
+        "cs301-c06",
+        "cs301-c07",
+        "cs301-c08",
+        "cs301-c09",
+        "cs301-c10",
+        "cs301-c11",
+        "cs301-c12",
+        "cs301-c13",
+        "cs301-c14",
+        "cs301-c15",
+        "cs301-c16"
+      ]
+    },
+    {
+      "id": "cs302",
+      "title": "Software Engineering and Maintenance",
+      "semester": 5,
+      "area": "computer-science",
+      "profile": "draft-feedback",
+      "split": "train",
+      "directory": "cs302",
+      "sourceDirectory": "cs302/course",
+      "bundle": "cs302/bundle.json",
+      "policy": "cs302/policy.json",
+      "oracle": "cs302/policy-oracle.json",
+      "cases": "cs302/evaluation.json",
+      "goldFeatures": "cs302/gold-features.json",
+      "classifierInput": "cs302/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Reservation change request",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Maintenance review packet",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Legacy record adapter",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Release readiness dossier",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "cs302-c01",
+        "cs302-c02",
+        "cs302-c03",
+        "cs302-c04",
+        "cs302-c05",
+        "cs302-c06",
+        "cs302-c07",
+        "cs302-c08",
+        "cs302-c09",
+        "cs302-c10",
+        "cs302-c11",
+        "cs302-c12",
+        "cs302-c13",
+        "cs302-c14",
+        "cs302-c15",
+        "cs302-c16"
+      ]
+    },
+    {
+      "id": "stat301",
+      "title": "Statistical Inference and Experimental Design",
+      "semester": 5,
+      "area": "statistics",
+      "profile": "design-only",
+      "split": "train",
+      "directory": "stat301",
+      "sourceDirectory": "stat301/course",
+      "bundle": "stat301/bundle.json",
+      "policy": "stat301/policy.json",
+      "oracle": "stat301/policy-oracle.json",
+      "cases": "stat301/evaluation.json",
+      "goldFeatures": "stat301/gold-features.json",
+      "classifierInput": "stat301/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Classroom trial critique",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Interval interpretation audit",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Cluster bootstrap investigation",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Preregistered study proposal",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "stat301-c01",
+        "stat301-c02",
+        "stat301-c03",
+        "stat301-c04",
+        "stat301-c05",
+        "stat301-c06",
+        "stat301-c07",
+        "stat301-c08",
+        "stat301-c09",
+        "stat301-c10",
+        "stat301-c11",
+        "stat301-c12",
+        "stat301-c13",
+        "stat301-c14",
+        "stat301-c15",
+        "stat301-c16"
+      ]
+    },
+    {
+      "id": "phil201",
+      "title": "Ethics, Technology, and Reasoned Disagreement",
+      "semester": 5,
+      "area": "humanities",
+      "profile": "computational",
+      "split": "train",
+      "directory": "phil201",
+      "sourceDirectory": "phil201/course",
+      "bundle": "phil201/bundle.json",
+      "policy": "phil201/policy.json",
+      "oracle": "phil201/policy-oracle.json",
+      "cases": "phil201/evaluation.json",
+      "goldFeatures": "phil201/gold-features.json",
+      "classifierInput": "phil201/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Allocation argument reconstruction",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Technology ethics essay",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Argument-map audit tool",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Public justification dialogue",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "phil201-c01",
+        "phil201-c02",
+        "phil201-c03",
+        "phil201-c04",
+        "phil201-c05",
+        "phil201-c06",
+        "phil201-c07",
+        "phil201-c08",
+        "phil201-c09",
+        "phil201-c10",
+        "phil201-c11",
+        "phil201-c12",
+        "phil201-c13",
+        "phil201-c14",
+        "phil201-c15",
+        "phil201-c16"
+      ]
+    },
+    {
+      "id": "cs303",
+      "title": "Computer Networks and Protocols",
+      "semester": 6,
+      "area": "computer-science",
+      "profile": "draft-feedback",
+      "split": "train",
+      "directory": "cs303",
+      "sourceDirectory": "cs303/course",
+      "bundle": "cs303/bundle.json",
+      "policy": "cs303/policy.json",
+      "oracle": "cs303/policy-oracle.json",
+      "cases": "cs303/evaluation.json",
+      "goldFeatures": "cs303/gold-features.json",
+      "classifierInput": "cs303/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Stream framing lab",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Reliable delivery simulation",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "JSONL decoder audit",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Network measurement critique",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "cs303-c01",
+        "cs303-c02",
+        "cs303-c03",
+        "cs303-c04",
+        "cs303-c05",
+        "cs303-c06",
+        "cs303-c07",
+        "cs303-c08",
+        "cs303-c09",
+        "cs303-c10",
+        "cs303-c11",
+        "cs303-c12",
+        "cs303-c13",
+        "cs303-c14",
+        "cs303-c15",
+        "cs303-c16"
+      ]
+    },
+    {
+      "id": "cs304",
+      "title": "Programming Languages and Semantics",
+      "semester": 6,
+      "area": "computer-science",
+      "profile": "design-only",
+      "split": "train",
+      "directory": "cs304",
+      "sourceDirectory": "cs304/course",
+      "bundle": "cs304/bundle.json",
+      "policy": "cs304/policy.json",
+      "oracle": "cs304/policy-oracle.json",
+      "cases": "cs304/evaluation.json",
+      "goldFeatures": "cs304/gold-features.json",
+      "classifierInput": "cs304/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Closure environment lab",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Type-rule dossier",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Let-expression evaluator",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Syntax transformation review",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "cs304-c01",
+        "cs304-c02",
+        "cs304-c03",
+        "cs304-c04",
+        "cs304-c05",
+        "cs304-c06",
+        "cs304-c07",
+        "cs304-c08",
+        "cs304-c09",
+        "cs304-c10",
+        "cs304-c11",
+        "cs304-c12",
+        "cs304-c13",
+        "cs304-c14",
+        "cs304-c15",
+        "cs304-c16"
+      ]
+    },
+    {
+      "id": "cs305",
+      "title": "Operating Systems and Resource Coordination",
+      "semester": 6,
+      "area": "computer-science",
+      "profile": "computational",
+      "split": "development",
+      "directory": "cs305",
+      "sourceDirectory": "cs305/course",
+      "bundle": "cs305/bundle.json",
+      "policy": "cs305/policy.json",
+      "oracle": "cs305/policy-oracle.json",
+      "cases": "cs305/evaluation.json",
+      "goldFeatures": "cs305/gold-features.json",
+      "classifierInput": "cs305/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Shared-slot concurrency lab",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Paging trace analysis",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Round-robin simulator",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Deadlock prevention proposal",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "cs305-c01",
+        "cs305-c02",
+        "cs305-c03",
+        "cs305-c04",
+        "cs305-c05",
+        "cs305-c06",
+        "cs305-c07",
+        "cs305-c08",
+        "cs305-c09",
+        "cs305-c10",
+        "cs305-c11",
+        "cs305-c12",
+        "cs305-c13",
+        "cs305-c14",
+        "cs305-c15",
+        "cs305-c16"
+      ]
+    },
+    {
+      "id": "art201",
+      "title": "Visual Culture and Interpretation",
+      "semester": 6,
+      "area": "humanities",
+      "profile": "guided",
+      "split": "test",
+      "directory": "art201",
+      "sourceDirectory": "art201/course",
+      "bundle": "art201/bundle.json",
+      "policy": "art201/policy.json",
+      "oracle": "art201/policy-oracle.json",
+      "cases": "art201/evaluation.json",
+      "goldFeatures": "art201/gold-features.json",
+      "classifierInput": "art201/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Poster visual analysis",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Provenance comparison",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Gallery metadata audit",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Exhibition sequence proposal",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "art201-c01",
+        "art201-c02",
+        "art201-c03",
+        "art201-c04",
+        "art201-c05",
+        "art201-c06",
+        "art201-c07",
+        "art201-c08",
+        "art201-c09",
+        "art201-c10",
+        "art201-c11",
+        "art201-c12",
+        "art201-c13",
+        "art201-c14",
+        "art201-c15",
+        "art201-c16"
+      ]
+    },
+    {
+      "id": "cs401",
+      "title": "Artificial Intelligence and Model Evaluation",
+      "semester": 7,
+      "area": "computer-science",
+      "profile": "design-only",
+      "split": "train",
+      "directory": "cs401",
+      "sourceDirectory": "cs401/course",
+      "bundle": "cs401/bundle.json",
+      "policy": "cs401/policy.json",
+      "oracle": "cs401/policy-oracle.json",
+      "cases": "cs401/evaluation.json",
+      "goldFeatures": "cs401/gold-features.json",
+      "classifierInput": "cs401/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Grouped evaluation lab",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Search strategy dossier",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Course holdout splitter",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Classifier error review",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "cs401-c01",
+        "cs401-c02",
+        "cs401-c03",
+        "cs401-c04",
+        "cs401-c05",
+        "cs401-c06",
+        "cs401-c07",
+        "cs401-c08",
+        "cs401-c09",
+        "cs401-c10",
+        "cs401-c11",
+        "cs401-c12",
+        "cs401-c13",
+        "cs401-c14",
+        "cs401-c15",
+        "cs401-c16"
+      ]
+    },
+    {
+      "id": "cs402",
+      "title": "Security Engineering and Trust Boundaries",
+      "semester": 7,
+      "area": "computer-science",
+      "profile": "computational",
+      "split": "train",
+      "directory": "cs402",
+      "sourceDirectory": "cs402/course",
+      "bundle": "cs402/bundle.json",
+      "policy": "cs402/policy.json",
+      "oracle": "cs402/policy-oracle.json",
+      "cases": "cs402/evaluation.json",
+      "goldFeatures": "cs402/gold-features.json",
+      "classifierInput": "cs402/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Import trust-boundary review",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Authorization state audit",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Strict configuration parser",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Quoted instruction evaluation",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "cs402-c01",
+        "cs402-c02",
+        "cs402-c03",
+        "cs402-c04",
+        "cs402-c05",
+        "cs402-c06",
+        "cs402-c07",
+        "cs402-c08",
+        "cs402-c09",
+        "cs402-c10",
+        "cs402-c11",
+        "cs402-c12",
+        "cs402-c13",
+        "cs402-c14",
+        "cs402-c15",
+        "cs402-c16"
+      ]
+    },
+    {
+      "id": "cs403",
+      "title": "Human-Computer Interaction and Accessibility",
+      "semester": 7,
+      "area": "computer-science",
+      "profile": "guided",
+      "split": "train",
+      "directory": "cs403",
+      "sourceDirectory": "cs403/course",
+      "bundle": "cs403/bundle.json",
+      "policy": "cs403/policy.json",
+      "oracle": "cs403/policy-oracle.json",
+      "cases": "cs403/evaluation.json",
+      "goldFeatures": "cs403/gold-features.json",
+      "classifierInput": "cs403/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Booking usability protocol",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Accessibility inspection",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Focus event audit",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Prototype evaluation portfolio",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "cs403-c01",
+        "cs403-c02",
+        "cs403-c03",
+        "cs403-c04",
+        "cs403-c05",
+        "cs403-c06",
+        "cs403-c07",
+        "cs403-c08",
+        "cs403-c09",
+        "cs403-c10",
+        "cs403-c11",
+        "cs403-c12",
+        "cs403-c13",
+        "cs403-c14",
+        "cs403-c15",
+        "cs403-c16"
+      ]
+    },
+    {
+      "id": "soc301",
+      "title": "Social Research Methods and Evidence",
+      "semester": 7,
+      "area": "social-science",
+      "profile": "draft-feedback",
+      "split": "train",
+      "directory": "soc301",
+      "sourceDirectory": "soc301/course",
+      "bundle": "soc301/bundle.json",
+      "policy": "soc301/policy.json",
+      "oracle": "soc301/policy-oracle.json",
+      "cases": "soc301/evaluation.json",
+      "goldFeatures": "soc301/gold-features.json",
+      "classifierInput": "soc301/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Belonging operationalization",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Interview coding memo",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Coding-table integrity audit",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Sampling strategy proposal",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "soc301-c01",
+        "soc301-c02",
+        "soc301-c03",
+        "soc301-c04",
+        "soc301-c05",
+        "soc301-c06",
+        "soc301-c07",
+        "soc301-c08",
+        "soc301-c09",
+        "soc301-c10",
+        "soc301-c11",
+        "soc301-c12",
+        "soc301-c13",
+        "soc301-c14",
+        "soc301-c15",
+        "soc301-c16"
+      ]
+    },
+    {
+      "id": "cs404",
+      "title": "Distributed Systems and Durable Coordination",
+      "semester": 8,
+      "area": "computer-science",
+      "profile": "computational",
+      "split": "train",
+      "directory": "cs404",
+      "sourceDirectory": "cs404/course",
+      "bundle": "cs404/bundle.json",
+      "policy": "cs404/policy.json",
+      "oracle": "cs404/policy-oracle.json",
+      "cases": "cs404/evaluation.json",
+      "goldFeatures": "cs404/gold-features.json",
+      "classifierInput": "cs404/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Durable retry ledger",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Replication trace dossier",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Idempotency ledger audit",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Coordination design review",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "cs404-c01",
+        "cs404-c02",
+        "cs404-c03",
+        "cs404-c04",
+        "cs404-c05",
+        "cs404-c06",
+        "cs404-c07",
+        "cs404-c08",
+        "cs404-c09",
+        "cs404-c10",
+        "cs404-c11",
+        "cs404-c12",
+        "cs404-c13",
+        "cs404-c14",
+        "cs404-c15",
+        "cs404-c16"
+      ]
+    },
+    {
+      "id": "cs405",
+      "title": "Computing Capstone and Research Communication",
+      "semester": 8,
+      "area": "computer-science",
+      "profile": "guided",
+      "split": "development",
+      "directory": "cs405",
+      "sourceDirectory": "cs405/course",
+      "bundle": "cs405/bundle.json",
+      "policy": "cs405/policy.json",
+      "oracle": "cs405/policy-oracle.json",
+      "cases": "cs405/evaluation.json",
+      "goldFeatures": "cs405/gold-features.json",
+      "classifierInput": "cs405/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Capstone experiment plan",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Midpoint evidence review",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Experiment manifest checker",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Research handoff portfolio",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "cs405-c01",
+        "cs405-c02",
+        "cs405-c03",
+        "cs405-c04",
+        "cs405-c05",
+        "cs405-c06",
+        "cs405-c07",
+        "cs405-c08",
+        "cs405-c09",
+        "cs405-c10",
+        "cs405-c11",
+        "cs405-c12",
+        "cs405-c13",
+        "cs405-c14",
+        "cs405-c15",
+        "cs405-c16"
+      ]
+    },
+    {
+      "id": "envs301",
+      "title": "Environmental Systems and Data Interpretation",
+      "semester": 8,
+      "area": "science",
+      "profile": "draft-feedback",
+      "split": "train",
+      "directory": "envs301",
+      "sourceDirectory": "envs301/course",
+      "bundle": "envs301/bundle.json",
+      "policy": "envs301/policy.json",
+      "oracle": "envs301/policy-oracle.json",
+      "cases": "envs301/evaluation.json",
+      "goldFeatures": "envs301/gold-features.json",
+      "classifierInput": "envs301/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Watershed load comparison",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Intervention scenario brief",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Load calculation audit",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Environmental monitoring proposal",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "envs301-c01",
+        "envs301-c02",
+        "envs301-c03",
+        "envs301-c04",
+        "envs301-c05",
+        "envs301-c06",
+        "envs301-c07",
+        "envs301-c08",
+        "envs301-c09",
+        "envs301-c10",
+        "envs301-c11",
+        "envs301-c12",
+        "envs301-c13",
+        "envs301-c14",
+        "envs301-c15",
+        "envs301-c16"
+      ]
+    },
+    {
+      "id": "comm301",
+      "title": "Technical Communication and Public Evidence",
+      "semester": 8,
+      "area": "humanities",
+      "profile": "design-only",
+      "split": "test",
+      "directory": "comm301",
+      "sourceDirectory": "comm301/course",
+      "bundle": "comm301/bundle.json",
+      "policy": "comm301/policy.json",
+      "oracle": "comm301/policy-oracle.json",
+      "cases": "comm301/evaluation.json",
+      "goldFeatures": "comm301/gold-features.json",
+      "classifierInput": "comm301/classifier-input.json",
+      "assignments": [
+        {
+          "id": "a1",
+          "title": "Setup guide usability review",
+          "graded": true
+        },
+        {
+          "id": "a2",
+          "title": "Public evidence brief",
+          "graded": true
+        },
+        {
+          "id": "a3",
+          "title": "Local manual link audit",
+          "graded": true
+        },
+        {
+          "id": "a4",
+          "title": "Handoff documentation portfolio",
+          "graded": true
+        },
+        {
+          "id": "practice",
+          "title": "Ungraded exploration",
+          "graded": false
+        }
+      ],
+      "caseIds": [
+        "comm301-c01",
+        "comm301-c02",
+        "comm301-c03",
+        "comm301-c04",
+        "comm301-c05",
+        "comm301-c06",
+        "comm301-c07",
+        "comm301-c08",
+        "comm301-c09",
+        "comm301-c10",
+        "comm301-c11",
+        "comm301-c12",
+        "comm301-c13",
+        "comm301-c14",
+        "comm301-c15",
+        "comm301-c16"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "synthetic": true,
+  "authorship": "Deterministic fixture-author specified policies and labels; no policy-generation or classifier model was invoked.",
+  "id": "cs303",
+  "title": "Computer Networks and Protocols",
+  "semester": 6,
+  "area": "computer-science",
+  "profile": "draft-feedback",
+  "effectiveDate": "2026-09-21",
+  "sources": [
+    "00-README.md",
+    "10-syllabus.md",
+    "20-instructions.txt",
+    "30-a1.md",
+    "40-a2.md",
+    "50-a3.md",
+    "60-a4.md",
+    "70-practice.md",
+    "80-amendment.md"
+  ],
+  "sourceCharacters": 10290,
+  "assignments": [
+    {
+      "id": "a1",
+      "title": "Stream framing lab",
+      "graded": true
+    },
+    {
+      "id": "a2",
+      "title": "Reliable delivery simulation",
+      "graded": true
+    },
+    {
+      "id": "a3",
+      "title": "JSONL decoder audit",
+      "graded": true
+    },
+    {
+      "id": "a4",
+      "title": "Network measurement critique",
+      "graded": true
+    }
+  ],
+  "practice": {
+    "id": "practice",
+    "graded": false
+  },
+  "counts": {
+    "sourceFiles": 9,
+    "cases": 16
+  },
+  "caseGoldExcludedFromInference": true
+}

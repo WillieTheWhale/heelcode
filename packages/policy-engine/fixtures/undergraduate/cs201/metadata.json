@@ -1,0 +1,53 @@
+{
+  "synthetic": true,
+  "authorship": "Deterministic fixture-author specified policies and labels; no policy-generation or classifier model was invoked.",
+  "id": "cs201",
+  "title": "Discrete Structures and Proof",
+  "semester": 3,
+  "area": "computer-science",
+  "profile": "design-only",
+  "effectiveDate": "2026-09-21",
+  "sources": [
+    "00-README.md",
+    "10-syllabus.md",
+    "20-instructions.txt",
+    "30-a1.md",
+    "40-a2.md",
+    "50-a3.md",
+    "60-a4.md",
+    "70-practice.md",
+    "80-amendment.md"
+  ],
+  "sourceCharacters": 10324,
+  "assignments": [
+    {
+      "id": "a1",
+      "title": "Recursive tiling proof",
+      "graded": true
+    },
+    {
+      "id": "a2",
+      "title": "Counting club schedules",
+      "graded": true
+    },
+    {
+      "id": "a3",
+      "title": "Graph layering verifier",
+      "graded": true
+    },
+    {
+      "id": "a4",
+      "title": "Logic specification review",
+      "graded": true
+    }
+  ],
+  "practice": {
+    "id": "practice",
+    "graded": false
+  },
+  "counts": {
+    "sourceFiles": 9,
+    "cases": 16
+  },
+  "caseGoldExcludedFromInference": true
+}
