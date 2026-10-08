@@ -1,0 +1,16 @@
+{
+  "model" : "gpt-5.6-terra",
+  "promptSha256" : "47e61c22356ead54e24f7a56718562c24bf15b3040a7c1ab2d1b84ac28d6e0c5",
+  "startedAt" : "2026-10-08T05:46:09.240228Z",
+  "adapter" : "codex-cli",
+  "effort" : "low",
+  "exitCode" : 0,
+  "elapsedMs" : 41107,
+  "command" : [ "codex", "exec", "--ignore-user-config", "--ephemeral", "--skip-git-repo-check", "--sandbox", "read-only", "--cd", "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-model-15272582479793528249", "--model", "gpt-5.6-terra", "--json", "-c", "model_reasoning_effort=\"low\"", "-c", "project_doc_max_bytes=0", "-c", "web_search=\"disabled\"", "-c", "features.shell_tool=false", "-c", "features.unified_exec=false", "-c", "features.plugins=false", "-c", "features.apps=false", "-c", "features.multi_agent=false", "-c", "features.browser_use=false", "-c", "features.computer_use=false", "-c", "features.image_generation=false", "--output-schema", "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt/classifiers/gpt-5.6-terra-5992cc7b-f4f3-4bac-b79e-8f9371c27b39/schema.json", "--output-last-message", "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt/classifiers/gpt-5.6-terra-5992cc7b-f4f3-4bac-b79e-8f9371c27b39/response.json", "-" ],
+  "usage" : {
+    "input_tokens" : 12953,
+    "cached_input_tokens" : 0,
+    "output_tokens" : 2701,
+    "reasoning_output_tokens" : 117
+  }
+}

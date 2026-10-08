@@ -1,0 +1,151 @@
+{
+  "note": "The initial mini-command expectation was a harness invocation error and is excluded here. Remaining failures are preserved.",
+  "history": [
+    {
+      "name": "EOF check rejects missing fields",
+      "status": "passed",
+      "details": {
+        "stdout": "{\"error\":\"MismatchedInputException\",\"message\":\"Missing creator property 'requestId' (index 0); `DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES` enabled\\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 2] (through reference chain: edu.heelcode.policy.Workspace$Request[\\\"requestId\\\"])\",\"forward\":false,\"requestId\":\"\"}\n",
+        "stderr": "Policy request failed: Missing creator property 'requestId' (index 0); `DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES` enabled\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 2] (through reference chain: edu.heelcode.policy.Workspace$Request[\"requestId\"])\n",
+        "code": 0
+      }
+    },
+    {
+      "name": "EOF check rejects duplicate keys",
+      "status": "passed",
+      "details": {
+        "stdout": "{\"message\":\"Duplicate field 'requestId'\\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 29]\",\"forward\":false,\"requestId\":\"\",\"error\":\"JsonParseException\"}\n",
+        "stderr": "Policy request failed: Duplicate field 'requestId'\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 29]\n",
+        "code": 0
+      }
+    },
+    {
+      "name": "EOF check rejects trailing JSON",
+      "status": "passed",
+      "details": {
+        "stdout": "{\"requestId\":\"\",\"error\":\"MismatchedInputException\",\"message\":\"Trailing token (of type START_OBJECT) found after value (bound as `edu.heelcode.policy.Workspace$Request`): not allowed as per `DeserializationFeature.FAIL_ON_TRAILING_TOKENS`\\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 2, column: 1]\",\"forward\":false}\n",
+        "stderr": "Policy request failed: Trailing token (of type START_OBJECT) found after value (bound as `edu.heelcode.policy.Workspace$Request`): not allowed as per `DeserializationFeature.FAIL_ON_TRAILING_TOKENS`\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 2, column: 1]\n",
+        "code": 0
+      }
+    },
+    {
+      "name": "EOF check rejects null fields",
+      "status": "passed",
+      "details": {
+        "stdout": "{\"error\":\"MismatchedInputException\",\"requestId\":\"\",\"forward\":false,\"message\":\"Null value for creator property 'requestId' (index 0); `DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES` enabled\\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 70] (through reference chain: edu.heelcode.policy.Workspace$Request[\\\"requestId\\\"])\"}\n",
+        "stderr": "Policy request failed: Null value for creator property 'requestId' (index 0); `DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES` enabled\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 70] (through reference chain: edu.heelcode.policy.Workspace$Request[\"requestId\"])\n",
+        "code": 0
+      }
+    },
+    {
+      "name": "EOF check rejects oversized frame with JSON",
+      "status": "failed",
+      "details": {
+        "stdout": "",
+        "stderr": "Request too large\n",
+        "code": 1
+      }
+    },
+    {
+      "name": "CRLF, blank frame, Unicode and final EOF frame",
+      "status": "passed",
+      "details": {
+        "stdout": "{\"forward\":false,\"message\":\"Missing creator property 'requestId' (index 0); `DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES` enabled\\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 2] (through reference chain: edu.heelcode.policy.Workspace$Request[\\\"requestId\\\"])\",\"error\":\"MismatchedInputException\",\"requestId\":\"\"}\n{\"forward\":false,\"message\":\"Invalid request ID, assignment, or prompt (limit 24,000 characters)\",\"error\":\"IllegalArgumentException\",\"requestId\":\"invalid!\"}\n{\"forward\":false,\"message\":\"No content to map due to end-of-input\\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1]\",\"error\":\"MismatchedInputException\",\"requestId\":\"\"}\n{\"forward\":false,\"message\":\"Invalid request ID, assignment, or prompt (limit 24,000 characters)\",\"error\":\"IllegalArgumentException\",\"requestId\":\"invalid!\"}\n",
+        "stderr": "Policy request failed: Missing creator property 'requestId' (index 0); `DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES` enabled\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 2] (through reference chain: edu.heelcode.policy.Workspace$Request[\"requestId\"])\nPolicy request failed: Invalid request ID, assignment, or prompt (limit 24,000 characters)\nPolicy request failed: No content to map due to end-of-input\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1]\nPolicy request failed: Invalid request ID, assignment, or prompt (limit 24,000 characters)\n",
+        "code": 0
+      }
+    },
+    {
+      "name": "Oversized JSONL frame returns error and next frame survives",
+      "status": "failed",
+      "details": {
+        "stdout": "",
+        "stderr": "JSONL frame too large\n",
+        "code": 1
+      }
+    },
+    {
+      "name": "Chunked JSONL responds before stdin EOF",
+      "status": "passed",
+      "details": {
+        "stdout": "{\"error\":\"IllegalArgumentException\",\"message\":\"Invalid request ID, assignment, or prompt (limit 24,000 characters)\",\"forward\":false,\"requestId\":\"invalid!\"}\n",
+        "stderr": "Policy request failed: Invalid request ID, assignment, or prompt (limit 24,000 characters)\n",
+        "code": 0
+      }
+    },
+    {
+      "name": "check rejects malformed UTF-8 before JSON admission",
+      "status": "failed",
+      "details": {
+        "stdout": "{\"error\":\"IllegalArgumentException\",\"message\":\"Invalid request ID, assignment, or prompt (limit 24,000 characters)\",\"forward\":false,\"requestId\":\"invalid!\"}\n",
+        "stderr": "Policy request failed: Invalid request ID, assignment, or prompt (limit 24,000 characters)\n",
+        "code": 0
+      }
+    },
+    {
+      "name": "stdio rejects malformed UTF-8 before JSON admission",
+      "status": "failed",
+      "details": {
+        "stdout": "{\"forward\":false,\"message\":\"Invalid request ID, assignment, or prompt (limit 24,000 characters)\",\"error\":\"IllegalArgumentException\",\"requestId\":\"invalid!\"}\n",
+        "stderr": "Policy request failed: Invalid request ID, assignment, or prompt (limit 24,000 characters)\n",
+        "code": 0
+      }
+    },
+    {
+      "name": "Empty run pipe exits unsuccessfully with clean stdout",
+      "status": "passed",
+      "details": {
+        "stdout": "",
+        "stderr": "\u001b[91m\u001b[1mError: \u001b[0mYou must provide a message or a command\n",
+        "code": 1
+      }
+    },
+    {
+      "name": "Policy stdout can feed a JSON consumer",
+      "status": "passed",
+      "details": {
+        "code": 0,
+        "bytes": 585,
+        "stderr": ""
+      }
+    },
+    {
+      "name": "Real run accepts Unicode stdin and emits JSONL",
+      "status": "passed",
+      "details": {
+        "code": 0,
+        "text": "CAFÉ-🧪 PIPE-358c905b-d80c-41a7-8b0e-523fab8d62bf",
+        "session": "ses_ee5ff0753ffeZIUEQFIax6vHv9",
+        "eventTypes": [
+          "step_start",
+          "text",
+          "step_finish"
+        ],
+        "evidence": "live-run.private.json"
+      }
+    },
+    {
+      "name": "Argument plus stdin and resumed output",
+      "status": "passed",
+      "details": {
+        "code": 0,
+        "text": "CAFÉ-🧪 PIPE-358c905b-d80c-41a7-8b0e-523fab8d62bf OUTPUT-✓",
+        "session": "ses_ee5ff0753ffeZIUEQFIax6vHv9",
+        "eventTypes": [
+          "step_start",
+          "text",
+          "step_finish"
+        ],
+        "evidence": "live-combined.private.json"
+      }
+    },
+    {
+      "name": "Export pipe preserves exact combined input",
+      "status": "failed",
+      "details": {
+        "code": 0,
+        "combinedInputFound": false
+      }
+    }
+  ]
+}

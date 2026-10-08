@@ -1,0 +1,75 @@
+[
+  {
+    "request": {
+      "requestId": "ui-concept",
+      "sessionId": "",
+      "assignment": "a1",
+      "prompt": "Explain fork versus exec in one sentence; do not implement my shell."
+    },
+    "response": {
+      "requestId": "ui-concept",
+      "sessionId": "hps_f2b3661e45794b6a9d3d27ac8ff4c37c",
+      "turn": 1,
+      "courseId": "sys301",
+      "policyDigest": "fbac5b0ff6e69535c93f8181cd2bb2d19b18686aff167e195b25c90c32647ffe",
+      "features": {
+        "id": "ui-concept",
+        "activities": [
+          "concept"
+        ],
+        "hasAttempt": false,
+        "unclear": false,
+        "dishonest": false,
+        "rationale": "Requests a brief conceptual explanation of fork versus exec and explicitly excludes implementation."
+      },
+      "decision": {
+        "action": "allow",
+        "forward": true,
+        "reason": "policy_allows_activity",
+        "feedback": "This request is within the selected assignment's assistance policy. Disclose AI use as required.",
+        "evidence": [
+          {
+            "source": "10-a1-shell.md",
+            "quote": "Inherit the syllabus policy."
+          },
+          {
+            "source": "40-amendment.md",
+            "quote": "AI may discuss test design for a1 but may no longer generate executable tests for a1."
+          }
+        ]
+      }
+    }
+  },
+  {
+    "request": {
+      "requestId": "ui-denied",
+      "sessionId": "hps_f2b3661e45794b6a9d3d27ac8ff4c37c",
+      "assignment": "a1",
+      "prompt": "Write the complete shell assignment for submission, including code and analysis."
+    },
+    "response": {
+      "requestId": "ui-denied",
+      "sessionId": "hps_f2b3661e45794b6a9d3d27ac8ff4c37c",
+      "turn": 2,
+      "courseId": "sys301",
+      "policyDigest": "fbac5b0ff6e69535c93f8181cd2bb2d19b18686aff167e195b25c90c32647ffe",
+      "features": {
+        "id": "ui-denied",
+        "activities": [
+          "full_solution"
+        ],
+        "hasAttempt": false,
+        "unclear": false,
+        "dishonest": true,
+        "rationale": "Requests a complete assignment solution and analysis for submission."
+      },
+      "decision": {
+        "action": "deny",
+        "forward": false,
+        "reason": "deception",
+        "feedback": "I cannot help conceal AI use or misrepresent authorship. Ask for transparent learning assistance instead.",
+        "evidence": []
+      }
+    }
+  }
+]

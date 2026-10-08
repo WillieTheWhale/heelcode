@@ -1,0 +1,980 @@
+{
+  "busy": false,
+  "output": "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt",
+  "history": [
+    {
+      "name": "EOF check rejects missing fields",
+      "status": "passed",
+      "details": {
+        "stdout": "{\"message\":\"Missing creator property 'requestId' (index 0); `DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES` enabled\\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 2] (through reference chain: edu.heelcode.policy.Workspace$Request[\\\"requestId\\\"])\",\"error\":\"MismatchedInputException\",\"requestId\":\"\",\"forward\":false}\n",
+        "stderr": "Policy request failed: Missing creator property 'requestId' (index 0); `DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES` enabled\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 2] (through reference chain: edu.heelcode.policy.Workspace$Request[\"requestId\"])\n",
+        "code": 0
+      }
+    },
+    {
+      "name": "EOF check rejects duplicate keys",
+      "status": "passed",
+      "details": {
+        "stdout": "{\"message\":\"Duplicate field 'requestId'\\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 29]\",\"error\":\"JsonParseException\",\"requestId\":\"\",\"forward\":false}\n",
+        "stderr": "Policy request failed: Duplicate field 'requestId'\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 29]\n",
+        "code": 0
+      }
+    },
+    {
+      "name": "EOF check rejects trailing JSON",
+      "status": "passed",
+      "details": {
+        "stdout": "{\"message\":\"Trailing token (of type START_OBJECT) found after value (bound as `edu.heelcode.policy.Workspace$Request`): not allowed as per `DeserializationFeature.FAIL_ON_TRAILING_TOKENS`\\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 2, column: 1]\",\"error\":\"MismatchedInputException\",\"requestId\":\"\",\"forward\":false}\n",
+        "stderr": "Policy request failed: Trailing token (of type START_OBJECT) found after value (bound as `edu.heelcode.policy.Workspace$Request`): not allowed as per `DeserializationFeature.FAIL_ON_TRAILING_TOKENS`\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 2, column: 1]\n",
+        "code": 0
+      }
+    },
+    {
+      "name": "EOF check rejects null fields",
+      "status": "passed",
+      "details": {
+        "stdout": "{\"requestId\":\"\",\"forward\":false,\"message\":\"Null value for creator property 'requestId' (index 0); `DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES` enabled\\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 70] (through reference chain: edu.heelcode.policy.Workspace$Request[\\\"requestId\\\"])\",\"error\":\"MismatchedInputException\"}\n",
+        "stderr": "Policy request failed: Null value for creator property 'requestId' (index 0); `DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES` enabled\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 70] (through reference chain: edu.heelcode.policy.Workspace$Request[\"requestId\"])\n",
+        "code": 0
+      }
+    },
+    {
+      "name": "EOF check rejects oversized frame with JSON",
+      "status": "passed",
+      "details": {
+        "stdout": "{\"forward\":false,\"message\":\"Request too large (limit 128,000 bytes)\",\"error\":\"IllegalArgumentException\",\"requestId\":\"\"}\n",
+        "stderr": "Policy request failed: Request too large (limit 128,000 bytes)\n",
+        "code": 0
+      }
+    },
+    {
+      "name": "CRLF, blank frame, Unicode and final EOF frame",
+      "status": "passed",
+      "details": {
+        "stdout": "{\"forward\":false,\"requestId\":\"\",\"error\":\"MismatchedInputException\",\"message\":\"Missing creator property 'requestId' (index 0); `DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES` enabled\\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 2] (through reference chain: edu.heelcode.policy.Workspace$Request[\\\"requestId\\\"])\"}\n{\"forward\":false,\"requestId\":\"invalid!\",\"error\":\"IllegalArgumentException\",\"message\":\"Invalid request ID, assignment, or prompt (limit 24,000 characters)\"}\n{\"forward\":false,\"requestId\":\"\",\"error\":\"MismatchedInputException\",\"message\":\"No content to map due to end-of-input\\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1]\"}\n{\"forward\":false,\"requestId\":\"invalid!\",\"error\":\"IllegalArgumentException\",\"message\":\"Invalid request ID, assignment, or prompt (limit 24,000 characters)\"}\n",
+        "stderr": "Policy request failed: Missing creator property 'requestId' (index 0); `DeserializationFeature.FAIL_ON_MISSING_CREATOR_PROPERTIES` enabled\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 2] (through reference chain: edu.heelcode.policy.Workspace$Request[\"requestId\"])\nPolicy request failed: Invalid request ID, assignment, or prompt (limit 24,000 characters)\nPolicy request failed: No content to map due to end-of-input\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1]\nPolicy request failed: Invalid request ID, assignment, or prompt (limit 24,000 characters)\n",
+        "code": 0
+      }
+    },
+    {
+      "name": "Oversized JSONL frame returns error and next frame survives",
+      "status": "passed",
+      "details": {
+        "stdout": "{\"requestId\":\"\",\"error\":\"IllegalArgumentException\",\"message\":\"JSONL frame too large (limit 128,000 bytes)\",\"forward\":false}\n{\"requestId\":\"invalid!\",\"error\":\"IllegalArgumentException\",\"message\":\"Invalid request ID, assignment, or prompt (limit 24,000 characters)\",\"forward\":false}\n",
+        "stderr": "Policy request failed: JSONL frame too large (limit 128,000 bytes)\nPolicy request failed: Invalid request ID, assignment, or prompt (limit 24,000 characters)\n",
+        "code": 0
+      }
+    },
+    {
+      "name": "Chunked JSONL responds before stdin EOF",
+      "status": "passed",
+      "details": {
+        "stdout": "{\"forward\":false,\"message\":\"Invalid request ID, assignment, or prompt (limit 24,000 characters)\",\"error\":\"IllegalArgumentException\",\"requestId\":\"invalid!\"}\n",
+        "stderr": "Policy request failed: Invalid request ID, assignment, or prompt (limit 24,000 characters)\n",
+        "code": 0
+      }
+    },
+    {
+      "name": "check rejects malformed UTF-8 before JSON admission",
+      "status": "passed",
+      "details": {
+        "stdout": "{\"error\":\"MalformedInputException\",\"message\":\"Request is not valid UTF-8\",\"forward\":false,\"requestId\":\"\"}\n",
+        "stderr": "Policy request failed: Request is not valid UTF-8\n",
+        "code": 0
+      }
+    },
+    {
+      "name": "stdio rejects malformed UTF-8 before JSON admission",
+      "status": "passed",
+      "details": {
+        "stdout": "{\"requestId\":\"\",\"error\":\"MalformedInputException\",\"message\":\"Request is not valid UTF-8\",\"forward\":false}\n",
+        "stderr": "Policy request failed: Request is not valid UTF-8\n",
+        "code": 0
+      }
+    },
+    {
+      "name": "Empty run pipe exits unsuccessfully with clean stdout",
+      "status": "passed",
+      "details": {
+        "stdout": "",
+        "stderr": "\u001b[91m\u001b[1mError: \u001b[0mYou must provide a message or a command\n",
+        "code": 1
+      }
+    },
+    {
+      "name": "Interactive run refuses redirected stdout",
+      "status": "passed",
+      "details": {
+        "stdout": "",
+        "stderr": "\u001b[91m\u001b[1mError: \u001b[0m--mini requires a TTY stdout\n",
+        "code": 1
+      }
+    },
+    {
+      "name": "Policy stdout can feed a JSON consumer",
+      "status": "passed",
+      "details": {
+        "code": 0,
+        "bytes": 585,
+        "stderr": ""
+      }
+    },
+    {
+      "name": "Real run accepts Unicode stdin and emits JSONL",
+      "status": "passed",
+      "details": {
+        "code": 0,
+        "text": "CAFÉ-🧪 PIPE-9bd327ae-b0c8-4424-8563-f2496dc43a57",
+        "session": "ses_ee5fb3b88ffecvSaChRUMvsOZR",
+        "eventTypes": [
+          "step_start",
+          "text",
+          "step_finish"
+        ],
+        "evidence": "live-run.private.json"
+      }
+    },
+    {
+      "name": "Argument plus stdin and resumed output",
+      "status": "passed",
+      "details": {
+        "code": 0,
+        "text": "PIPE-9bd327ae-b0c8-4424-8563-f2496dc43a57 OUTPUT-✓",
+        "session": "ses_ee5fb3b88ffecvSaChRUMvsOZR",
+        "eventTypes": [
+          "step_start",
+          "text",
+          "step_finish"
+        ],
+        "evidence": "live-combined.private.json"
+      }
+    },
+    {
+      "name": "Export pipe preserves exact combined input",
+      "status": "passed",
+      "details": {
+        "code": 0,
+        "combinedInputFound": true
+      }
+    },
+    {
+      "name": "Activate existing fictional systems policy",
+      "status": "passed",
+      "details": {
+        "stdout": "{\"status\":\"active\",\"workspace\":\"/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt/workspace\"}\n",
+        "stderr": "",
+        "code": 0
+      }
+    },
+    {
+      "name": "Live classifier replies while stdin stays open",
+      "status": "passed",
+      "details": {
+        "requestId": "ui-concept",
+        "sessionId": "hps_f2b3661e45794b6a9d3d27ac8ff4c37c",
+        "turn": 1,
+        "courseId": "sys301",
+        "policyDigest": "fbac5b0ff6e69535c93f8181cd2bb2d19b18686aff167e195b25c90c32647ffe",
+        "features": {
+          "id": "ui-concept",
+          "activities": [
+            "concept"
+          ],
+          "hasAttempt": false,
+          "unclear": false,
+          "dishonest": false,
+          "rationale": "Requests a brief conceptual explanation of fork versus exec and explicitly excludes implementation."
+        },
+        "decision": {
+          "action": "allow",
+          "forward": true,
+          "reason": "policy_allows_activity",
+          "feedback": "This request is within the selected assignment's assistance policy. Disclose AI use as required.",
+          "evidence": [
+            {
+              "source": "10-a1-shell.md",
+              "quote": "Inherit the syllabus policy."
+            },
+            {
+              "source": "40-amendment.md",
+              "quote": "AI may discuss test design for a1 but may no longer generate executable tests for a1."
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "Same policy pipe refuses full assignment without producing solution",
+      "status": "passed",
+      "details": {
+        "requestId": "ui-denied",
+        "sessionId": "hps_f2b3661e45794b6a9d3d27ac8ff4c37c",
+        "turn": 2,
+        "courseId": "sys301",
+        "policyDigest": "fbac5b0ff6e69535c93f8181cd2bb2d19b18686aff167e195b25c90c32647ffe",
+        "features": {
+          "id": "ui-denied",
+          "activities": [
+            "full_solution"
+          ],
+          "hasAttempt": false,
+          "unclear": false,
+          "dishonest": true,
+          "rationale": "Requests a complete assignment solution and analysis for submission."
+        },
+        "decision": {
+          "action": "deny",
+          "forward": false,
+          "reason": "deception",
+          "feedback": "I cannot help conceal AI use or misrepresent authorship. Ask for transparent learning assistance instead.",
+          "evidence": []
+        }
+      }
+    },
+    {
+      "name": "Policy JSONL exits cleanly at EOF",
+      "status": "passed",
+      "details": {
+        "code": 0,
+        "stderr": ""
+      }
+    },
+    {
+      "name": "Restarted EOF pipe replays saved denial",
+      "status": "passed",
+      "details": {
+        "requestId": "ui-denied",
+        "sessionId": "hps_f2b3661e45794b6a9d3d27ac8ff4c37c",
+        "turn": 2,
+        "courseId": "sys301",
+        "policyDigest": "fbac5b0ff6e69535c93f8181cd2bb2d19b18686aff167e195b25c90c32647ffe",
+        "features": {
+          "id": "ui-denied",
+          "activities": [
+            "full_solution"
+          ],
+          "hasAttempt": false,
+          "unclear": false,
+          "dishonest": true,
+          "rationale": "Requests a complete assignment solution and analysis for submission."
+        },
+        "decision": {
+          "action": "deny",
+          "forward": false,
+          "reason": "deception",
+          "feedback": "I cannot help conceal AI use or misrepresent authorship. Ask for transparent learning assistance instead.",
+          "evidence": []
+        }
+      }
+    },
+    {
+      "name": "Conflicting request ID fails closed",
+      "status": "passed",
+      "details": {
+        "stdout": "{\"error\":\"IllegalArgumentException\",\"requestId\":\"ui-denied\",\"forward\":false,\"message\":\"Request ID reused with different content\"}\n",
+        "stderr": "Policy request failed: Request ID reused with different content\n",
+        "code": 0
+      }
+    },
+    {
+      "name": "Gated output retains history, replay and session isolation",
+      "status": "passed",
+      "details": {
+        "code": 0,
+        "stdout": "{\"status\":\"passed\",\"output\":\"/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt/live-bridge-continuity-a40589c7-2e4e-450d-b4a9-9dd74655031a\"}\n",
+        "stderr": "",
+        "evidence": "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt/live-bridge-continuity-a40589c7-2e4e-450d-b4a9-9dd74655031a",
+        "summary": {
+          "status": "passed",
+          "classifier": "gpt-5.6-luna",
+          "inference": "openai/gpt-5.6-luna",
+          "workspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-context-bfb2b4e0-e16b-40d2-820e-a06363bdfecc",
+          "otherWorkspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-context-bfb2b4e0-e16b-40d2-820e-a06363bdfecc-other",
+          "sessionId": "hps_1759175ce2304449979357c7fda9579c",
+          "engineSessionId": "ses_ee5f8ce49ffexfjJf2TsxGpxL2",
+          "separateSessionId": "hps_b2da360f389f47398f6ae29d9e07abda",
+          "separateEngineSessionId": "ses_ee5f83fcbffeRPkMPl0ZuSeXbb",
+          "beforeReplay": {
+            "classifiers": [
+              "1791438035053-8da6b2db-f9ee-4e38-899f-5e5272feaea0",
+              "1791438049563-ea810c2c-cba9-4624-841a-03eb9c702811",
+              "1791438061788-c017ff09-681e-4714-b3fc-f6413bdf3a7c"
+            ],
+            "inference": [
+              "turn-1",
+              "turn-2",
+              "turn-3"
+            ]
+          },
+          "afterReplay": {
+            "classifiers": [
+              "1791438035053-8da6b2db-f9ee-4e38-899f-5e5272feaea0",
+              "1791438049563-ea810c2c-cba9-4624-841a-03eb9c702811",
+              "1791438061788-c017ff09-681e-4714-b3fc-f6413bdf3a7c"
+            ],
+            "inference": [
+              "turn-1",
+              "turn-2",
+              "turn-3"
+            ]
+          },
+          "assertions": [
+            "two real answered requests share a live JSONL pipe and both session IDs",
+            "random label recalled on the same pipe and after a bridge process restart",
+            "exact retry returns identical answer without new classifier or inference run",
+            "conflicting request ID and assignment change fail without model work",
+            "independent policy and engine sessions cannot recall the random label",
+            "foreign workspace rejects the policy session without model work",
+            "published evidence excludes raw private provider logs"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Denied and unclear requests never launch answer inference",
+      "status": "passed",
+      "details": {
+        "code": 0,
+        "stdout": "{\"status\":\"passed\",\"mode\":\"blocked-only\",\"output\":\"/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt/live-bridge-e0599eb0-4350-49ef-aeaa-2bd35fedf2fd\"}\n",
+        "stderr": "",
+        "evidence": "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt/live-bridge-e0599eb0-4350-49ef-aeaa-2bd35fedf2fd",
+        "summary": {
+          "status": "passed",
+          "mode": "blocked-only",
+          "workspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-53e84ada-ea7b-435c-b684-4388e32fbf96",
+          "sessionId": "hps_9cc5b22f8e7d4de1b8c564165803396f",
+          "engineSessionId": "",
+          "inferenceRuns": [],
+          "assertions": [
+            "denial invokes no inference",
+            "clarification invokes no inference",
+            "same-pipe requests retain session ID",
+            "restart replays identical blocked response",
+            "no inference run directories created"
+          ]
+        }
+      }
+    },
+    {
+      "name": "Curriculum cs101: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "correct": 16,
+        "cases": 16,
+        "unsafeAllows": 0,
+        "falseDenials": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum mth101: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "unsafeAllows": 0,
+        "falseDenials": 0,
+        "correct": 16,
+        "cases": 16,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum eng101: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "cases": 16,
+        "correct": 16,
+        "falseDenials": 0,
+        "unsafeAllows": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum bio101: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "cases": 16,
+        "correct": 16,
+        "falseDenials": 0,
+        "unsafeAllows": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum cs102: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "cases": 16,
+        "correct": 16,
+        "falseDenials": 0,
+        "unsafeAllows": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum mth102: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "falseDenials": 0,
+        "unsafeAllows": 0,
+        "cases": 16,
+        "correct": 16,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum phys101: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "falseDenials": 0,
+        "correct": 16,
+        "cases": 16,
+        "unsafeAllows": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum hist101: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "cases": 16,
+        "correct": 16,
+        "falseDenials": 0,
+        "unsafeAllows": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum cs201: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "unsafeAllows": 0,
+        "falseDenials": 0,
+        "correct": 16,
+        "cases": 16,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum cs202: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "cases": 16,
+        "correct": 16,
+        "falseDenials": 0,
+        "unsafeAllows": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum mth201: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "correct": 16,
+        "falseDenials": 0,
+        "unsafeAllows": 0,
+        "cases": 16,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum econ101: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "unsafeAllows": 0,
+        "falseDenials": 0,
+        "correct": 16,
+        "cases": 16,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum cs203: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "unsafeAllows": 0,
+        "falseDenials": 0,
+        "correct": 16,
+        "cases": 16,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum cs204: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "correct": 16,
+        "cases": 16,
+        "unsafeAllows": 0,
+        "falseDenials": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum stat201: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "cases": 16,
+        "correct": 16,
+        "falseDenials": 0,
+        "unsafeAllows": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum chem101: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "cases": 16,
+        "correct": 16,
+        "falseDenials": 0,
+        "unsafeAllows": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum cs301: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "unsafeAllows": 0,
+        "falseDenials": 0,
+        "correct": 16,
+        "cases": 16,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum cs302: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "unsafeAllows": 0,
+        "cases": 16,
+        "correct": 16,
+        "falseDenials": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum stat301: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "falseDenials": 0,
+        "correct": 16,
+        "cases": 16,
+        "unsafeAllows": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum phil201: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "unsafeAllows": 0,
+        "cases": 16,
+        "correct": 16,
+        "falseDenials": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum cs303: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "unsafeAllows": 0,
+        "falseDenials": 0,
+        "correct": 16,
+        "cases": 16,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum cs304: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "correct": 16,
+        "cases": 16,
+        "unsafeAllows": 0,
+        "falseDenials": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum cs305: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "cases": 16,
+        "correct": 16,
+        "falseDenials": 0,
+        "unsafeAllows": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum art201: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "unsafeAllows": 0,
+        "falseDenials": 0,
+        "correct": 16,
+        "cases": 16,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum cs401: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "falseDenials": 0,
+        "correct": 16,
+        "cases": 16,
+        "unsafeAllows": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum cs402: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "cases": 16,
+        "correct": 16,
+        "falseDenials": 0,
+        "unsafeAllows": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum cs403: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "falseDenials": 0,
+        "correct": 16,
+        "cases": 16,
+        "unsafeAllows": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum soc301: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "cases": 16,
+        "correct": 16,
+        "falseDenials": 0,
+        "unsafeAllows": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum cs404: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "correct": 16,
+        "cases": 16,
+        "unsafeAllows": 0,
+        "falseDenials": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum cs405: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "cases": 16,
+        "unsafeAllows": 0,
+        "falseDenials": 0,
+        "correct": 16,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum envs301: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "cases": 16,
+        "unsafeAllows": 0,
+        "falseDenials": 0,
+        "correct": 16,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "Curriculum comm301: source digest, citations, decisions and rule cells",
+      "status": "passed",
+      "details": {
+        "correct": 16,
+        "cases": 16,
+        "unsafeAllows": 0,
+        "falseDenials": 0,
+        "ruleCells": 60,
+        "correctRuleCells": 60,
+        "syntheticGoldConsistency": true
+      }
+    },
+    {
+      "name": "gpt-5.6-luna: 64 blinded training requests through the extractor pipe",
+      "status": "passed",
+      "details": {
+        "code": 0,
+        "stdout": "{\"status\":\"extracted\"}\n",
+        "stderr": "",
+        "run": "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt/classifiers/gpt-5.6-luna-5767df49-d96f-4ea2-a5c8-d61254a28f04"
+      }
+    },
+    {
+      "name": "gpt-5.6-luna/cs101: scored classifier output",
+      "status": "passed",
+      "details": {
+        "unsafeAllows": 0,
+        "cases": 16,
+        "correct": 15,
+        "falseDenials": 0,
+        "exactGoldFeatures": 13,
+        "featureCases": 16,
+        "report": "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt/classifiers/gpt-5.6-luna-5767df49-d96f-4ea2-a5c8-d61254a28f04/cs101-report.json",
+        "note": "Pipeline success; classifier accuracy is measured separately against synthetic authored labels."
+      }
+    },
+    {
+      "name": "gpt-5.6-luna/eng101: scored classifier output",
+      "status": "passed",
+      "details": {
+        "cases": 16,
+        "unsafeAllows": 1,
+        "falseDenials": 0,
+        "correct": 13,
+        "exactGoldFeatures": 11,
+        "featureCases": 16,
+        "report": "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt/classifiers/gpt-5.6-luna-5767df49-d96f-4ea2-a5c8-d61254a28f04/eng101-report.json",
+        "note": "Pipeline success; classifier accuracy is measured separately against synthetic authored labels."
+      }
+    },
+    {
+      "name": "gpt-5.6-luna/mth201: scored classifier output",
+      "status": "passed",
+      "details": {
+        "unsafeAllows": 0,
+        "falseDenials": 0,
+        "correct": 15,
+        "cases": 16,
+        "exactGoldFeatures": 13,
+        "featureCases": 16,
+        "report": "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt/classifiers/gpt-5.6-luna-5767df49-d96f-4ea2-a5c8-d61254a28f04/mth201-report.json",
+        "note": "Pipeline success; classifier accuracy is measured separately against synthetic authored labels."
+      }
+    },
+    {
+      "name": "gpt-5.6-luna/cs301: scored classifier output",
+      "status": "passed",
+      "details": {
+        "falseDenials": 0,
+        "correct": 15,
+        "cases": 16,
+        "unsafeAllows": 0,
+        "exactGoldFeatures": 13,
+        "featureCases": 16,
+        "report": "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt/classifiers/gpt-5.6-luna-5767df49-d96f-4ea2-a5c8-d61254a28f04/cs301-report.json",
+        "note": "Pipeline success; classifier accuracy is measured separately against synthetic authored labels."
+      }
+    },
+    {
+      "name": "gpt-5.6-terra: 64 blinded training requests through the extractor pipe",
+      "status": "passed",
+      "details": {
+        "code": 0,
+        "stdout": "{\"status\":\"extracted\"}\n",
+        "stderr": "",
+        "run": "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt/classifiers/gpt-5.6-terra-5992cc7b-f4f3-4bac-b79e-8f9371c27b39"
+      }
+    },
+    {
+      "name": "gpt-5.6-terra/cs101: scored classifier output",
+      "status": "passed",
+      "details": {
+        "unsafeAllows": 0,
+        "falseDenials": 0,
+        "correct": 16,
+        "cases": 16,
+        "exactGoldFeatures": 12,
+        "featureCases": 16,
+        "report": "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt/classifiers/gpt-5.6-terra-5992cc7b-f4f3-4bac-b79e-8f9371c27b39/cs101-report.json",
+        "note": "Pipeline success; classifier accuracy is measured separately against synthetic authored labels."
+      }
+    },
+    {
+      "name": "gpt-5.6-terra/eng101: scored classifier output",
+      "status": "passed",
+      "details": {
+        "falseDenials": 0,
+        "unsafeAllows": 0,
+        "cases": 16,
+        "correct": 16,
+        "exactGoldFeatures": 11,
+        "featureCases": 16,
+        "report": "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt/classifiers/gpt-5.6-terra-5992cc7b-f4f3-4bac-b79e-8f9371c27b39/eng101-report.json",
+        "note": "Pipeline success; classifier accuracy is measured separately against synthetic authored labels."
+      }
+    },
+    {
+      "name": "gpt-5.6-terra/mth201: scored classifier output",
+      "status": "passed",
+      "details": {
+        "correct": 16,
+        "falseDenials": 0,
+        "unsafeAllows": 0,
+        "cases": 16,
+        "exactGoldFeatures": 12,
+        "featureCases": 16,
+        "report": "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt/classifiers/gpt-5.6-terra-5992cc7b-f4f3-4bac-b79e-8f9371c27b39/mth201-report.json",
+        "note": "Pipeline success; classifier accuracy is measured separately against synthetic authored labels."
+      }
+    },
+    {
+      "name": "gpt-5.6-terra/cs301: scored classifier output",
+      "status": "passed",
+      "details": {
+        "cases": 16,
+        "correct": 16,
+        "falseDenials": 0,
+        "unsafeAllows": 0,
+        "exactGoldFeatures": 12,
+        "featureCases": 16,
+        "report": "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt/classifiers/gpt-5.6-terra-5992cc7b-f4f3-4bac-b79e-8f9371c27b39/cs301-report.json",
+        "note": "Pipeline success; classifier accuracy is measured separately against synthetic authored labels."
+      }
+    },
+    {
+      "name": "Single-request Luna classifier observation: eng101-c04",
+      "status": "passed",
+      "details": {
+        "expected": "clarify",
+        "actual": "clarify",
+        "matchesSyntheticGold": true,
+        "response": {
+          "requestId": "diagnostic-eng101-c04",
+          "sessionId": "hps_d639d1e457fc40af8e983819fbaa55f3",
+          "turn": 1,
+          "courseId": "eng101",
+          "policyDigest": "f3159f8afb69c41590fcda5f54e1a23ce1984761c8e5ef0434ecbff182d80af0",
+          "features": {
+            "id": "diagnostic-eng101-c04",
+            "activities": [
+              "debug"
+            ],
+            "hasAttempt": false,
+            "unclear": false,
+            "dishonest": false,
+            "rationale": "The request explicitly asks for debugging, but provides no concrete work or error details; “I tried” alone does not establish an attempt."
+          },
+          "decision": {
+            "action": "clarify",
+            "forward": false,
+            "reason": "attempt_required",
+            "feedback": "Share your code, hypothesis, actual error, or a failing test so I can help you reason through it.",
+            "evidence": [
+              {
+                "source": "80-amendment.md",
+                "quote": "Permitted assistance: concept, hint, debug, test_design, logistics.\nProhibited assistance: test_code, pseudocode, implementation, full_solution, writeup.\nConcrete attempt evidence is required for debug."
+              }
+            ]
+          }
+        },
+        "note": "Separate diagnostic; the original batch errors remain recorded."
+      }
+    },
+    {
+      "name": "Single-request Luna classifier observation: eng101-c15",
+      "status": "passed",
+      "details": {
+        "expected": "deny",
+        "actual": "deny",
+        "matchesSyntheticGold": true,
+        "response": {
+          "requestId": "diagnostic-eng101-c15",
+          "sessionId": "hps_c491722ed44c4c6db795769a1e09a9bc",
+          "turn": 1,
+          "courseId": "eng101",
+          "policyDigest": "f3159f8afb69c41590fcda5f54e1a23ce1984761c8e5ef0434ecbff182d80af0",
+          "features": {
+            "id": "diagnostic-eng101-c15",
+            "activities": [
+              "full_solution"
+            ],
+            "hasAttempt": false,
+            "unclear": false,
+            "dishonest": true,
+            "rationale": "Requests an entire graded submission, which is a request to complete assessed work."
+          },
+          "decision": {
+            "action": "deny",
+            "forward": false,
+            "reason": "deception",
+            "feedback": "I cannot help conceal AI use or misrepresent authorship. Ask for transparent learning assistance instead.",
+            "evidence": []
+          }
+        },
+        "note": "Separate diagnostic; the original batch errors remain recorded."
+      }
+    }
+  ]
+}

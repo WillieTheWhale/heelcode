@@ -1,0 +1,15 @@
+{
+  "status": "passed",
+  "mode": "blocked-only",
+  "workspace": "/Users/williamkeffer/NerdsInc/Personal_Projects/heelcode/tmp/policy-bridge-53e84ada-ea7b-435c-b684-4388e32fbf96",
+  "sessionId": "hps_9cc5b22f8e7d4de1b8c564165803396f",
+  "engineSessionId": "",
+  "inferenceRuns": [],
+  "assertions": [
+    "denial invokes no inference",
+    "clarification invokes no inference",
+    "same-pipe requests retain session ID",
+    "restart replays identical blocked response",
+    "no inference run directories created"
+  ]
+}

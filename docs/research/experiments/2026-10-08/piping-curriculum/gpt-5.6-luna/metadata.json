@@ -1,0 +1,16 @@
+{
+  "exitCode" : 0,
+  "elapsedMs" : 17697,
+  "command" : [ "codex", "exec", "--ignore-user-config", "--ephemeral", "--skip-git-repo-check", "--sandbox", "read-only", "--cd", "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-model-16714820725366483540", "--model", "gpt-5.6-luna", "--json", "-c", "model_reasoning_effort=\"low\"", "-c", "project_doc_max_bytes=0", "-c", "web_search=\"disabled\"", "-c", "features.shell_tool=false", "-c", "features.unified_exec=false", "-c", "features.plugins=false", "-c", "features.apps=false", "-c", "features.multi_agent=false", "-c", "features.browser_use=false", "-c", "features.computer_use=false", "-c", "features.image_generation=false", "--output-schema", "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt/classifiers/gpt-5.6-luna-5767df49-d96f-4ea2-a5c8-d61254a28f04/schema.json", "--output-last-message", "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-pipe-console-HwKXOt/classifiers/gpt-5.6-luna-5767df49-d96f-4ea2-a5c8-d61254a28f04/response.json", "-" ],
+  "usage" : {
+    "input_tokens" : 11811,
+    "cached_input_tokens" : 0,
+    "output_tokens" : 2989,
+    "reasoning_output_tokens" : 252
+  },
+  "model" : "gpt-5.6-luna",
+  "promptSha256" : "e350676c66a6952d6fec20a65554129574d16cefadb8f288eece85e942e511e8",
+  "startedAt" : "2026-10-08T05:45:50.567117Z",
+  "adapter" : "codex-cli",
+  "effort" : "low"
+}

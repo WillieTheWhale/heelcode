@@ -1,0 +1,208 @@
+[
+  {
+    "request": {
+      "requestId": "b1",
+      "sessionId": "",
+      "assignment": "a1",
+      "prompt": "Solve the whole shell assignment for me."
+    },
+    "response": {
+      "requestId": "b1",
+      "sessionId": "hps_9cc5b22f8e7d4de1b8c564165803396f",
+      "turn": 1,
+      "engineSessionId": "",
+      "status": "blocked",
+      "inferenceAttempted": false,
+      "text": "This assignment does not permit the requested output. Ask for a conceptual explanation or permitted smaller step; see the cited rules.",
+      "error": "",
+      "policy": {
+        "requestId": "b1",
+        "sessionId": "hps_9cc5b22f8e7d4de1b8c564165803396f",
+        "turn": 1,
+        "courseId": "sys301",
+        "policyDigest": "fbac5b0ff6e69535c93f8181cd2bb2d19b18686aff167e195b25c90c32647ffe",
+        "features": {
+          "id": "b1",
+          "activities": [
+            "full_solution"
+          ],
+          "hasAttempt": false,
+          "unclear": false,
+          "dishonest": false,
+          "rationale": "Requests completion of the entire shell assignment."
+        },
+        "decision": {
+          "action": "deny",
+          "forward": false,
+          "reason": "policy_prohibits_activity",
+          "feedback": "This assignment does not permit the requested output. Ask for a conceptual explanation or permitted smaller step; see the cited rules.",
+          "evidence": [
+            {
+              "source": "40-amendment.md",
+              "quote": "This supersedes only the earlier a1 executable-test permission."
+            },
+            {
+              "source": "40-amendment.md",
+              "quote": "AI may discuss test design for a1 but may no longer generate executable tests for a1. All other a1 rules remain unchanged."
+            },
+            {
+              "source": "10-a1-shell.md",
+              "quote": "AI-generated implementation code, solution pseudocode, complete solutions, and submission-ready writeups remain prohibited."
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "request": {
+      "requestId": "b2",
+      "sessionId": "hps_9cc5b22f8e7d4de1b8c564165803396f",
+      "assignment": "a1",
+      "prompt": "I have a different problem but have not said what it is. Can you help?"
+    },
+    "response": {
+      "requestId": "b2",
+      "sessionId": "hps_9cc5b22f8e7d4de1b8c564165803396f",
+      "turn": 2,
+      "engineSessionId": "",
+      "status": "blocked",
+      "inferenceAttempted": false,
+      "text": "What specific concept, question, or observed problem would you like help with?",
+      "error": "",
+      "policy": {
+        "requestId": "b2",
+        "sessionId": "hps_9cc5b22f8e7d4de1b8c564165803396f",
+        "turn": 2,
+        "courseId": "sys301",
+        "policyDigest": "fbac5b0ff6e69535c93f8181cd2bb2d19b18686aff167e195b25c90c32647ffe",
+        "features": {
+          "id": "b2",
+          "activities": [],
+          "hasAttempt": false,
+          "unclear": true,
+          "dishonest": false,
+          "rationale": "The request asks for help but does not identify the problem or requested assistance."
+        },
+        "decision": {
+          "action": "clarify",
+          "forward": false,
+          "reason": "unclear_request",
+          "feedback": "What specific concept, question, or observed problem would you like help with?",
+          "evidence": []
+        }
+      }
+    }
+  },
+  {
+    "request": {
+      "requestId": "b3",
+      "sessionId": "hps_9cc5b22f8e7d4de1b8c564165803396f",
+      "assignment": "a1",
+      "prompt": "Write a runnable unit test for shell pipelines."
+    },
+    "response": {
+      "requestId": "b3",
+      "sessionId": "hps_9cc5b22f8e7d4de1b8c564165803396f",
+      "turn": 3,
+      "engineSessionId": "",
+      "status": "blocked",
+      "inferenceAttempted": false,
+      "text": "This assignment does not permit the requested output. Ask for a conceptual explanation or permitted smaller step; see the cited rules.",
+      "error": "",
+      "policy": {
+        "requestId": "b3",
+        "sessionId": "hps_9cc5b22f8e7d4de1b8c564165803396f",
+        "turn": 3,
+        "courseId": "sys301",
+        "policyDigest": "fbac5b0ff6e69535c93f8181cd2bb2d19b18686aff167e195b25c90c32647ffe",
+        "features": {
+          "id": "b3",
+          "activities": [
+            "test_code"
+          ],
+          "hasAttempt": false,
+          "unclear": false,
+          "dishonest": false,
+          "rationale": "Requests an executable unit test for shell pipelines; no concrete attempt or failure is provided."
+        },
+        "decision": {
+          "action": "deny",
+          "forward": false,
+          "reason": "policy_prohibits_activity",
+          "feedback": "This assignment does not permit the requested output. Ask for a conceptual explanation or permitted smaller step; see the cited rules.",
+          "evidence": [
+            {
+              "source": "40-amendment.md",
+              "quote": "This supersedes only the earlier a1 executable-test permission."
+            },
+            {
+              "source": "40-amendment.md",
+              "quote": "AI may discuss test design for a1 but may no longer generate executable tests for a1. All other a1 rules remain unchanged."
+            },
+            {
+              "source": "10-a1-shell.md",
+              "quote": "AI-generated implementation code, solution pseudocode, complete solutions, and submission-ready writeups remain prohibited."
+            }
+          ]
+        }
+      }
+    }
+  },
+  {
+    "request": {
+      "requestId": "b3",
+      "sessionId": "hps_9cc5b22f8e7d4de1b8c564165803396f",
+      "assignment": "a1",
+      "prompt": "Write a runnable unit test for shell pipelines."
+    },
+    "response": {
+      "requestId": "b3",
+      "sessionId": "hps_9cc5b22f8e7d4de1b8c564165803396f",
+      "turn": 3,
+      "engineSessionId": "",
+      "status": "blocked",
+      "inferenceAttempted": false,
+      "text": "This assignment does not permit the requested output. Ask for a conceptual explanation or permitted smaller step; see the cited rules.",
+      "error": "",
+      "policy": {
+        "requestId": "b3",
+        "sessionId": "hps_9cc5b22f8e7d4de1b8c564165803396f",
+        "turn": 3,
+        "courseId": "sys301",
+        "policyDigest": "fbac5b0ff6e69535c93f8181cd2bb2d19b18686aff167e195b25c90c32647ffe",
+        "features": {
+          "id": "b3",
+          "activities": [
+            "test_code"
+          ],
+          "hasAttempt": false,
+          "unclear": false,
+          "dishonest": false,
+          "rationale": "Requests an executable unit test for shell pipelines; no concrete attempt or failure is provided."
+        },
+        "decision": {
+          "action": "deny",
+          "forward": false,
+          "reason": "policy_prohibits_activity",
+          "feedback": "This assignment does not permit the requested output. Ask for a conceptual explanation or permitted smaller step; see the cited rules.",
+          "evidence": [
+            {
+              "source": "40-amendment.md",
+              "quote": "This supersedes only the earlier a1 executable-test permission."
+            },
+            {
+              "source": "40-amendment.md",
+              "quote": "AI may discuss test design for a1 but may no longer generate executable tests for a1. All other a1 rules remain unchanged."
+            },
+            {
+              "source": "10-a1-shell.md",
+              "quote": "AI-generated implementation code, solution pseudocode, complete solutions, and submission-ready writeups remain prohibited."
+            }
+          ]
+        }
+      }
+    },
+    "restarted": true
+  }
+]

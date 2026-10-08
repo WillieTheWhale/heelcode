@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Heelcode pipe verification</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: system-ui, sans-serif;
+      color: #163246;
+      background: #f4f8fb;
+    }
+    body {
+      max-width: 1100px;
+      margin: 36px auto;
+      padding: 0 24px;
+    }
+    h1 {
+      margin-bottom: 8px;
+    }
+    p {
+      line-height: 1.5;
+    }
+    button {
+      background: #4b9cd3;
+      color: #062639;
+      border: 0;
+      border-radius: 6px;
+      font: inherit;
+      font-weight: 600;
+      padding: 12px 18px;
+      cursor: pointer;
+      margin: 0 8px 8px 0;
+    }
+    button:disabled {
+      opacity: 0.45;
+      cursor: wait;
+    }
+    #status {
+      font-weight: 600;
+      padding: 16px 0;
+    }
+    article {
+      background: white;
+      border: 1px solid #d6e3ed;
+      border-radius: 8px;
+      margin: 12px 0;
+      padding: 16px;
+    }
+    article.failed {
+      border-left: 5px solid #b91c1c;
+    }
+    article.passed {
+      border-left: 5px solid #15803d;
+    }
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+    }
+    pre {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+      font-size: 12px;
+    }
+    code {
+      font-size: 12px;
+      overflow-wrap: anywhere;
+    }
+  </style>
+  <h1>Heelcode pipe verification</h1>
+  <p>
+    Drive real launcher stdin/stdout pipes from this browser. Fixtures are fictional; no assignment solutions are
+    generated. Each run saves evidence locally.
+  </p>
+  <button data-action="transport">Run transport checks</button>
+  <button data-action="live-run">Test real input and output</button>
+  <button data-action="policy-live">Test persistent policy pipe</button>
+  <button data-action="bridge-live">Test gated answer output</button>
+  <button data-action="curriculum">Validate 32 curriculum pipes</button>
+  <button data-action="classifiers">Compare two classifiers</button>
+  <button data-action="diagnostic">Inspect Luna errors individually</button>
+  <div id="status" role="status">Loading…</div>
+  <p id="metrics"></p>
+  <p>Evidence: <code id="output"></code></p>
+  <details>
+    <summary>Save a Computer Use screenshot</summary>
+    <label for="screenshot">Screenshot data</label><textarea id="screenshot" aria-label="Screenshot data"></textarea>
+    <button id="save-screenshot">Save screenshot evidence</button>
+    <p id="screenshot-result" role="status"></p>
+  </details>
+  <div id="results"></div>
+  <script>
+    const status = document.querySelector("#status")
+    const results = document.querySelector("#results")
+    let previous = ""
+    async function refresh() {
+      const state = await fetch("/state").then((response) => response.json())
+      document.querySelectorAll("button[data-action]").forEach((button) => {
+        button.disabled = state.busy
+      })
+      document.querySelector("#output").textContent = state.output
+      const passed = state.history.filter((row) => row.status === "passed").length
+      const failed = state.history.filter((row) => row.status === "failed").length
+      status.textContent = `${state.busy ? "Running" : "Idle"} · ${passed} pipe/scoring checks passed · ${failed} failed`
+      document.querySelector("#metrics").textContent = ["gpt-5.6-luna", "gpt-5.6-terra"]
+        .map((model) => {
+          const rows = state.history.filter(
+            (row) => row.name.startsWith(model + "/") && row.name.endsWith("scored classifier output"),
+          )
+          if (!rows.length) return ""
+          const total = rows.reduce(
+            (total, row) => ({
+              cases: total.cases + row.details.cases,
+              correct: total.correct + row.details.correct,
+              unsafe: total.unsafe + row.details.unsafeAllows,
+            }),
+            { cases: 0, correct: 0, unsafe: 0 },
+          )
+          return `${model}: ${total.correct}/${total.cases} expected decisions; ${total.unsafe} forbidden requests allowed.`
+        })
+        .filter(Boolean)
+        .join(" ")
+      const serialized = JSON.stringify(state.history)
+      if (previous === serialized) return
+      previous = serialized
+      results.replaceChildren(
+        ...state.history.map((row) => {
+          const article = document.createElement("article")
+          article.className = row.status
+          const details = document.createElement("details")
+          const summary = document.createElement("summary")
+          summary.textContent = `${row.status.toUpperCase()} — ${row.name}`
+          const pre = document.createElement("pre")
+          pre.textContent = JSON.stringify(row.details, null, 2)
+          details.append(summary, pre)
+          article.append(details)
+          return article
+        }),
+      )
+    }
+    document.querySelectorAll("button[data-action]").forEach((button) =>
+      button.addEventListener("click", async () => {
+        button.disabled = true
+        await fetch(`/run?action=${button.dataset.action}`, { method: "POST" })
+        await refresh()
+      }),
+    )
+    document.querySelector("#save-screenshot").addEventListener("click", async () => {
+      const response = await fetch("/screenshot", { method: "POST", body: document.querySelector("#screenshot").value })
+      const result = await response.json()
+      document.querySelector("#screenshot").value = ""
+      document.querySelector("#screenshot-result").textContent = result.path || result.error
+    })
+    setInterval(() => {
+      refresh().catch((error) => {
+        status.textContent = String(error)
+      })
+    }, 1500)
+    refresh()
+  </script>
+</html>
