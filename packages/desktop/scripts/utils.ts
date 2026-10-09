@@ -1,9 +1,6 @@
 import { $ } from "bun"
-import { chmod, copyFile, mkdtemp, rm } from "node:fs/promises"
-import { tmpdir } from "node:os"
-import { join } from "node:path"
-
-const CLI_VERSION = "0.0.0-next-16350"
+import { chmod, copyFile, mkdir } from "node:fs/promises"
+import { join, resolve } from "node:path"
 
 export type Channel = "dev" | "beta" | "prod"
 
@@ -13,40 +10,40 @@ export function resolveChannel(): Channel {
   return "dev"
 }
 
-export const CLI_BINARIES: Array<{ rustTarget: string; package: string; os: string; cpu: string }> = [
+export const CLI_BINARIES: Array<{ rustTarget: string; directory: string; os: string; cpu: string }> = [
   {
     rustTarget: "aarch64-apple-darwin",
-    package: "@opencode-ai/cli-darwin-arm64",
+    directory: "cli-darwin-arm64",
     os: "darwin",
     cpu: "arm64",
   },
   {
     rustTarget: "x86_64-apple-darwin",
-    package: "@opencode-ai/cli-darwin-x64-baseline",
+    directory: "cli-darwin-x64-baseline",
     os: "darwin",
     cpu: "x64",
   },
   {
     rustTarget: "aarch64-pc-windows-msvc",
-    package: "@opencode-ai/cli-windows-arm64",
+    directory: "cli-windows-arm64",
     os: "win32",
     cpu: "arm64",
   },
   {
     rustTarget: "x86_64-pc-windows-msvc",
-    package: "@opencode-ai/cli-windows-x64-baseline",
+    directory: "cli-windows-x64-baseline",
     os: "win32",
     cpu: "x64",
   },
   {
     rustTarget: "x86_64-unknown-linux-gnu",
-    package: "@opencode-ai/cli-linux-x64-baseline",
+    directory: "cli-linux-x64-baseline",
     os: "linux",
     cpu: "x64",
   },
   {
     rustTarget: "aarch64-unknown-linux-gnu",
-    package: "@opencode-ai/cli-linux-arm64",
+    directory: "cli-linux-arm64",
     os: "linux",
     cpu: "arm64",
   },
@@ -69,26 +66,22 @@ export function getCurrentCli(target = RUST_TARGET ?? nativeTarget()) {
   return binaryConfig
 }
 
-export async function downloadCliToResources() {
+export async function buildCliToResources() {
   const cli = getCurrentCli()
-  const directory = await mkdtemp(join(tmpdir(), "opencode-cli-"))
-  const dest = windowsify("resources/opencode-cli")
-  try {
-    await $`bun install --no-save --cwd ${directory} ${`${cli.package}@${CLI_VERSION}`} ${`--os=${cli.os}`} ${`--cpu=${cli.cpu}`}`
-    await copyFile(
-      join(directory, "node_modules", cli.package, "bin", cli.os === "win32" ? "opencode2.exe" : "opencode2"),
-      dest,
-    )
-  } finally {
-    await rm(directory, { recursive: true, force: true })
-  }
+  const directory = resolve(import.meta.dirname, "../../cli")
+  const dest = resolve(import.meta.dirname, "../resources", cli.os === "win32" ? "opencode-cli.exe" : "opencode-cli")
+  const flags = cli.os === process.platform && cli.cpu === process.arch ? ["--single", "--baseline"] : []
+  // Bundle the fork's v2 CLI and workspace packages instead of a published OpenCode CLI.
+  await $`bun run script/build.ts --skip-install ${flags}`.cwd(directory)
+  await mkdir(resolve(import.meta.dirname, "../resources"), { recursive: true })
+  await copyFile(join(directory, "dist", cli.directory, "bin", cli.os === "win32" ? "lildax.exe" : "lildax"), dest)
   if (process.platform !== "win32") await chmod(dest, 0o755)
   if (process.platform === "win32" && process.env.GITHUB_ACTIONS === "true") {
     await $`pwsh -NoLogo -NoProfile -ExecutionPolicy Bypass -File ../../script/sign-windows.ps1 ${dest}`
   }
   if (process.platform === "darwin") await $`codesign --force --sign - ${dest}`
 
-  console.log(`Copied ${cli.package} to ${dest}`)
+  console.log(`Built local ${cli.directory} and copied it to ${dest}`)
 }
 
 export function windowsify(path: string) {

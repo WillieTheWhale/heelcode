@@ -9,7 +9,6 @@ import { app } from "electron"
 const execFileAsync = promisify(execFile)
 const root = dirname(fileURLToPath(import.meta.url))
 const stateHome = process.env.XDG_STATE_HOME
-const desktopStateNames = ["ai.opencode.desktop.dev", "ai.opencode.desktop.beta", "ai.opencode.desktop"]
 
 type Logger = {
   log(message: string, meta?: Record<string, unknown>): void
@@ -24,24 +23,17 @@ export async function startBackgroundCli(logger: Logger, shellStateHome?: string
   const version = await run(bundled, ["--version"], logger)
   const binary = app.isPackaged ? await installCli(bundled, version, logger) : bundled
 
-  const candidates = [
-    ...new Set([stateHome, shellStateHome, ...desktopStateNames.map((name) => join(app.getPath("appData"), name))]),
-  ].filter((candidate) => candidate === undefined || existsSync(candidate))
-  const discovered = await Promise.all(
-    candidates.map(async (candidate) => ({
-      stateHome: candidate,
-      url: serviceUrl(await run(binary, ["service", "status"], logger, { stateHome: candidate })),
-    })),
-  )
-  const found = discovered.find((candidate) => candidate.url !== undefined)
+  // Keep the fork's bundled daemon separate from a user's installed OpenCode service.
+  const daemonStateHome = join(stateHome ?? shellStateHome ?? app.getPath("userData"), "heelcode")
+  await mkdir(daemonStateHome, { recursive: true })
+  const found = serviceUrl(await run(binary, ["service", "status"], logger, { stateHome: daemonStateHome }))
   logger.log("v2 CLI background instance checked", {
     detected: Boolean(found),
-    ...endpoint(found?.url),
+    ...endpoint(found),
   })
 
-  const daemonStateHome = found?.stateHome ?? stateHome
   const url = await run(binary, ["service", "start"], logger, { stateHome: daemonStateHome })
-  const password = await run(binary, ["service", "get", "password"], logger, {
+  const password = await run(binary, ["service", "password"], logger, {
     redact: true,
     stateHome: daemonStateHome,
   })

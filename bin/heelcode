@@ -10,6 +10,8 @@ while [ -L "$launcher" ]; do
   esac
 done
 root=$(CDPATH= cd -- "$(dirname -- "$launcher")/.." && pwd)
+# Fork updates come from this repository, never the upstream OpenCode installer.
+export OPENCODE_DISABLE_AUTOUPDATE=1
 if [ "${1:-}" = policy ]; then
   shift
   export HEELCODE_EXECUTABLE="$root/bin/heelcode"

@@ -1,3 +1,23 @@
+# HeelCode
+
+HeelCode is an educational research fork of OpenCode, maintained independently of the OpenCode team. This repository contains the complete upstream source tree together with HeelCode's terminal branding, theme, policy engine, and curriculum experiments. Its engine runs from this checkout; a separate OpenCode installation is not required.
+
+For development:
+
+```sh
+bun install --frozen-lockfile
+./bin/heelcode
+```
+
+To build a standalone HeelCode executable for the current platform, including the local web UI:
+
+```sh
+bun run build:heelcode --single --skip-install
+./packages/opencode/dist/heelcode-darwin-arm64/bin/heelcode --version
+```
+
+Replace `darwin-arm64` with the build's platform directory. The compiled executable includes the engine and Bun runtime; students do not need Bun or OpenCode installed. See [the fork and packaging notes](docs/heelcode-fork.md) for policy-engine prerequisites, platform builds, and upstream synchronization. The OpenCode documentation below is retained as upstream reference.
+
 <p align="center">
   <a href="https://opencode.ai">
     <picture>

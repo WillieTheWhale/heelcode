@@ -22,6 +22,7 @@ const skipInstall = process.argv.includes("--skip-install")
 const sourcemapsFlag = process.argv.includes("--sourcemaps")
 const plugin = createSolidTransformPlugin()
 const skipEmbedWebUi = process.argv.includes("--skip-embed-web-ui")
+const binary = process.env.HEELCODE_BUILD === "1" ? "heelcode" : pkg.name
 
 const createEmbeddedWebUIBundle = async () => {
   console.log(`Building Web UI to embed in the binary`)
@@ -144,7 +145,7 @@ if (!skipInstall) {
 }
 for (const item of targets) {
   const name = [
-    pkg.name,
+    binary,
     // changing to win32 flags npm for some reason
     item.os === "win32" ? "windows" : item.os,
     item.arch,
@@ -174,9 +175,9 @@ for (const item of targets) {
       autoloadDotenv: false,
       autoloadTsconfig: true,
       autoloadPackageJson: true,
-      target: name.replace(pkg.name, "bun") as any,
-      outfile: `dist/${name}/bin/opencode`,
-      execArgv: [`--user-agent=opencode/${Script.version}`, "--use-system-ca", "--"],
+      target: name.replace(binary, "bun") as Bun.Build.CompileTarget,
+      outfile: `dist/${name}/bin/${binary}`,
+      execArgv: [`--user-agent=${binary}/${Script.version}`, "--use-system-ca", "--"],
       windows: {},
     },
     files: {
@@ -197,6 +198,7 @@ for (const item of targets) {
       OPENCODE_WORKER_PATH: workerPath,
       OPENCODE_CHANNEL: `'${Script.channel}'`,
       OPENCODE_LIBC: item.os === "linux" ? `'${item.abi ?? "glibc"}'` : "",
+      ...(binary === "heelcode" ? { "process.env.HEELCODE_BUILD": '"1"' } : {}),
       ...(item.os === "linux" ? { "process.env.OPENTUI_LIBC": JSON.stringify(item.abi ?? "glibc") } : {}),
     },
   })
@@ -204,12 +206,12 @@ for (const item of targets) {
   // Embedding the bundle invalidates the linker's ad-hoc signature, and macOS 27+
   // SIGKILLs binaries with invalid pages. Re-sign ad-hoc; release CI re-signs with Developer ID.
   if (item.os === "darwin" && process.platform === "darwin") {
-    await $`codesign --force --sign - dist/${name}/bin/opencode`
+    await $`codesign --force --sign - dist/${name}/bin/${binary}`
   }
 
   // Smoke test: only run if binary is for current platform
   if (item.os === process.platform && item.arch === process.arch && !item.abi) {
-    const binaryPath = `dist/${name}/bin/opencode`
+    const binaryPath = `dist/${name}/bin/${binary}`
     console.log(`Running smoke test: ${binaryPath} --version`)
     try {
       const versionOutput = await $`${binaryPath} --version`.text()
@@ -221,6 +223,7 @@ for (const item of targets) {
   }
 
   await $`rm -rf ./dist/${name}/bin/tui`
+  if (binary === "heelcode") await Bun.write(`dist/${name}/LICENSE`, Bun.file("../../LICENSE"))
   await Bun.file(`dist/${name}/package.json`).write(
     JSON.stringify(
       {
