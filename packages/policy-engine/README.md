@@ -14,6 +14,36 @@ mvn package
 
 The repository launcher exposes the same commands as `heelcode policy`. On Windows use `java -jar target/policy-engine-0.1.0-SNAPSHOT.jar ...`; the Java code and JSON protocol are identical. Windows has not yet been smoke-tested. The POSIX launcher chooses Homebrew Java on macOS because the system default may still be Java 8. Override with `HEELCODE_JAVA=/path/to/java`.
 
+## Desktop app
+
+```sh
+./run gui                       # or: heelcode policy gui [WORKSPACE] [--student]
+./run demo                      # activate the fictional SYS 301 demo workspace
+```
+
+A Swing + FlatLaf desktop frontend in `src/main/java/edu/heelcode/policy/gui`, laid out like the Codex app (sidebar, threads, centered composer, collapsible tool rows) with Carolina Blue `#4B9CD3` / `#7BAFD4` and UNC Navy `#13294B` accents and an original argyle mark. It runs in the same JVM as the engine and calls the same code paths as the CLI; nothing in it is a mock. Four views:
+
+- **Ask** — the student view. Every request goes through `Workspace.check` (classifier → deterministic controller) and, when admitted, `Bridge.chat`. Each turn shows a collapsible policy-check row (detected activities, attempt evidence, classifier rationale, controller reason, latency). Declined or unclear requests get a teaching card instead of an answer: the boundary, the instructor's verbatim rule, and clickable "you can ask for" alternatives computed from the active scope. Composer controls pick the assignment, the classifier (Luna, Terra, Jev), and the answer model or *Policy check only* (no answer model is ever called). Threads are the engine's own `hps_` sessions, listed from `.heelcode-policy/` and reopened from disk.
+- **Policies** — the active policy as a scope × activity matrix with the source passage behind every cell, plus the generator: ingest sources → draft with Luna/Terra (a real `codex exec` run whose evidence is kept under `~/.heelcode/policy/runs/`) or open a saved run → instructor review (change any cell's effect or attempt requirement; citations stay attached and validation reruns) → activate in a workspace. Edits are written to a new `review-*` folder beside the untouched generated draft.
+- **Policy tests** — runs the red-team, challenge, original, bookkeeping, and 512-case curriculum suites through the real controller. *Recorded / Gold* replays saved features with no model calls; *Luna / Terra / Jev* re-classify live (blinded, no labels sent) and save every model run plus `report.json` under `~/.heelcode/policy/test-runs/`. Unsafe allowances (expected deny → allowed) are the headline number.
+- **Admin** — edits exactly two prompts: the **classifier prompt** (Luna/Terra extraction instructions) and the **system prompt** (answer-model instructions). See below.
+
+`--student` hides Policies, Tests, and Admin. This is a convenience, not an access-control boundary: anyone who controls the files can change them. `--snapshot DIR` renders each view to PNG without showing a window; with `--send TEXT` (repeatable), `--suite ID[:MODEL]`, `--assignment`, `--classifier`, `--answer`, `--theme`, and `--thread`, it scripts the real views first (used for the documented screenshots and live checks). Live steps make real model calls.
+
+## Admin prompts
+
+The two prompts live in a versioned store, `$HEELCODE_POLICY_HOME/prompts` (default `~/.heelcode/policy/prompts`). With no saved override the packaged defaults are used, and they are byte-identical to the frozen September 18 prompts. Tests check this against `docs/research/experiments/2026-09-18`: the classifier default against `luna-features-02/prompt.txt`, and the system default by rebuilding `bridge-full-01/chat/turn-1/submitted.txt` exactly.
+
+```sh
+./run prompts show classifier
+./run prompts set system my-system-prompt.txt "Handout prompt 1, trial week"   # FILE may be - for stdin
+./run prompts history system
+./run prompts presets system
+./run prompts reset system
+```
+
+Every save is content-addressed by SHA-256 under `prompts/history/` and logged in `prompts/history.jsonl` with a note. Saving text equal to the default removes the override. Prompts are read per call, so an edit applies to the next request in the app, `policy check`/`stdio`/`chat`, and `extract`; each model run still saves its full prompt for provenance. Presets include the original first-pass classifier prompt (ablation) and the four short system prompts from the October 9 education-policy handout. The classifier prompt only describes requests; the Java controller alone maps features to allow/deny/clarify, so no prompt edit can grant a permission the activated policy does not contain. Jev ignores the classifier prompt (it uses its own typed questions). The editor flags missing categories, features, and untrusted-input guidance, previews the assembled prompt, and can run the unsaved draft on one request with Luna or Terra.
+
 ## Piping and persistence
 
 Single request, EOF-delimited:
@@ -43,7 +73,14 @@ Policy sessions use `hps_...` IDs and are stored under the workspace's `.heelcod
 heelcode policy chat /tmp/my-course-workspace gpt-5.6-luna openai/gpt-5.6-luna
 ```
 
-This uses the same JSONL request framing. It owns the gate-to-inference boundary: a deny or clarify decision returns `status: "blocked"` without launching HeelCode inference. An allowed request runs `heelcode run --format json`, supplies the assignment policy, and pins both the main and auxiliary model to the explicitly selected Luna/Terra model. External plugins and tool actions are disabled for this text-only prototype. Responses are buffered until the turn finishes; this is not incremental token streaming.
+This uses the same JSONL request framing. It owns the gate-to-inference boundary: a deny or clarify decision returns `status: "blocked"` without launching HeelCode inference. An allowed request runs `heelcode run --format json --agent build` and pins both the main and auxiliary model to the explicitly selected Luna/Terra model. Tool actions are denied, and the agent gets one text-only step.
+
+The admin **system prompt** goes into `OPENCODE_CONFIG_CONTENT` as `agent.build.prompt`, which replaces the agent's default coding-assistant system prompt in both OpenCode v1 (`session/llm/request.ts`) and v2 (`core/src/session/model-request.ts`). The assignment's policy JSON and the student's request are the user message on stdin. Each turn saves `system.txt`, `submitted.txt`, redacted `events.json`, and `metadata.json` (engine, command, system-prompt SHA-256, timing).
+
+The bridge detects the engine once per launcher: `run --help` lists `--standalone` only on v2.
+- v1: `--pure`.
+- v2, which rejects `--pure`: `--standalone` (a private server that inherits the environment), plus an empty per-turn `OPENCODE_CONFIG_DIR`, `OPENCODE_DISABLE_CLAUDE_CODE=1`, `OPENCODE_DISABLE_PROJECT_CONFIG=1`, and `PWD` set to the workspace. Logins still come from the data directory.
+- Provider errors are read from v2's `error.message`, falling back to v1's `error.data.message`. An error before a session exists is a definitive failure, not an uncertain one.
 
 The response contains both `sessionId` (`hps_...`, send this on subsequent bridge requests) and `engineSessionId` (`ses_...`, tracked by the bridge). Do not supply an arbitrary engine ID or mix admission-only sessions with chat sessions. The `policy` field contains the admission decision. Successful inference returns `status: "completed"` and `text`. A provider failure returns `failed`; a crash/timeout with uncertain outcome returns `uncertain` and does not automatically reissue the call. A definitive result is persisted and an exact retry returns that same result, without re-running inference. `inferenceAttempted` describes the saved/emitted result, not a fresh billing event; an exact replay may retain its original `true` value. Treat `busy`, `failed`, `uncertain`, and `error` as non-successes.
 
@@ -59,10 +96,20 @@ State is stored under `.heelcode-policy/chat/SESSION/state.json`. A durable pend
 - `Classifier`: model extraction of requested activities, concrete attempt evidence, ambiguity, and explicit deception; deterministic mapping to allow/deny/clarify. It does not infer whether a student understands the material.
 - `Workspace`: explicit activation, stale-source refusal, scoped durable sessions, atomic writes, exclusive per-session lock, exact-request replay.
 - `Evaluation`: blinded feature extraction (no gold labels sent), frozen cases, confusion matrix, unsafe allowances and false denials. Batched offline extraction is not a latency estimate for one live student request.
+- `PromptStore`: the two admin-editable prompts, packaged defaults, presets, SHA-addressed revisions, and advisory lint.
+- `PolicyReview`: per-cell instructor edits that keep citations attached, diffs, and review records saved beside generated drafts.
+- `TestBench`, `Threads`, `Fixtures`, `Models`: suite discovery and scoring, read-only views of saved sessions, fixture/demo location, and classifier availability for frontends.
+- `gui`: the Swing desktop app described above.
 
 ## Tests and research evidence
 
-`mvn test` is offline; `bun typecheck` checks the research scripts. `script/live-sessions.ts` runs real Luna inference through HeelCode and tests saved context across process restarts and isolation of a separate session. `script/live-policy-sessions.ts` tests the JSONL gate, follow-up context, amendment enforcement, and replay after restart. `script/live-bridge.ts` tests the actual bridge in `blocked-only` or `full` mode. Live scripts consume model allowance and save evidence; invoke explicitly with Bun from this package. Never rebuild the shaded JAR during a live Java model run. Do not run tests from the monorepo root.
+`mvn test` is offline: 63 tests. Besides the engine, bridge, pipe, Jev, and curriculum tests, these cover:
+
+- `RejectionTest`: the 24-case red-team suite (14 declines, 7 benign controls, 3 clarifications) with zero unsafe allowances. Recorded September Luna features still reproduce all 68 decisions, and the 512-case curriculum scores 512/512. An exhaustive sweep checks every scope × activity × attempt cell of all 33 packaged policies (SYS 301 + 32 courses), and that deception, any denied activity, ambiguity, and unknown assignments are never forwarded.
+- `PromptStoreTest`, `AnswerPromptTest`, `CliTest`: the frozen-default provenance checks, versioned saves, and that a saved admin prompt is what the classifier and the answer-model process actually receive (as its system prompt, on both engines: v1 `--pure` and v2 `--standalone` with isolated config). Also v2's error format, admission being reported before inference, and declines never starting the answer process.
+- `GeneratorReviewTest`, `ThreadsTest`: instructor edits on the real Luna SYS 301 draft regroup rules, keep citations valid, are saved beside the untouched draft, and change live decisions after activation. The GUI's thread list reads the engine's own session files.
+
+The live November 5 GUI checks and red-team runs are in [docs/research/experiments/2026-11-05](../../docs/research/experiments/2026-11-05/README.md). `bun typecheck` checks the research scripts. `script/live-sessions.ts` runs real Luna inference through HeelCode and tests saved context across process restarts and isolation of a separate session. `script/live-policy-sessions.ts` tests the JSONL gate, follow-up context, amendment enforcement, and replay after restart. `script/live-bridge.ts` tests the actual bridge in `blocked-only` or `full` mode. Live scripts consume model allowance and save evidence; invoke explicitly with Bun from this package. Never rebuild the shaded JAR during a live Java model run. Do not run tests from the monorepo root.
 
 `bun script/pipe-console.ts` starts a localhost browser panel for Computer Use verification. Open its printed URL, then click the transport, real input/output, persistent policy, gated answer, curriculum, and classifier controls. Every control runs the actual launcher with stdin/stdout pipes and saves results in a new temporary evidence directory. Live controls consume Luna/Terra allowance; answer requests are limited to short synthetic labels and concepts. Resume an existing panel history with `bun script/pipe-console.ts EVIDENCE_DIRECTORY` after stopping the previous server. Individual diagnostics require the curriculum validation control to have activated its workspaces first. The panel reports pipe/scoring success separately from classifier accuracy. Raw provider outputs stay in private local evidence files. Stop the server with Ctrl-C when finished.
 
