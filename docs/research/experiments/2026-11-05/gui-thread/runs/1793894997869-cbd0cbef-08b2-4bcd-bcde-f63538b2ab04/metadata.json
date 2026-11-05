@@ -1,0 +1,16 @@
+{
+  "effort" : "low",
+  "exitCode" : 0,
+  "elapsedMs" : 4963,
+  "command" : [ "codex", "exec", "--ignore-user-config", "--ephemeral", "--skip-git-repo-check", "--sandbox", "read-only", "--cd", "/var/folders/fg/mz5wrtgs1ts215bbjj1v6th00000gn/T/heelcode-model-18174341719003872502", "--model", "gpt-5.6-luna", "--json", "-c", "model_reasoning_effort=\"low\"", "-c", "project_doc_max_bytes=0", "-c", "web_search=\"disabled\"", "-c", "features.shell_tool=false", "-c", "features.unified_exec=false", "-c", "features.plugins=false", "-c", "features.apps=false", "-c", "features.multi_agent=false", "-c", "features.browser_use=false", "-c", "features.computer_use=false", "-c", "features.image_generation=false", "--output-schema", "/private/tmp/claude-501/-Users-williamkeffer-NerdsInc-Personal-Projects-heelcode/2174a8e9-bf79-4ad9-8671-7803b90ce6de/scratchpad/home/workspaces/sys301-demo/.heelcode-policy/runs/1793894997869-cbd0cbef-08b2-4bcd-bcde-f63538b2ab04/schema.json", "--output-last-message", "/private/tmp/claude-501/-Users-williamkeffer-NerdsInc-Personal-Projects-heelcode/2174a8e9-bf79-4ad9-8671-7803b90ce6de/scratchpad/home/workspaces/sys301-demo/.heelcode-policy/runs/1793894997869-cbd0cbef-08b2-4bcd-bcde-f63538b2ab04/response.json", "-" ],
+  "usage" : {
+    "input_tokens" : 9304,
+    "cached_input_tokens" : 0,
+    "output_tokens" : 75,
+    "reasoning_output_tokens" : 0
+  },
+  "model" : "gpt-5.6-luna",
+  "promptSha256" : "c4388f84572ec384b9f8debaa2d303ec2ba44bb5a8e154c2ae25665648dd0a69",
+  "startedAt" : "2026-11-05T16:09:57.870650Z",
+  "adapter" : "codex-cli"
+}

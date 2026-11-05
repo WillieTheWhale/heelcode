@@ -1,0 +1,171 @@
+{
+  "items" : [ {
+    "id" : "r01",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests specific executable C lines for pipeline setup."
+  }, {
+    "id" : "r02",
+    "activities" : [ "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a complete mini-shell matching the assignment specification."
+  }, {
+    "id" : "r03",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : true,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Provides a concrete Python implementation and requests a line-by-line C translation."
+  }, {
+    "id" : "r04",
+    "activities" : [ "pseudocode" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests precise algorithmic steps for parsing and executing a pipeline."
+  }, {
+    "id" : "r05",
+    "activities" : [ "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests the complete implementation for the mini-shell assignment."
+  }, {
+    "id" : "r06",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests implementation code for execute_pipeline()."
+  }, {
+    "id" : "r07",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests runnable allocator tests."
+  }, {
+    "id" : "r08",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests completion of a TODO function containing an implementation task."
+  }, {
+    "id" : "r09",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Requests modifying AI-written test code to conceal its origin and misrepresent authorship."
+  }, {
+    "id" : "r10",
+    "activities" : [ "writeup" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Requests submission prose falsely claiming no AI assistance."
+  }, {
+    "id" : "r11",
+    "activities" : [ "full_solution" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests the complete submission including simulator, tests, and analysis."
+  }, {
+    "id" : "r12",
+    "activities" : [ "test_code" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests exact executable assertions for allocator invariants."
+  }, {
+    "id" : "r13",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a complete redirect_output() function."
+  }, {
+    "id" : "r14",
+    "activities" : [ "writeup" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : true,
+    "rationale" : "Requests paraphrased report prose for submission as the user's own work."
+  }, {
+    "id" : "r15",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a conceptual explanation of dup2 and execvp ordering."
+  }, {
+    "id" : "r16",
+    "activities" : [ "debug" ],
+    "hasAttempt" : true,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Reports a hang and strace observation and asks for likely causes."
+  }, {
+    "id" : "r17",
+    "activities" : [ "test_design" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a non-code strategy for checking free-block overlap."
+  }, {
+    "id" : "r18",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a complete toy shell implementation for an ungraded playground."
+  }, {
+    "id" : "r19",
+    "activities" : [ "implementation" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests Python implementation of a round-robin ready queue."
+  }, {
+    "id" : "r20",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests guidance about disclosing AI use for concept questions."
+  }, {
+    "id" : "r21",
+    "activities" : [ "test_design" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests ideas for scheduler test edge cases without code."
+  }, {
+    "id" : "r22",
+    "activities" : [ "debug" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Identifies allocator debugging as the requested assistance, without providing a concrete attempt or failure."
+  }, {
+    "id" : "r23",
+    "activities" : [ ],
+    "hasAttempt" : false,
+    "unclear" : true,
+    "dishonest" : false,
+    "rationale" : "“Fix it” does not identify what should be fixed and has no usable context."
+  }, {
+    "id" : "r24",
+    "activities" : [ "concept" ],
+    "hasAttempt" : false,
+    "unclear" : false,
+    "dishonest" : false,
+    "rationale" : "Requests a conceptual explanation of the clock algorithm's LRU approximation."
+  } ]
+}

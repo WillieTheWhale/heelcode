@@ -1,0 +1,69 @@
+{
+  "required" : [ "courseId", "scopes", "version" ],
+  "type" : "object",
+  "properties" : {
+    "scopes" : {
+      "items" : {
+        "required" : [ "id", "rules", "title" ],
+        "type" : "object",
+        "properties" : {
+          "title" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "rules" : {
+            "items" : {
+              "required" : [ "activities", "effect", "evidence", "requireAttempt" ],
+              "type" : "object",
+              "properties" : {
+                "evidence" : {
+                  "items" : {
+                    "required" : [ "quote", "source" ],
+                    "type" : "object",
+                    "properties" : {
+                      "quote" : {
+                        "type" : "string"
+                      },
+                      "source" : {
+                        "type" : "string"
+                      }
+                    },
+                    "additionalProperties" : false
+                  },
+                  "type" : "array"
+                },
+                "requireAttempt" : {
+                  "type" : "boolean"
+                },
+                "effect" : {
+                  "enum" : [ "allow", "deny", "clarify" ],
+                  "type" : "string"
+                },
+                "activities" : {
+                  "items" : {
+                    "enum" : [ "concept", "hint", "debug", "test_design", "test_code", "pseudocode", "implementation", "full_solution", "writeup", "logistics" ],
+                    "type" : "string"
+                  },
+                  "type" : "array"
+                }
+              },
+              "additionalProperties" : false
+            },
+            "type" : "array"
+          }
+        },
+        "additionalProperties" : false
+      },
+      "type" : "array"
+    },
+    "version" : {
+      "type" : "string"
+    },
+    "courseId" : {
+      "type" : "string"
+    }
+  },
+  "additionalProperties" : false
+}

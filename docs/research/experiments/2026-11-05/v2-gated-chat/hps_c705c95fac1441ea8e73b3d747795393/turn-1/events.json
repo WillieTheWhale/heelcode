@@ -1,0 +1,22 @@
+[ {
+  "type" : "step_start",
+  "timestamp" : 1793897256340,
+  "sessionID" : "ses_e5364315bffea7ahCbcuP3dsPY",
+  "part" : {
+    "id" : "prt_1ac9bd594001T2A7aFRmwC7uRA",
+    "sessionID" : "ses_e5364315bffea7ahCbcuP3dsPY",
+    "messageID" : "msg_1ac9bd0df001q0aCfDKh4R2XOr",
+    "type" : "step-start"
+  }
+}, {
+  "type" : "error",
+  "timestamp" : 1793897256343,
+  "sessionID" : "ses_e5364315bffea7ahCbcuP3dsPY",
+  "error" : {
+    "type" : "provider.quota",
+    "message" : "The usage limit has been reached",
+    "response" : {
+      "body" : "{\"type\":\"error\",\"error\":{\"type\":\"usage_limit_reached\",\"message\":\"The usage limit has been reached\",\"plan_type\":\"free\",\"resets_at\":1796485209,\"eligible_promo\":null,\"limit_window_minutes\":43200,\"resets_in_seconds\":2587953},\"status_code\":429,\"headers\":{\"X-Codex-Active-Limit\":\"premium\",\"X-Codex-Plan-Type\":\"free\",\"X-Codex-Primary-Used-Percent\":\"100\",\"X-Codex-Secondary-Used-Percent\":\"0\",\"X-Codex-Primary-Window-Minutes\":\"43200\",\"X-Codex-Primary-Over-Secondary-Limit-Percent\":\"0\",\"X-Codex-Secondary-Window-Minutes\":\"0\",\"X-Codex-Primary-Reset-After-Seconds\":\"2587954\",\"X-Codex-Secondary-Reset-After-Seconds\":\"0\",\"X-Codex-Primary-Reset-At\":\"1796485209\",\"X-Codex-Secondary-Reset-At\":\"\",\"X-Codex-Credits-Has-Credits\":\"False\",\"X-Codex-Credits-Balance\":\"\",\"X-Codex-Credits-Unlimited\":\"False\"}}"
+    }
+  }
+} ]

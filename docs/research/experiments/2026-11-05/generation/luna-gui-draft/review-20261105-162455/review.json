@@ -1,0 +1,35 @@
+{
+  "reviewedAt" : "2026-11-05T16:24:55.682927Z",
+  "note" : "Syllabus: debugging is allowed after a concrete attempt; a clarifying question is for vague requests, not an instructor referral.",
+  "generatedPolicySha256" : "a239c864f1be450adf60214eb029939c5353ad17ff8452e51926e33d940def5b",
+  "reviewedPolicySha256" : "709682587ed8cb68b4dc0e2ea240fe5bb5b6c150ac43ffb35c540863d94ad051",
+  "changes" : [ {
+    "scope" : "*",
+    "activity" : "debug",
+    "fromEffect" : "clarify",
+    "fromAttempt" : true,
+    "toEffect" : "allow",
+    "toAttempt" : true
+  }, {
+    "scope" : "a1",
+    "activity" : "debug",
+    "fromEffect" : "clarify",
+    "fromAttempt" : true,
+    "toEffect" : "allow",
+    "toAttempt" : true
+  }, {
+    "scope" : "a2",
+    "activity" : "debug",
+    "fromEffect" : "clarify",
+    "fromAttempt" : true,
+    "toEffect" : "allow",
+    "toAttempt" : true
+  }, {
+    "scope" : "a3",
+    "activity" : "debug",
+    "fromEffect" : "clarify",
+    "fromAttempt" : true,
+    "toEffect" : "allow",
+    "toAttempt" : true
+  } ]
+}

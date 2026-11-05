@@ -1,0 +1,69 @@
+{
+  "additionalProperties" : false,
+  "required" : [ "courseId", "scopes", "version" ],
+  "type" : "object",
+  "properties" : {
+    "courseId" : {
+      "type" : "string"
+    },
+    "scopes" : {
+      "type" : "array",
+      "items" : {
+        "additionalProperties" : false,
+        "required" : [ "id", "rules", "title" ],
+        "type" : "object",
+        "properties" : {
+          "rules" : {
+            "type" : "array",
+            "items" : {
+              "additionalProperties" : false,
+              "required" : [ "activities", "effect", "evidence", "requireAttempt" ],
+              "type" : "object",
+              "properties" : {
+                "activities" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string",
+                    "enum" : [ "concept", "hint", "debug", "test_design", "test_code", "pseudocode", "implementation", "full_solution", "writeup", "logistics" ]
+                  }
+                },
+                "evidence" : {
+                  "type" : "array",
+                  "items" : {
+                    "additionalProperties" : false,
+                    "required" : [ "quote", "source" ],
+                    "type" : "object",
+                    "properties" : {
+                      "source" : {
+                        "type" : "string"
+                      },
+                      "quote" : {
+                        "type" : "string"
+                      }
+                    }
+                  }
+                },
+                "requireAttempt" : {
+                  "type" : "boolean"
+                },
+                "effect" : {
+                  "type" : "string",
+                  "enum" : [ "allow", "deny", "clarify" ]
+                }
+              }
+            }
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string"
+          }
+        }
+      }
+    },
+    "version" : {
+      "type" : "string"
+    }
+  }
+}

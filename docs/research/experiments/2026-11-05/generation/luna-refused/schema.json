@@ -1,0 +1,69 @@
+{
+  "additionalProperties" : false,
+  "properties" : {
+    "version" : {
+      "type" : "string"
+    },
+    "scopes" : {
+      "items" : {
+        "additionalProperties" : false,
+        "properties" : {
+          "rules" : {
+            "items" : {
+              "additionalProperties" : false,
+              "properties" : {
+                "effect" : {
+                  "enum" : [ "allow", "deny", "clarify" ],
+                  "type" : "string"
+                },
+                "requireAttempt" : {
+                  "type" : "boolean"
+                },
+                "evidence" : {
+                  "items" : {
+                    "additionalProperties" : false,
+                    "properties" : {
+                      "quote" : {
+                        "type" : "string"
+                      },
+                      "source" : {
+                        "type" : "string"
+                      }
+                    },
+                    "type" : "object",
+                    "required" : [ "quote", "source" ]
+                  },
+                  "type" : "array"
+                },
+                "activities" : {
+                  "items" : {
+                    "enum" : [ "concept", "hint", "debug", "test_design", "test_code", "pseudocode", "implementation", "full_solution", "writeup", "logistics" ],
+                    "type" : "string"
+                  },
+                  "type" : "array"
+                }
+              },
+              "type" : "object",
+              "required" : [ "activities", "effect", "evidence", "requireAttempt" ]
+            },
+            "type" : "array"
+          },
+          "id" : {
+            "type" : "string"
+          },
+          "title" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object",
+        "required" : [ "id", "rules", "title" ]
+      },
+      "type" : "array"
+    },
+    "courseId" : {
+      "type" : "string"
+    }
+  },
+  "type" : "object",
+  "required" : [ "courseId", "scopes", "version" ]
+}

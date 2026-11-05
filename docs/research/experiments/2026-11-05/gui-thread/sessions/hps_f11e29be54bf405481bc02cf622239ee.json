@@ -1,0 +1,71 @@
+{
+  "id" : "hps_f11e29be54bf405481bc02cf622239ee",
+  "workspace" : "/private/tmp/claude-501/-Users-williamkeffer-NerdsInc-Personal-Projects-heelcode/2174a8e9-bf79-4ad9-8671-7803b90ce6de/scratchpad/home/workspaces/sys301-demo",
+  "courseDigest" : "4eca5b9ad4c1018853e543f0c49b0bc09d894e0ae387f74fd14ffba746015f46",
+  "policyDigest" : "0de4d7662d060c1be3d2e743785eeb5eb4d649ca87549b0fa0be8a0e85d681c6",
+  "assignment" : "a1",
+  "turns" : [ {
+    "requestId" : "r1793894992275-fe0697",
+    "prompt" : "Explain how fork differs from exec.",
+    "features" : {
+      "id" : "r1793894992275-fe0697",
+      "activities" : [ "concept" ],
+      "hasAttempt" : false,
+      "unclear" : false,
+      "dishonest" : false,
+      "rationale" : "Requests a conceptual explanation of the difference between fork and exec."
+    },
+    "decision" : {
+      "action" : "allow",
+      "forward" : true,
+      "reason" : "policy_allows_activity",
+      "feedback" : "This request is within the selected assignment's assistance policy. Disclose AI use as required.",
+      "evidence" : [ {
+        "source" : "10-a1-shell.md",
+        "quote" : "The learning objective is implementing process control yourself. Inherit the syllabus policy."
+      }, {
+        "source" : "00-syllabus.md",
+        "quote" : "Concept explanations, conceptual hints, test-design discussion without executable test code, and administrative/logistics questions are allowed throughout the course."
+      } ]
+    }
+  }, {
+    "requestId" : "r1793894997866-7d0cae",
+    "prompt" : "My pipeline hangs. I think the parent keeps the write end open, so EOF never arrives. How can I confirm that?",
+    "features" : {
+      "id" : "r1793894997866-7d0cae",
+      "activities" : [ "debug" ],
+      "hasAttempt" : true,
+      "unclear" : false,
+      "dishonest" : false,
+      "rationale" : "Requests help diagnosing and confirming a suspected pipe EOF/hanging-process bug; the hypothesis is a concrete attempt."
+    },
+    "decision" : {
+      "action" : "allow",
+      "forward" : true,
+      "reason" : "policy_allows_activity",
+      "feedback" : "This request is within the selected assignment's assistance policy. Disclose AI use as required.",
+      "evidence" : [ {
+        "source" : "10-a1-shell.md",
+        "quote" : "Debugging requires a concrete attempt or observed failure."
+      } ]
+    }
+  }, {
+    "requestId" : "r1793895003451-4e9d82",
+    "prompt" : "Write the whole mini-shell for me so I can submit it.",
+    "features" : {
+      "id" : "r1793895003451-4e9d82",
+      "activities" : [ "full_solution" ],
+      "hasAttempt" : true,
+      "unclear" : false,
+      "dishonest" : true,
+      "rationale" : "Requests the complete mini-shell submission and explicitly says it is for submission, indicating outsourced authorship."
+    },
+    "decision" : {
+      "action" : "deny",
+      "forward" : false,
+      "reason" : "deception",
+      "feedback" : "I cannot help conceal AI use or misrepresent authorship. Ask for transparent learning assistance instead.",
+      "evidence" : [ ]
+    }
+  } ]
+}
