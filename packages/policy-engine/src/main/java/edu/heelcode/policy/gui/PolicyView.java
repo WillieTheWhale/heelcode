@@ -77,10 +77,9 @@ final class PolicyView extends JPanel implements MainFrame.Refreshable {
 
     var head = new JPanel(new BorderLayout());
     head.setOpaque(false);
-    head.setBorder(Ui.pad(46, 28, 14, 28));
+    head.setBorder(Ui.pad(22, 32, 14, 32));
     var titles = new Ui.Stack(4);
-    titles.add(Ui.label("Policies", 22f, Font.BOLD, Theme.p.text));
-    titles.add(Ui.wrap("Compile an instructor's course documents into assignment rules with verbatim citations, review every cell, then activate it for a course workspace.", 13f, Theme.p.muted));
+    titles.add(Ui.wrap("Compile an instructor's course documents into assignment rules with verbatim citations, review every cell, then activate the policy for a course.", 14f, Theme.p.muted));
     head.add(titles, BorderLayout.CENTER);
     var tabs = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
     tabs.setOpaque(false);
@@ -105,6 +104,7 @@ final class PolicyView extends JPanel implements MainFrame.Refreshable {
 
   @Override
   public void refresh() {
+    if ("policies".equals(frame.view)) frame.title("Policies", frame.state.active == null ? "" : frame.state.course());
     var state = frame.state;
     activeHead.removeAll();
     if (state.active == null) {
@@ -132,9 +132,9 @@ final class PolicyView extends JPanel implements MainFrame.Refreshable {
 
   private JComponent activePane() {
     var page = new Ui.Stack(16);
-    page.setBorder(Ui.pad(4, 28, 28, 28));
+    page.setBorder(Ui.pad(4, 32, 28, 32));
     page.add(activeHead);
-    var matrixCard = new Ui.Stack(12).card(Theme.p.surface, Theme.p.border);
+    var matrixCard = new Ui.Stack(12).card(Theme.p.surface, Theme.p.subtle);
     matrixCard.setBorder(Ui.pad(14, 14, 14, 14));
     matrixCard.add(legend());
     matrixCard.add(activeMatrix);
@@ -157,7 +157,7 @@ final class PolicyView extends JPanel implements MainFrame.Refreshable {
   private void showEvidence(Ui.Stack target, Policy policy, String scope, String activity, boolean editable) {
     target.removeAll();
     var cell = PolicyReview.cell(policy, scope, activity);
-    var card = new Ui.Stack(8).card(Theme.p.surface, Theme.p.border);
+    var card = new Ui.Stack(8).card(Theme.p.surface, Theme.p.subtle);
     card.setBorder(Ui.pad(14, 16, 14, 16));
     var heading = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
     heading.setOpaque(false);
@@ -199,7 +199,7 @@ final class PolicyView extends JPanel implements MainFrame.Refreshable {
 
   private JComponent generatorPane() {
     var page = new Ui.Stack(14);
-    page.setBorder(Ui.pad(4, 28, 32, 28));
+    page.setBorder(Ui.pad(4, 32, 32, 32));
     page.maxWidth = 1040;
 
     var sourcesBrowse = Ui.secondary("Browse…", "folder");
@@ -268,13 +268,12 @@ final class PolicyView extends JPanel implements MainFrame.Refreshable {
   }
 
   private JComponent step(int number, String title, String description, JComponent... content) {
-    var card = new Ui.Stack(10).card(Theme.p.surface, Theme.p.border);
-    card.setBorder(Ui.pad(16, 18, 16, 18));
-    var heading = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+    var card = new Ui.Stack(10).card(Theme.p.surface, Theme.p.subtle);
+    card.setBorder(Ui.pad(18, 20, 18, 20));
+    var heading = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
     heading.setOpaque(false);
-    var badge = new Ui.Chip(String.valueOf(number), Theme.p.primaryText, Theme.p.primary, null);
-    heading.add(badge);
-    heading.add(Ui.label(title, 15f, Font.BOLD, Theme.p.text));
+    heading.add(Ui.label(number + ".", 15f, Font.PLAIN, Theme.p.faint));
+    heading.add(Ui.label(title, 15f, Font.BOLD, Theme.p.emphasis));
     heading.setPreferredSize(new Dimension(10, 26));
     card.add(heading);
     card.add(Ui.wrap(description, 12.5f, Theme.p.muted));
@@ -458,24 +457,27 @@ final class PolicyView extends JPanel implements MainFrame.Refreshable {
 
   private static JTextField field(String text) {
     var field = new JTextField(text);
-    field.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE, "arc: 10; margin: 5,8,5,8");
+    field.setFont(Theme.ui(13.5f));
+    field.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE, "arc: 10; margin: 6,10,6,10; background: " + Theme.hex(Theme.p.dark ? Theme.p.composer : Theme.p.surface) + "; borderColor: " + Theme.hex(Theme.p.border));
     return field;
   }
 
+  /** Codex segmented control: transparent pills, the selected one filled. */
   private static JToggleButton tab(String text) {
     var button = new JToggleButton(text);
-    Ui.style(button, "arc: 10; borderWidth: 0; focusWidth: 0; margin: 6,12,6,12; background: " + Theme.hex(Theme.p.bg)
-        + "; selectedBackground: " + Theme.hex(Theme.p.selected) + "; selectedForeground: " + Theme.hex(Theme.p.text)
+    button.setFont(Theme.medium(13f));
+    Ui.style(button, "arc: 999; borderWidth: 0; focusWidth: 0; margin: 6,14,6,14; background: " + Theme.hex(Theme.alpha(Theme.p.bg, 0))
+        + "; selectedBackground: " + Theme.hex(Theme.p.selected) + "; selectedForeground: " + Theme.hex(Theme.p.emphasis)
         + "; foreground: " + Theme.hex(Theme.p.muted) + "; hoverBackground: " + Theme.hex(Theme.p.hover));
     return button;
   }
 
   private static JToggleButton segment(String text) {
     var button = new JToggleButton(text);
-    Ui.style(button, "arc: 8; borderWidth: 1; focusWidth: 0; margin: 4,12,4,12; borderColor: " + Theme.hex(Theme.p.border)
-        + "; background: " + Theme.hex(Theme.p.surface) + "; selectedBackground: " + Theme.hex(Theme.mix(Theme.p.surface, Theme.p.accent, 0.22))
-        + "; selectedForeground: " + Theme.hex(Theme.p.text) + "; foreground: " + Theme.hex(Theme.p.muted)
-        + "; hoverBackground: " + Theme.hex(Theme.p.hover));
+    button.setFont(Theme.medium(13f));
+    Ui.style(button, "arc: 999; borderWidth: 0; focusWidth: 0; margin: 5,13,5,13; background: " + Theme.hex(Theme.alpha(Theme.p.bg, 0))
+        + "; selectedBackground: " + Theme.hex(Theme.p.selected) + "; selectedForeground: " + Theme.hex(Theme.p.emphasis)
+        + "; foreground: " + Theme.hex(Theme.p.muted) + "; hoverBackground: " + Theme.hex(Theme.p.hover));
     return button;
   }
 }

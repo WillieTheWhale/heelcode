@@ -44,7 +44,7 @@ final class AdminView extends JPanel implements MainFrame.Refreshable {
   private final PromptStore store = PromptStore.open();
   private PromptStore.Kind kind = PromptStore.Kind.CLASSIFIER;
   private final Ui.Stack list = new Ui.Stack(4);
-  private final JLabel title = Ui.label("", 19f, Font.BOLD, Theme.p.text);
+  private final JLabel title = Ui.label("", 20f, Font.BOLD, Theme.p.emphasis);
   private final JPanel chips = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
   private final JTextArea description = Ui.wrap("", 12.5f, Theme.p.muted);
   private final JTextArea editor = new JTextArea();
@@ -68,21 +68,20 @@ final class AdminView extends JPanel implements MainFrame.Refreshable {
     var side = new JPanel(new BorderLayout()) {
       @Override
       protected void paintComponent(Graphics g) {
-        g.setColor(Theme.p.dark ? Theme.mix(Theme.p.bg, Theme.p.sidebar, 0.5) : Theme.p.raised);
-        g.fillRect(0, 0, getWidth(), getHeight());
-        g.setColor(Theme.p.border);
+        // The inset panel behind paints the surface (and its rounded corners); only the rule here.
+        g.setColor(Theme.p.subtle);
         g.fillRect(getWidth() - 1, 0, 1, getHeight());
       }
     };
     side.setPreferredSize(new Dimension(250, 100));
-    list.setBorder(Ui.pad(54, 12, 12, 12));
+    list.setBorder(Ui.pad(16, 10, 12, 10));
     side.add(list, BorderLayout.NORTH);
     add(side, BorderLayout.WEST);
 
     var body = new JPanel(new BorderLayout());
     body.setOpaque(false);
     var head = new Ui.Stack(8);
-    head.setBorder(Ui.pad(46, 28, 12, 28));
+    head.setBorder(Ui.pad(22, 32, 12, 32));
     var titleRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
     titleRow.setOpaque(false);
     titleRow.add(title);
@@ -115,7 +114,7 @@ final class AdminView extends JPanel implements MainFrame.Refreshable {
     editor.setLineWrap(true);
     editor.setWrapStyleWord(true);
     editor.setTabSize(2);
-    editor.setBorder(Ui.pad(12, 8, 12, 14));
+    editor.setBorder(Ui.pad(14, 8, 14, 16));
     editor.getDocument().addDocumentListener(new DocumentListener() {
       public void insertUpdate(DocumentEvent event) { edited(); }
       public void removeUpdate(DocumentEvent event) { edited(); }
@@ -123,15 +122,15 @@ final class AdminView extends JPanel implements MainFrame.Refreshable {
     });
     var scroll = new JScrollPane(editor);
     scroll.setRowHeaderView(new Gutter(editor));
-    scroll.setBorder(javax.swing.BorderFactory.createLineBorder(Theme.p.border));
+    scroll.setBorder(javax.swing.BorderFactory.createLineBorder(Theme.over(Theme.p.border, Theme.p.bg)));
     scroll.getViewport().setBackground(Theme.p.code);
     var editorHolder = new JPanel(new BorderLayout());
     editorHolder.setOpaque(false);
-    editorHolder.setBorder(Ui.pad(0, 28, 0, 28));
+    editorHolder.setBorder(Ui.pad(0, 32, 0, 32));
     editorHolder.add(scroll, BorderLayout.CENTER);
 
     lower.setOpaque(false);
-    lower.setBorder(Ui.pad(10, 28, 0, 28));
+    lower.setBorder(Ui.pad(10, 32, 0, 32));
     split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, editorHolder, lower);
     split.setBorder(null);
     split.setOpaque(false);
@@ -143,7 +142,7 @@ final class AdminView extends JPanel implements MainFrame.Refreshable {
 
     var foot = new JPanel(new BorderLayout(12, 8));
     foot.setOpaque(false);
-    foot.setBorder(Ui.pad(10, 28, 18, 28));
+    foot.setBorder(Ui.pad(10, 32, 18, 32));
     var status = new Ui.Stack(4);
     status.add(counts);
     status.add(warnings);
@@ -153,7 +152,7 @@ final class AdminView extends JPanel implements MainFrame.Refreshable {
     actions.setOpaque(false);
     note.setColumns(18);
     note.putClientProperty(com.formdev.flatlaf.FlatClientProperties.PLACEHOLDER_TEXT, "Change note (optional)");
-    note.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE, "arc: 10; margin: 4,8,4,8");
+    note.putClientProperty(com.formdev.flatlaf.FlatClientProperties.STYLE, "arc: 999; margin: 5,12,5,12; background: " + Theme.hex(Theme.p.dark ? Theme.p.composer : Theme.p.surface) + "; borderColor: " + Theme.hex(Theme.p.border));
     actions.add(restore);
     actions.add(revert);
     actions.add(note);
@@ -170,6 +169,7 @@ final class AdminView extends JPanel implements MainFrame.Refreshable {
 
   @Override
   public void refresh() {
+    if ("admin".equals(frame.view)) frame.title("Admin", "Classifier and system prompts");
     if (!dirty()) load();
     else buildList();
   }
@@ -301,8 +301,8 @@ final class AdminView extends JPanel implements MainFrame.Refreshable {
         g.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
       }
       Ui.icon(entry == PromptStore.Kind.CLASSIFIER ? "shield" : "chat", 16, selected ? Theme.p.accent : Theme.p.muted).paintIcon(this, g, 10, 9);
-      g.setFont(Theme.ui(13f, selected ? Font.BOLD : Font.PLAIN));
-      g.setColor(Theme.p.text);
+      g.setFont(Theme.ui(14f));
+      g.setColor(selected ? Theme.p.emphasis : Theme.p.text);
       g.drawString(entry.title, 34, 21);
       g.setFont(Theme.ui(11f));
       g.setColor(Theme.p.faint);
@@ -390,7 +390,7 @@ final class AdminView extends JPanel implements MainFrame.Refreshable {
     area.setBorder(Ui.pad(10, 12, 10, 12));
     area.setCaretPosition(0);
     var scroll = new JScrollPane(area);
-    scroll.setBorder(javax.swing.BorderFactory.createLineBorder(Theme.p.border));
+    scroll.setBorder(javax.swing.BorderFactory.createLineBorder(Theme.over(Theme.p.border, Theme.p.bg)));
     lower.add(scroll, BorderLayout.CENTER);
     openLower();
   }

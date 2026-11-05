@@ -16,7 +16,10 @@ final class Settings {
   String theme = "dark";
   String classifier = Models.CLASSIFIERS.get(0).id();
   String answer = Models.ANSWERS.get(0).id();
+  /** The floating policy card beside the thread, shown by default as in Codex. */
   boolean inspector = true;
+  /** Policy digest + assignment whose new-chat tip was dismissed. */
+  String dismissed = "";
 
   static Path file() {
     return PromptStore.home().resolve("gui.json");
@@ -31,7 +34,9 @@ final class Settings {
       settings.theme = node.path("theme").asText("dark");
       settings.classifier = node.path("classifier").asText(settings.classifier);
       settings.answer = node.path("answer").asText(settings.answer);
-      settings.inspector = node.path("inspector").asBoolean(true);
+      // The floating card replaced the old side panel, so its saved state starts fresh.
+      settings.inspector = node.path("policyCard").asBoolean(true);
+      settings.dismissed = node.path("dismissedTip").asText("");
       node.path("recent").forEach(item -> settings.recent.add(item.asText()));
     } catch (Exception ignored) {
       // Damaged preferences fall back to defaults; they hold nothing that needs recovery.
@@ -49,7 +54,8 @@ final class Settings {
               "theme", theme,
               "classifier", classifier,
               "answer", answer,
-              "inspector", inspector));
+              "policyCard", inspector,
+              "dismissedTip", dismissed));
     } catch (Exception ignored) {
       // Preferences are a convenience; failing to save them must not interrupt the user.
     }

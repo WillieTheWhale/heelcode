@@ -8,36 +8,57 @@ import edu.heelcode.policy.Policy;
 import edu.heelcode.policy.PromptStore;
 import edu.heelcode.policy.Threads;
 import edu.heelcode.policy.Workspace;
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Graphics;
-import java.awt.GridLayout;
+import java.awt.RadialGradientPaint;
+import java.awt.Toolkit;
+import java.awt.datatransfer.StringSelection;
+import java.awt.geom.Path2D;
+import java.awt.geom.Point2D;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
+import javax.swing.JTextPane;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.SimpleAttributeSet;
+import javax.swing.text.StyleConstants;
 
 /**
- * The student view. Every request is classified and checked against the active assignment
- * policy before any answer model is called; declined and unclear requests get a teaching
- * response with the permitted next steps instead of an answer.
+ * The student view, laid out like a Codex thread. Every request is classified and checked
+ * against the assignment policy before any answer model runs; a decline is answered in plain
+ * prose, with a card (shaped like Codex's "Edited files" card) listing the help that is allowed.
  */
 final class AskView extends JPanel implements MainFrame.Refreshable {
-  private static final int COLUMN = 780;
+  private static final int COLUMN = 720;
+  private static final int CARD = 292;
+  private static final java.util.Map<String, String> BRIEF = java.util.Map.of(
+      "concept", "concepts", "hint", "hints", "debug", "debugging help", "test_design", "test ideas", "test_code", "runnable tests",
+      "pseudocode", "pseudocode", "implementation", "solution code", "full_solution", "full solutions", "writeup", "writeups", "logistics", "logistics");
+  private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("EEE, MMM d 'at' h:mm a", Locale.US).withZone(ZoneId.systemDefault());
   private final MainFrame frame;
   private final State state;
   private final ExecutorService serial =
@@ -46,22 +67,23 @@ final class AskView extends JPanel implements MainFrame.Refreshable {
         thread.setDaemon(true);
         return thread;
       });
-  private final JLabel title = Ui.label("New thread", 14f, Font.BOLD, Theme.p.text);
-  private final JPanel chips = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
   private final CardLayout cards = new CardLayout();
   private final JPanel center = new JPanel(cards);
-  private final Ui.Stack transcript = new Ui.Stack(14);
-  private final JScrollPane scroll = Ui.scroll(transcript);
-  private final Ui.Stack hero = new Ui.Stack(0);
+  private final Ui.Stack transcript = new Ui.Stack(0);
+  private final JScrollPane scroll = Ui.fading(transcript, Theme.p.bg);
+  private final JButton down = new ScrollDown();
+  private final Ui.Stack welcome = new Ui.Stack(0);
   private final Ui.Stack setup = new Ui.Stack(0);
   private final Composer composer = new Composer();
-  private final JLabel footnote = Ui.label("", 11.5f, Font.PLAIN, Theme.p.faint);
+  private final Ui.Stack dock = new Ui.Stack(0);
   private final JPanel bottom = new JPanel(new BorderLayout());
-  private final Inspector inspector = new Inspector();
+  private final PolicyCard card = new PolicyCard();
+  private final JPanel gutter;
   private boolean busy;
   private String assignment = "";
   private String rendered;
   private String policyDigest = "";
+  private String threadTitle = "New chat";
 
   AskView(MainFrame frame) {
     super(new BorderLayout());
@@ -69,48 +91,41 @@ final class AskView extends JPanel implements MainFrame.Refreshable {
     this.state = frame.state;
     setOpaque(false);
 
-    var header = new JPanel(new BorderLayout());
-    header.setOpaque(false);
-    header.setBorder(Ui.pad(16, 22, 12, 14));
-    var left = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-    left.setOpaque(false);
-    left.add(title);
-    chips.setOpaque(false);
-    left.add(chips);
-    header.add(left, BorderLayout.WEST);
-    var toggle = Ui.ghost("", "panel");
-    toggle.setToolTipText("Toggle inspector (⌘I)");
-    toggle.addActionListener(event -> toggleInspector());
-    header.add(toggle, BorderLayout.EAST);
+    transcript.maxWidth = COLUMN;
+    transcript.setBorder(Ui.pad(16, 32, 32, 32));
+    center.setOpaque(false);
+    center.add(centered(welcome), "empty");
+    center.add(threadArea(), "thread");
+    center.add(centered(setup), "setup");
     var main = new JPanel(new BorderLayout());
     main.setOpaque(false);
-    main.add(header, BorderLayout.NORTH);
-
-    transcript.maxWidth = COLUMN;
-    transcript.setBorder(Ui.pad(18, 24, 28, 24));
-    center.setOpaque(false);
-    center.add(backdrop(hero), "empty");
-    center.add(scroll, "thread");
-    center.add(backdrop(setup), "setup");
     main.add(center, BorderLayout.CENTER);
-
     bottom.setOpaque(false);
-    bottom.setBorder(Ui.pad(4, 24, 14, 24));
-    var composerColumn = new Ui.Stack(8);
-    composerColumn.maxWidth = COLUMN;
-    composerColumn.add(composer);
-    footnote.setHorizontalAlignment(JLabel.CENTER);
-    composerColumn.add(footnote);
-    bottom.add(composerColumn, BorderLayout.CENTER);
+    bottom.setBorder(Ui.pad(0, 32, 12, 32));
+    dock.maxWidth = COLUMN;
+    dock.add(composer);
+    bottom.add(dock, BorderLayout.CENTER);
     main.add(bottom, BorderLayout.SOUTH);
     add(main, BorderLayout.CENTER);
-    add(inspector, BorderLayout.EAST);
-    inspector.setVisible(state.settings.inspector);
+    gutter = new JPanel(null) {
+      @Override
+      public void doLayout() {
+        card.setBounds(getWidth() - CARD - 8, 8, CARD, card.heightFor(CARD));
+      }
+    };
+    gutter.setOpaque(false);
+    gutter.setPreferredSize(new Dimension(CARD + 12, 10));
+    gutter.add(card);
+    add(gutter, BorderLayout.EAST);
 
     composer.onSend = this::send;
-    composer.assignment.addActionListener(event -> assignmentMenu());
-    composer.classifier.addActionListener(event -> classifierMenu());
-    composer.answer.addActionListener(event -> answerMenu());
+    composer.plus.addActionListener(event -> helpMenu());
+    composer.policy.onClick(this::classifierMenu);
+    composer.model.onClick(this::answerMenu);
+    composer.course.onClick(() -> courseMenu(composer.course));
+    composer.assignment.onClick(this::assignmentMenu);
+    composer.settings.addActionListener(event -> frame.show("admin"));
+    composer.settings.setVisible(!state.student);
     state.listen(this::sync);
     sync();
   }
@@ -120,11 +135,13 @@ final class AskView extends JPanel implements MainFrame.Refreshable {
     sync();
   }
 
-  void toggleInspector() {
-    state.settings.inspector = !inspector.isVisible();
+  void toggleCard() {
+    state.settings.inspector = !state.settings.inspector;
     state.settings.save();
-    inspector.setVisible(state.settings.inspector);
+    gutter.setVisible(state.settings.inspector && state.active != null);
     revalidate();
+    repaint();
+    title();
   }
 
   void focusComposer() {
@@ -151,32 +168,72 @@ final class AskView extends JPanel implements MainFrame.Refreshable {
       policyDigest = digest;
       assignment = active == null ? "" : defaultAssignment(active.policy());
     }
-    chips.removeAll();
-    if (active != null) {
-      chips.add(Ui.Chip.neutral(state.course()));
-      chips.add(Ui.Chip.of("Policy active · " + Ui.shortSha(active.policyDigest()), Theme.p.allow));
-    }
-    chips.revalidate();
     if (active == null) {
-      title.setText("HeelCode");
+      threadTitle = state.workspace == null ? "Welcome to HeelCode" : state.workspace.getFileName().toString();
       buildSetup();
       cards.show(center, "setup");
       bottom.setVisible(false);
+      gutter.setVisible(false);
       rendered = null;
-      inspector.update();
+      title();
       return;
     }
-    bottom.setVisible(true);
     if (!state.thread.isEmpty() && !state.thread.equals(rendered)) load(state.thread);
     if (state.thread.isEmpty() && !"".equals(rendered)) {
       rendered = "";
       transcript.removeAll();
-      title.setText("New thread");
-      buildHero();
-      cards.show(center, "empty");
+      threadTitle = "New chat";
+      showWelcome();
     }
     updateControls();
-    inspector.update();
+    card.update();
+    gutter.setVisible(state.settings.inspector);
+    title();
+  }
+
+  private void title() {
+    if (!"ask".equals(frame.view)) return;
+    if (state.active == null) {
+      frame.title(threadTitle, "");
+      return;
+    }
+    var more = MainFrame.toolbarIcon("dots", "More");
+    more.addActionListener(event -> moreMenu(more));
+    var toggle = MainFrame.toolbarToggle("panel", "Policy card (⌘I)", state.settings.inspector);
+    toggle.addActionListener(event -> toggleCard());
+    var scope = scope();
+    frame.title(threadTitle, state.course() + (scope == null ? "" : " · " + label(scope)), more, toggle);
+  }
+
+  private void showWelcome() {
+    buildWelcome();
+    composer.tray(true);
+    dockItems(true);
+    cards.show(center, "empty");
+    bottom.setVisible(true);
+    revalidate();
+    repaint();
+  }
+
+  private void showThread() {
+    composer.tray(false);
+    dockItems(false);
+    cards.show(center, "thread");
+    bottom.setVisible(true);
+    revalidate();
+    repaint();
+  }
+
+  private void dockItems(boolean welcoming) {
+    dock.removeAll();
+    if (welcoming && state.active != null && !state.settings.dismissed.equals(tipKey())) dock.add(Ui.gap(new Tip(), 10));
+    dock.add(composer);
+    dock.revalidate();
+    dock.repaint();
+  }
+
+  private String tipKey() {
+    return policyDigest + ":" + assignment;
   }
 
   private void load(String id) {
@@ -185,44 +242,44 @@ final class AskView extends JPanel implements MainFrame.Refreshable {
       rendered = id;
       assignment = thread.summary().assignment();
       state.settings.answer = thread.summary().model();
-      title.setText(thread.summary().title());
-      transcript.removeAll();
+      threadTitle = thread.summary().title();
+      start(thread.summary().created());
       for (var entry : thread.entries()) {
-        transcript.add(new Bubble(entry.prompt()), Ui.Align.RIGHT);
-        var admission =
-            new Workspace.Response(
-                entry.requestId(),
-                id,
-                0,
-                state.active.course().courseId(),
-                state.active.policyDigest(),
-                entry.features(),
-                entry.decision());
+        right(new Bubble(entry.prompt()), 34);
+        var admission = new Workspace.Response(entry.requestId(), id, 0, state.active.course().courseId(), state.active.policyDigest(), entry.features(), entry.decision());
         addAdmission(admission, "", -1);
-        if (entry.status().equals("completed")) transcript.add(new Answer(entry.text(), Models.label(thread.summary().model()), -1));
-        else if (!List.of("blocked", "admission").contains(entry.status()))
-          transcript.add(new Notice("No answer was saved for this turn (" + entry.status() + ")", entry.error(), Theme.p.clarify));
+        if (entry.status().equals("completed")) append(new Answer(entry.text(), Models.label(thread.summary().model()), -1), 34);
+        else if (!List.of("blocked", "admission").contains(entry.status())) append(new Notice(failureTitle(entry.status()), entry.error()), 34);
       }
-      cards.show(center, "thread");
-      transcript.revalidate();
+      showThread();
       scrollToBottom();
     } catch (Exception error) {
-      frame.toast("Could not open thread: " + Ui.message(error), Theme.p.deny);
+      frame.toast("Could not open chat: " + Ui.message(error), Theme.p.deny);
       state.thread = "";
     }
   }
 
   private void updateControls() {
-    var scope = state.active == null ? null : state.active.policy().scope(assignment);
-    composer.assignment.setText(scope == null ? "Assignment" : label(scope));
-    composer.classifier.setText(Models.label(state.settings.classifier) + " check");
-    composer.answer.setText(state.settings.answer.equals(Models.ADMISSION_ONLY) ? "Check only" : Models.label(state.settings.answer) + " answers");
-    var who = Models.label(state.settings.classifier);
-    var policy = state.course() + " · " + (assignment.equals("*") ? "course" : assignment) + " policy";
-    footnote.setText(
-        state.settings.answer.equals(Models.ADMISSION_ONLY)
-            ? "Checked by " + who + " against the " + policy + ". Check-only mode: no answer model is called."
-            : "Checked by " + who + " against the " + policy + " before anything reaches the answer model.");
+    var scope = scope();
+    composer.course.set("folder", state.course(), null, null);
+    composer.assignment.set("book", scope == null ? "Assignment" : label(scope), null, null);
+    var classifier = Models.label(state.settings.classifier);
+    composer.policy.set("shield", "Policy · " + classifier, null, Theme.unc());
+    composer.policy.setToolTipText("Each request is checked against the " + scopeName() + " policy by " + classifier + " before any answer model runs");
+    var checkOnly = state.settings.answer.equals(Models.ADMISSION_ONLY);
+    composer.model.set(null, checkOnly ? "Policy check only" : Models.label(state.settings.answer), checkOnly ? null : "answers", null);
+    composer.model.setToolTipText(checkOnly ? "No answer model is called" : "Answer model: " + Models.label(state.settings.answer));
+    composer.placeholder = scope == null ? Composer.PLACEHOLDER : "Ask HeelCode about " + scopeName();
+    composer.input.repaint();
+  }
+
+  private Policy.Scope scope() {
+    return state.active == null ? null : state.active.policy().scope(assignment);
+  }
+
+  private String scopeName() {
+    var scope = scope();
+    return scope == null ? "course" : scope.id().equals("*") ? state.course() : Ui.assignment(scope.id());
   }
 
   private static String defaultAssignment(Policy policy) {
@@ -230,9 +287,9 @@ final class AskView extends JPanel implements MainFrame.Refreshable {
   }
 
   private static String label(Policy.Scope scope) {
-    if (scope.id().equals("*")) return "General course question";
+    if (scope.id().equals("*")) return "General question";
     var name = scope.title().replaceFirst("(?i)^assignment\\s+" + java.util.regex.Pattern.quote(scope.id()) + "\\s*[:—-]\\s*", "");
-    return scope.id() + " · " + (name.length() > 28 ? name.substring(0, 27) + "…" : name);
+    return Ui.assignment(scope.id()) + " · " + (name.length() > 26 ? name.substring(0, 25) + "…" : name);
   }
 
   // ------------------------------------------------------------------ menus
@@ -241,74 +298,155 @@ final class AskView extends JPanel implements MainFrame.Refreshable {
     if (state.active == null) return;
     var menu = new JPopupMenu();
     for (var scope : state.active.policy().scopes()) {
-      var item = new JMenuItem((scope.id().equals("*") ? "General course question" : scope.id() + " — " + scope.title()), scope.id().equals(assignment) ? Ui.icon("check", 14, Theme.p.accent) : null);
+      var item = new JMenuItem(scope.id().equals("*") ? "General course question" : Ui.assignment(scope.id()) + "  ·  " + scope.title(), scope.id().equals(assignment) ? Ui.icon("check", 14, Theme.p.text) : null);
       item.addActionListener(event -> {
         if (scope.id().equals(assignment)) return;
         assignment = scope.id();
-        restartIfNeeded("Assignment changed to " + scope.id() + " — started a new thread");
+        restartIfNeeded("Switched to " + Ui.assignment(scope.id()) + " — new chat");
       });
       menu.add(item);
     }
-    menu.show(composer.assignment, 0, -menu.getPreferredSize().height - 6);
+    above(menu, composer.assignment);
+  }
+
+  private void courseMenu(JComponent anchor) {
+    courseMenu(anchor, 0);
+  }
+
+  private void courseMenu(JComponent anchor, int x) {
+    var menu = new JPopupMenu();
+    var open = new JMenuItem("Open course…", Ui.icon("folder", 15, Theme.p.muted));
+    open.addActionListener(event -> frame.openWorkspace());
+    menu.add(open);
+    if (State.demoAvailable()) {
+      var demo = new JMenuItem("Open SYS 301 demo", Ui.icon("spark", 15, Theme.p.muted));
+      demo.addActionListener(event -> frame.createDemo());
+      menu.add(demo);
+    }
+    var recent = state.settings.recent.stream().filter(path -> state.workspace == null || !path.equals(state.workspace.toString())).toList();
+    if (!recent.isEmpty()) menu.addSeparator();
+    for (var path : recent) {
+      var item = new JMenuItem(Path.of(path).getFileName().toString(), Ui.icon("folder", 15, Theme.p.muted));
+      item.setEnabled(Files.isDirectory(Path.of(path)));
+      item.addActionListener(event -> {
+        state.open(Path.of(path));
+        frame.show("ask");
+      });
+      menu.add(item);
+    }
+    if (anchor == composer.course) above(menu, anchor);
+    else menu.show(anchor, x, anchor.getHeight() + 4);
+  }
+
+  /** "+": the kinds of help, marked with what this assignment's policy does with each. */
+  private void helpMenu() {
+    var scope = scope();
+    if (scope == null) return;
+    var menu = new JPopupMenu();
+    for (var activity : Policy.ACTIVITIES) {
+      var rule = scope.rules().stream().filter(r -> r.activities().contains(activity)).findFirst().orElse(null);
+      if (rule == null) continue;
+      var effect = rule.effect();
+      var icon = switch (effect) {
+        case "allow" -> "check";
+        case "deny" -> "ban";
+        default -> "help";
+      };
+      var note = effect.equals("allow") ? (rule.requireAttempt() ? "with your attempt" : "allowed") : effect.equals("deny") ? "declined" : "ask your instructor";
+      var item = new JMenuItem("<html>" + Ui.ACTIVITY.getOrDefault(activity, activity) + "&nbsp;&nbsp;<span style='color:" + Theme.hex(Theme.p.faint) + "'>" + note + "</span></html>", Ui.icon(icon, 14, Theme.effect(effect)));
+      item.setEnabled(effect.equals("allow"));
+      item.addActionListener(event -> composer.prefill(template(activity)));
+      menu.add(item);
+    }
+    above(menu, composer.plus);
   }
 
   private void classifierMenu() {
     var menu = new JPopupMenu();
     for (var choice : Models.CLASSIFIERS) {
       var reason = Models.unavailable(choice.id());
-      var item = new JMenuItem("<html>" + choice.label() + "<br><span style='font-size:9px;color:" + Theme.hex(Theme.p.faint) + "'>" + (reason == null ? choice.detail() : reason) + "</span></html>", choice.id().equals(state.settings.classifier) ? Ui.icon("check", 14, Theme.p.accent) : null);
+      var item = new JMenuItem("<html>" + choice.label() + "&nbsp;&nbsp;<span style='color:" + Theme.hex(Theme.p.faint) + "'>" + (reason == null ? choice.detail() : reason) + "</span></html>", choice.id().equals(state.settings.classifier) ? Ui.icon("check", 14, Theme.p.text) : null);
       item.setEnabled(reason == null);
       item.addActionListener(event -> {
         state.settings.classifier = choice.id();
         state.settings.save();
         updateControls();
-        inspector.update();
+        card.update();
       });
       menu.add(item);
     }
-    if (!Models.CLASSIFIERS.isEmpty() && Models.unavailable(Models.JEV) != null) {
+    if (Models.unavailable(Models.JEV) != null) {
       menu.addSeparator();
-      var key = new JMenuItem("Use a TypeSafe key for this session…", Ui.icon("key", 14, Theme.p.muted));
+      var key = new JMenuItem("Use a TypeSafe key for this session…");
       key.addActionListener(event -> sessionKey());
       menu.add(key);
     }
-    menu.show(composer.classifier, 0, -menu.getPreferredSize().height - 6);
+    above(menu, composer.policy);
   }
 
   private void answerMenu() {
     var menu = new JPopupMenu();
     for (var choice : Models.ANSWERS) {
-      var item = new JMenuItem("<html>" + choice.label() + "<br><span style='font-size:9px;color:" + Theme.hex(Theme.p.faint) + "'>" + choice.detail() + "</span></html>", choice.id().equals(state.settings.answer) ? Ui.icon("check", 14, Theme.p.accent) : null);
+      var item = new JMenuItem("<html>" + choice.label() + "&nbsp;&nbsp;<span style='color:" + Theme.hex(Theme.p.faint) + "'>" + choice.detail() + "</span></html>", choice.id().equals(state.settings.answer) ? Ui.icon("check", 14, Theme.p.text) : null);
       item.addActionListener(event -> {
         if (choice.id().equals(state.settings.answer)) return;
         state.settings.answer = choice.id();
         state.settings.save();
-        restartIfNeeded("Answer mode changed — started a new thread");
+        restartIfNeeded("Answer mode changed — new chat");
       });
       menu.add(item);
     }
-    menu.show(composer.answer, 0, -menu.getPreferredSize().height - 6);
+    above(menu, composer.model);
+  }
+
+  private void moreMenu(JComponent anchor) {
+    var menu = new JPopupMenu();
+    if (!state.thread.isEmpty()) {
+      var copy = new JMenuItem("Copy chat ID", Ui.icon("copy", 15, Theme.p.muted));
+      copy.addActionListener(event -> Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(state.thread), null));
+      menu.add(copy);
+    }
+    var digest = new JMenuItem("Copy policy digest", Ui.icon("shield", 15, Theme.p.muted));
+    digest.addActionListener(event -> Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(policyDigest), null));
+    menu.add(digest);
+    if (!state.student) {
+      menu.addSeparator();
+      var policies = new JMenuItem("Open policies", Ui.icon("layers", 15, Theme.p.muted));
+      policies.addActionListener(event -> frame.show("policies"));
+      menu.add(policies);
+      var prompts = new JMenuItem("Edit admin prompts", Ui.icon("sliders", 15, Theme.p.muted));
+      prompts.addActionListener(event -> frame.show("admin"));
+      menu.add(prompts);
+    }
+    menu.show(anchor, anchor.getWidth() - menu.getPreferredSize().width, anchor.getHeight() + 4);
+  }
+
+  private static void above(JPopupMenu menu, JComponent anchor) {
+    menu.show(anchor, 0, -menu.getPreferredSize().height - 6);
   }
 
   private void sessionKey() {
     var field = new javax.swing.JPasswordField(36);
-    var result = javax.swing.JOptionPane.showConfirmDialog(frame, new Object[] {"TypeSafe API key (kept in memory for this session only):", field}, "Jev classifier", javax.swing.JOptionPane.OK_CANCEL_OPTION, javax.swing.JOptionPane.PLAIN_MESSAGE, Ui.icon("key", 28, Theme.p.accent));
+    var result = javax.swing.JOptionPane.showConfirmDialog(frame, new Object[] {"TypeSafe API key (kept in memory for this session only):", field}, "Jev classifier", javax.swing.JOptionPane.OK_CANCEL_OPTION, javax.swing.JOptionPane.PLAIN_MESSAGE);
     if (result != javax.swing.JOptionPane.OK_OPTION || field.getPassword().length == 0) return;
     System.setProperty("heelcode.typesafe.key", new String(field.getPassword()));
     state.settings.classifier = Models.JEV;
     state.settings.save();
     updateControls();
+    card.update();
     frame.toast("Jev is available for this session", Theme.p.allow);
   }
 
-  /** Sessions are pinned to one assignment and answer model, so a change starts a new thread. */
+  /** Sessions are pinned to one assignment and answer model, so a change starts a new chat. */
   private void restartIfNeeded(String message) {
     if (!state.thread.isEmpty()) {
       state.select("");
       frame.toast(message, Theme.p.accent);
     }
     updateControls();
-    inspector.update();
+    card.update();
+    if (state.thread.isEmpty()) showWelcome();
+    title();
   }
 
   // ------------------------------------------------------------------ sending
@@ -323,13 +461,17 @@ final class AskView extends JPanel implements MainFrame.Refreshable {
     busy = true;
     composer.setBusy(true);
     composer.clear();
-    if (transcript.getComponentCount() == 0) title.setText(text.length() > 60 ? text.substring(0, 59) + "…" : text);
-    cards.show(center, "thread");
+    if (transcript.getComponentCount() == 0) {
+      threadTitle = text.length() > 60 ? text.substring(0, 59) + "…" : text;
+      start(Instant.now());
+      title();
+    }
+    showThread();
     rendered = state.thread;
-    transcript.add(new Bubble(text), Ui.Align.RIGHT);
+    right(new Bubble(text), 34);
     var classifierLabel = Models.label(state.settings.classifier);
-    var checking = new Working("Checking the " + assignment + " policy with " + classifierLabel);
-    transcript.add(checking);
+    var checking = new Working("Checking against the " + scopeName() + " policy");
+    append(checking, 34);
     refreshTranscript();
 
     var workspace = state.workspace;
@@ -362,7 +504,7 @@ final class AskView extends JPanel implements MainFrame.Refreshable {
                   addAdmission(admission, classifierLabel, elapsed);
                   if (admission.decision().forward()) {
                     answering[0] = new Working("Answering with " + Models.label(answerModel));
-                    transcript.add(answering[0]);
+                    append(answering[0], 34);
                   }
                   refreshTranscript();
                 });
@@ -376,16 +518,16 @@ final class AskView extends JPanel implements MainFrame.Refreshable {
           if (answering[0] != null) transcript.remove(answering[0]);
           if (admitted[0] == 0 && response.policy() != null) addAdmission(response.policy(), classifierLabel, -1);
           switch (response.status()) {
-            case "completed" -> transcript.add(new Answer(response.text(), Models.label(answerModel), answerMillis));
+            case "completed" -> append(new Answer(response.text(), Models.label(answerModel), answerMillis), 34);
             case "blocked" -> {}
-            default -> transcript.add(new Notice(failureTitle(response.status()), response.error(), response.status().equals("busy") ? Theme.p.clarify : Theme.p.deny));
+            default -> append(new Notice(failureTitle(response.status()), response.error()), 34);
           }
           finish(response.sessionId());
         });
       } catch (Exception error) {
         SwingUtilities.invokeLater(() -> {
           transcript.remove(checking);
-          transcript.add(new Notice("Request not sent — nothing was forwarded to an answer model", Ui.message(error), Theme.p.deny));
+          append(new Notice("Not sent — nothing reached an answer model", Ui.message(error)), 34);
           finish(state.thread);
         });
       }
@@ -394,10 +536,11 @@ final class AskView extends JPanel implements MainFrame.Refreshable {
 
   private static String failureTitle(String status) {
     return switch (status) {
-      case "failed" -> "The answer model failed — the policy decision is saved";
-      case "uncertain" -> "Answer outcome unknown — it will not be retried automatically";
-      case "busy" -> "This thread is busy — retry in a moment";
-      default -> "The request could not continue";
+      case "failed" -> "The answer model failed. The policy decision is saved.";
+      case "uncertain" -> "The answer's outcome is unknown and won't be retried automatically.";
+      case "busy" -> "This chat is busy. Try again in a moment.";
+      case "pending" -> "No answer was saved for this turn.";
+      default -> "The request could not continue.";
     };
   }
 
@@ -410,6 +553,7 @@ final class AskView extends JPanel implements MainFrame.Refreshable {
       state.thread = sessionId;
     }
     state.refreshThreads();
+    frame.threadChanged();
     focusComposer();
   }
 
@@ -438,23 +582,66 @@ final class AskView extends JPanel implements MainFrame.Refreshable {
     return "heelcode";
   }
 
-  // ------------------------------------------------------------------ transcript pieces
+  // ------------------------------------------------------------------ thread pieces
 
-  private void addAdmission(Workspace.Response admission, String classifier, long millis) {
-    transcript.add(new Check(admission, classifier, millis));
-    if (!admission.decision().forward()) transcript.add(new Gate(admission));
+  private void start(Instant when) {
+    transcript.removeAll();
+    var date = MainFrame.centered(DATE.format(when), Theme.ui(13f), Theme.p.faint);
+    date.setPreferredSize(new Dimension(10, 20));
+    append(date, 18);
   }
 
-  /** The student's message: a rounded bubble, right-aligned like Codex. */
+  private void append(JComponent component, int gap) {
+    transcript.add(Ui.gap(component, gap));
+  }
+
+  private void right(JComponent component, int gap) {
+    transcript.add(Ui.gap(component, gap), Ui.Align.RIGHT);
+  }
+
+  private void addAdmission(Workspace.Response admission, String classifier, long millis) {
+    append(new Check(admission, classifier, millis), 18);
+    if (!admission.decision().forward()) append(new Gate(admission), 34);
+  }
+
+  private JComponent threadArea() {
+    var area = new JPanel(null) {
+      @Override
+      public boolean isOptimizedDrawingEnabled() {
+        return false;
+      }
+
+      @Override
+      public void doLayout() {
+        scroll.setBounds(0, 0, getWidth(), getHeight());
+        down.setBounds((getWidth() - 32) / 2, getHeight() - 42, 32, 32);
+      }
+    };
+    area.setOpaque(false);
+    area.add(down);
+    area.add(scroll);
+    down.setVisible(false);
+    down.addActionListener(event -> scrollToBottom());
+    scroll.getVerticalScrollBar().addAdjustmentListener(event -> {
+      var bar = scroll.getVerticalScrollBar();
+      down.setVisible(bar.getValue() + bar.getVisibleAmount() < bar.getMaximum() - 48);
+    });
+    return area;
+  }
+
+  /** The student's turn: a right-aligned rounded bubble in Codex's quiet gray. */
   private static final class Bubble extends Ui.Stack implements Ui.Sized {
-    private final javax.swing.JTextArea text;
+    private final JTextPane text;
+    private final String message;
 
     Bubble(String message) {
       super(0);
+      this.message = message;
       card(Theme.p.bubble, null);
-      arc = 18;
-      setBorder(Ui.pad(10, 14, 10, 14));
-      text = Ui.selectable(message, Theme.ui(13.5f), Theme.p.text);
+      arc = 36;
+      setBorder(Ui.pad(9, 15, 5, 15));
+      text = Ui.prose(message, 14f, Theme.p.text);
+      Ui.leading(text, 0.3f);
       add(text);
     }
 
@@ -462,129 +649,299 @@ final class AskView extends JPanel implements MainFrame.Refreshable {
     public int widthFor(int available) {
       var metrics = text.getFontMetrics(text.getFont());
       var widest = 0;
-      for (var line : text.getText().split("\n")) widest = Math.max(widest, metrics.stringWidth(line));
-      return Math.min((int) (available * 0.78), widest + 30);
+      for (var line : message.split("\n")) widest = Math.max(widest, metrics.stringWidth(line));
+      return Math.min((int) (available * 0.72), widest + 36);
     }
   }
 
-  /** Compact, expandable admission row (Codex's tool-call row style). */
+  /** Codex's "Worked for …" line: gray, expandable, with a hairline under it. */
   private final class Check extends Ui.Stack {
-    private final Ui.Stack details = new Ui.Stack(8);
     private boolean open;
+    private boolean hover;
 
     Check(Workspace.Response admission, String classifier, long millis) {
-      super(6);
+      super(0);
       var decision = admission.decision();
-      var tone = Theme.effect(decision.action());
-      var row = new JPanel(new BorderLayout(8, 0));
-      row.setOpaque(false);
-      var icon = switch (decision.action()) {
-        case "allow" -> "check";
-        case "deny" -> "ban";
-        default -> "help";
+      var summary = "Checked against the " + scopeName() + " policy" + (classifier.isEmpty() ? "" : " by " + classifier) + (millis >= 0 ? " in " + Ui.seconds(millis) : "");
+      var row = new JComponent() {
+        @Override
+        protected void paintComponent(Graphics graphics) {
+          var g = Ui.smooth(graphics);
+          g.setFont(Theme.ui(14f));
+          g.setColor(hover ? Theme.p.muted : Theme.p.faint);
+          var metrics = g.getFontMetrics();
+          var y = (getHeight() - metrics.getHeight()) / 2 + metrics.getAscent();
+          g.drawString(summary, 0, y);
+          Ui.icon(open ? "chevron-down" : "chevron-right", 14, hover ? Theme.p.muted : Theme.p.faint).paintIcon(this, g, metrics.stringWidth(summary) + 5, (getHeight() - 14) / 2);
+          g.dispose();
+        }
       };
-      var head = new JPanel(new FlowLayout(FlowLayout.LEFT, 7, 0));
-      head.setOpaque(false);
-      head.add(Ui.iconLabel(icon, 15, tone));
-      var verdict = switch (decision.action()) {
-        case "allow" -> "Policy check passed";
-        case "deny" -> "Policy check declined this request";
-        default -> "Policy check needs more from you";
-      };
-      head.add(Ui.label(verdict, 12.5f, Font.BOLD, Theme.p.muted));
-      var detected = admission.features().activities();
-      if (!detected.isEmpty()) head.add(Ui.label("· " + Ui.join(detected), 12.5f, Font.PLAIN, Theme.p.faint));
-      row.add(head, BorderLayout.WEST);
-      var meta = new ArrayList<String>();
-      if (!classifier.isEmpty()) meta.add(classifier);
-      if (millis >= 0) meta.add(Ui.seconds(millis));
-      var chevron = Ui.iconLabel("chevron-down", 14, Theme.p.faint);
-      var right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
-      right.setOpaque(false);
-      if (!meta.isEmpty()) right.add(Ui.label(String.join(" · ", meta), 11.5f, Font.PLAIN, Theme.p.faint));
-      right.add(chevron);
-      row.add(right, BorderLayout.EAST);
-      row.setPreferredSize(new Dimension(10, 22));
+      row.setPreferredSize(new Dimension(10, 28));
+      Ui.hover(row, () -> { hover = true; row.repaint(); }, () -> { hover = false; row.repaint(); });
       add(row);
 
-      details.setBorder(Ui.pad(10, 12, 10, 12));
-      details.card(Theme.p.dark ? Theme.p.surface : Theme.p.raised, Theme.p.border);
-      details.arc = 12;
+      var details = new Ui.Stack(6);
+      details.setBorder(Ui.pad(4, 0, 12, 0));
       var features = admission.features();
-      var flags = new Ui.Wrap(6, 6);
-      for (var activity : features.activities()) flags.add(Ui.Chip.of(Ui.ACTIVITY.getOrDefault(activity, activity), tone));
-      flags.add(Ui.Chip.neutral(features.hasAttempt() ? "attempt shown" : "no attempt shown"));
-      if (features.unclear()) flags.add(Ui.Chip.of("unclear", Theme.p.clarify));
-      if (features.dishonest()) flags.add(Ui.Chip.of("concealment / misrepresentation", Theme.p.deny));
-      details.add(flags);
-      details.add(Ui.wrap("Classifier: " + features.rationale(), 12.5f, Theme.p.muted));
-      details.add(Ui.wrap("Controller: " + decision.reason().replace('_', ' ') + " → " + decision.action() + (decision.forward() ? " (forwarded)" : " (not forwarded)"), 12.5f, Theme.p.muted));
-      var trace = "Request " + admission.requestId() + (admission.turn() > 0 ? " · turn " + admission.turn() : "") + " · policy " + Ui.shortSha(admission.policyDigest());
-      details.add(Ui.label(trace, 11f, Font.PLAIN, Theme.p.faint));
+      var detected = features.activities();
+      var verdict = switch (decision.action()) {
+        case "allow" -> "Allowed";
+        case "deny" -> "Declined";
+        default -> "Needs clarification";
+      };
+      details.add(detail("Decision", verdict + " — " + decision.reason().replace('_', ' ') + (decision.forward() ? ", forwarded to the answer model" : ", not forwarded")));
+      details.add(detail("Activities", (detected.isEmpty() ? "none identified" : Ui.join(detected)) + " · attempt " + (features.hasAttempt() ? "shown" : "not shown") + (features.unclear() ? " · unclear" : "") + (features.dishonest() ? " · concealment requested" : "")));
+      details.add(detail("Classifier", features.rationale()));
+      details.add(detail("Record", "Request " + admission.requestId() + (admission.turn() > 0 ? " · turn " + admission.turn() : "") + " · policy " + Ui.shortSha(admission.policyDigest())));
       details.setVisible(false);
       add(details);
+      var rule = new JComponent() {
+        @Override
+        protected void paintComponent(Graphics g) {
+          g.setColor(Theme.p.subtle);
+          g.fillRect(0, getHeight() - 1, getWidth(), 1);
+        }
+      };
+      rule.setPreferredSize(new Dimension(10, 7));
+      add(rule);
       Ui.click(row, () -> {
         open = !open;
         details.setVisible(open);
-        chevron.setIcon(Ui.icon(open ? "chevron-down" : "chevron-right", 14, Theme.p.faint));
         transcript.revalidate();
         transcript.repaint();
       });
-      chevron.setIcon(Ui.icon("chevron-right", 14, Theme.p.faint));
+    }
+
+    private JComponent detail(String key, String value) {
+      var pane = Ui.prose("", 13.5f, Theme.p.faint);
+      var document = pane.getStyledDocument();
+      var strong = new SimpleAttributeSet();
+      StyleConstants.setForeground(strong, Theme.p.muted);
+      try {
+        document.insertString(0, key + "  ", strong);
+        document.insertString(document.getLength(), value, null);
+      } catch (BadLocationException ignored) {
+        // Offsets come from the document itself.
+      }
+      Ui.leading(pane, 0.2f);
+      return pane;
     }
   }
 
-  /** The teaching response for a blocked request: the boundary, why, and what is permitted. */
+  /** The reply to a declined or unclear request: prose, the decision card, then the cited rule. */
   private final class Gate extends Ui.Stack {
     Gate(Workspace.Response admission) {
-      super(10);
+      super(14);
       var decision = admission.decision();
-      var tone = Theme.effect(decision.action());
-      card(Theme.alpha(tone, Theme.p.dark ? 16 : 12), Theme.alpha(tone, Theme.p.dark ? 70 : 90));
-      accent = tone;
-      arc = 14;
-      setBorder(Ui.pad(14, 20, 14, 16));
-      // Live and saved turns both belong to the thread's pinned assignment.
-      var scope = state.active.policy().scope(assignment);
-      var heading = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-      heading.setOpaque(false);
-      heading.add(Ui.iconLabel(decision.action().equals("deny") ? "ban" : "help", 17, tone));
-      heading.add(Ui.label(headline(decision.reason(), scope), 14f, Font.BOLD, Theme.p.text));
-      add(heading);
-      add(Ui.wrap(decision.feedback(), 13.5f, Theme.mix(Theme.p.text, Theme.p.muted, 0.25)));
-      if (scope != null) {
-        var permitted = scope.rules().stream().filter(rule -> rule.effect().equals("allow")).toList();
-        if (!permitted.isEmpty()) {
-          add(Ui.gap(Ui.section("You can ask for"), 6));
-          var options = new Ui.Wrap(6, 6);
-          for (var rule : permitted) {
-            for (var activity : rule.activities()) {
-              var chip = new Ui.Chip(Ui.ACTIVITY.getOrDefault(activity, activity) + (rule.requireAttempt() ? " · share your attempt" : ""), Theme.p.text, Theme.p.dark ? Theme.p.raised : Theme.p.surface, Ui.icon("plus", 11, Theme.p.accent));
-              chip.setToolTipText("Start a request of this kind");
-              Ui.click(chip, () -> composer.prefill(template(activity)));
-              options.add(chip);
-            }
-          }
-          add(options);
-        }
-      }
+      var scope = scope();
+      add(paragraph(headline(decision.reason(), scope), decision.feedback()));
+      add(new DecisionCard(admission, scope));
       for (var evidence : decision.evidence().stream().limit(2).toList()) {
         var quote = evidence.quote().replaceAll("\\s+", " ").strip();
-        add(new Ui.IconText("quote", (quote.length() > 220 ? quote.substring(0, 219) + "…" : quote) + "  — " + evidence.source(), 12f, Theme.p.faint));
+        add(new Quote((quote.length() > 240 ? quote.substring(0, 239) + "…" : quote), evidence.source()));
       }
     }
+  }
 
+  private static JTextPane paragraph(String lead, String rest) {
+    var pane = Ui.prose("", 14f, Theme.p.text);
+    var document = pane.getStyledDocument();
+    var bold = new SimpleAttributeSet();
+    StyleConstants.setBold(bold, true);
+    StyleConstants.setForeground(bold, Theme.p.emphasis);
+    try {
+      document.insertString(0, lead + " ", bold);
+      document.insertString(document.getLength(), rest, null);
+    } catch (BadLocationException ignored) {
+      // Offsets come from the document itself.
+    }
+    Ui.leading(pane, 0.3f);
+    return pane;
+  }
+
+  /**
+   * Codex's "Edited N files" card, holding a policy decision: an icon tile, the verdict and what
+   * was detected, a "View policy" button, then one row per kind of help that is allowed instead.
+   */
+  private final class DecisionCard extends Ui.Stack {
+    DecisionCard(Workspace.Response admission, Policy.Scope scope) {
+      super(0);
+      var decision = admission.decision();
+      var tone = Theme.effect(decision.action());
+      card(Theme.p.dark ? Theme.p.sidebar : Color.WHITE, Theme.p.border);
+      arc = 28;
+      setBorder(Ui.pad(1, 1, 1, 1));
+      var header = new JPanel(new BorderLayout(12, 0)) {
+        @Override
+        protected void paintComponent(Graphics graphics) {
+          var g = Ui.smooth(graphics);
+          g.setColor(Theme.p.dark ? new Color(0x1B1B1B) : new Color(0xFAFAFA));
+          g.fill(MainFrame.rounded(getWidth(), getHeight(), 13, 13, 0, 0));
+          g.setColor(Theme.p.subtle);
+          g.fillRect(0, getHeight() - 1, getWidth(), 1);
+          g.dispose();
+        }
+      };
+      header.setOpaque(false);
+      header.setBorder(Ui.pad(12, 12, 12, 12));
+      var icon = switch (decision.action()) {
+        case "deny" -> "ban";
+        case "allow" -> "check";
+        default -> "help";
+      };
+      var tile = new JComponent() {
+        @Override
+        protected void paintComponent(Graphics graphics) {
+          var g = Ui.smooth(graphics);
+          g.setColor(Theme.p.dark ? new Color(0x0F0F0F) : new Color(0xF1F1F1));
+          g.fillRoundRect(0, 0, getWidth(), getHeight(), 16, 16);
+          Ui.icon(icon, 18, tone).paintIcon(this, g, (getWidth() - 18) / 2, (getHeight() - 18) / 2);
+          g.dispose();
+        }
+      };
+      tile.setPreferredSize(new Dimension(38, 38));
+      header.add(tile, BorderLayout.WEST);
+      var words = new JPanel(new BorderLayout(0, 1));
+      words.setOpaque(false);
+      words.add(Ui.label(verdictTitle(decision.reason(), scope), 14f, Font.PLAIN, Theme.p.emphasis), BorderLayout.NORTH);
+      var detected = admission.features().activities();
+      var what = detected.isEmpty() ? "No activity identified" : String.join(", ", detected.stream().map(a -> Ui.ACTIVITY.getOrDefault(a, a)).toList());
+      words.add(Ui.label(what + " · " + switch (decision.action()) {
+        case "deny" -> "declined";
+        case "allow" -> "allowed";
+        default -> "needs detail";
+      }, 13f, Font.PLAIN, tone), BorderLayout.CENTER);
+      header.add(words, BorderLayout.CENTER);
+      var view = Ui.outline("View policy");
+      view.addActionListener(event -> {
+        card.open = true;
+        if (!state.settings.inspector) toggleCard();
+        card.update();
+      });
+      var holder = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 6));
+      holder.setOpaque(false);
+      holder.add(view);
+      header.add(holder, BorderLayout.EAST);
+      header.setPreferredSize(new Dimension(10, 62));
+      add(header);
+
+      if (scope == null) return;
+      var alternatives = new ArrayList<String[]>();
+      for (var activity : Policy.ACTIVITIES) {
+        var rule = scope.rules().stream().filter(r -> r.activities().contains(activity)).findFirst().orElse(null);
+        if (rule != null && rule.effect().equals("allow")) alternatives.add(new String[] {activity, rule.requireAttempt() ? "With your attempt" : "Allowed"});
+      }
+      var rows = new Ui.Stack(0);
+      rows.setBorder(Ui.pad(5, 0, 5, 0));
+      for (var alternative : alternatives.stream().limit(5).toList())
+        rows.add(new AlternativeRow(scope.id().equals("*") ? state.course() : Ui.assignment(scope.id()), alternative[0], alternative[1]));
+      if (!alternatives.isEmpty()) add(rows);
+    }
+  }
+
+  /** One allowed alternative; clicking it starts that request in the composer. */
+  private final class AlternativeRow extends JComponent {
+    private final String scope;
+    private final String activity;
+    private final String effect;
+    private boolean hover;
+
+    AlternativeRow(String scope, String activity, String effect) {
+      this.scope = scope;
+      this.activity = activity;
+      this.effect = effect;
+      setToolTipText("Ask for " + Ui.ACTIVITY.getOrDefault(activity, activity).toLowerCase(Locale.ROOT));
+      Ui.hover(this, () -> { hover = true; repaint(); }, () -> { hover = false; repaint(); });
+      Ui.click(this, () -> composer.prefill(template(activity)));
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+      return new Dimension(100, 34);
+    }
+
+    @Override
+    protected void paintComponent(Graphics graphics) {
+      var g = Ui.smooth(graphics);
+      if (hover) {
+        g.setColor(Theme.p.dark ? Theme.alpha(Color.WHITE, 8) : Theme.alpha(Color.BLACK, 8));
+        g.fillRect(0, 0, getWidth(), getHeight());
+      }
+      g.setFont(Theme.ui(14f));
+      var metrics = g.getFontMetrics();
+      var y = (getHeight() - metrics.getHeight()) / 2 + metrics.getAscent();
+      var prefix = scope + " / ";
+      g.setColor(Theme.p.faint);
+      g.drawString(prefix, 14, y);
+      g.setColor(hover ? Theme.p.emphasis : Theme.p.text);
+      g.drawString(Ui.ACTIVITY.getOrDefault(activity, activity), 14 + metrics.stringWidth(prefix), y);
+      g.setFont(Theme.ui(13.5f));
+      var small = g.getFontMetrics();
+      g.setColor(effect.equals("Allowed") ? Theme.p.allow : Theme.p.clarify);
+      g.drawString(effect, getWidth() - 14 - small.stringWidth(effect), (getHeight() - small.getHeight()) / 2 + small.getAscent());
+      g.dispose();
+    }
+  }
+
+  /** A blockquote with a thin left rule, as Codex renders quoted passages. */
+  private static final class Quote extends JPanel implements Ui.Flow {
+    private final JTextPane text;
+
+    Quote(String body, String source) {
+      super(null);
+      setOpaque(false);
+      text = Ui.prose("", 13.5f, Theme.p.muted);
+      var document = text.getStyledDocument();
+      var faint = new SimpleAttributeSet();
+      StyleConstants.setForeground(faint, Theme.p.faint);
+      try {
+        document.insertString(0, "“" + body + "”", null);
+        document.insertString(document.getLength(), "  — " + source, faint);
+      } catch (BadLocationException ignored) {
+        // Offsets come from the document itself.
+      }
+      Ui.leading(text, 0.28f);
+      add(text);
+    }
+
+    @Override
+    public int heightFor(int width) {
+      return Ui.heightFor(text, Math.max(40, width - 16));
+    }
+
+    @Override
+    public void doLayout() {
+      text.setBounds(16, 0, Math.max(40, getWidth() - 16), heightFor(getWidth()));
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+      g.setColor(Theme.p.borderStrong);
+      g.fillRect(1, 3, 2, getHeight() - 8);
+    }
   }
 
   private static String headline(String reason, Policy.Scope scope) {
-    var name = scope == null ? "this assignment" : scope.id().equals("*") ? "this course" : scope.id();
+    var name = scope == null ? "this assignment" : scope.id().equals("*") ? "this course" : Ui.assignment(scope.id());
     return switch (reason) {
-      case "deception" -> "I can't help hide AI use or misrepresent authorship";
-      case "policy_prohibits_activity" -> "That's outside " + name + "'s AI policy";
-      case "attempt_required" -> "Share your attempt first";
-      case "policy_uncertain" -> "Your instructor hasn't settled this one";
-      case "unknown_assignment" -> "Choose an assignment in this course";
-      default -> "Tell me a bit more about what you need";
+      case "deception" -> "I can't help hide AI use or misrepresent authorship.";
+      case "policy_prohibits_activity" -> "That's outside " + name + "'s AI policy.";
+      case "attempt_required" -> "Share your attempt first.";
+      case "policy_uncertain" -> "Your instructor hasn't settled this one.";
+      case "unknown_assignment" -> "Choose an assignment in this course.";
+      default -> "Tell me a bit more about what you need.";
+    };
+  }
+
+  private static String verdictTitle(String reason, Policy.Scope scope) {
+    var name = scope == null ? "course" : scope.id().equals("*") ? "course" : Ui.assignment(scope.id());
+    return switch (reason) {
+      case "deception" -> "Declined: misrepresents authorship";
+      case "policy_prohibits_activity" -> "Declined by the " + name + " policy";
+      case "attempt_required" -> "Allowed once you share an attempt";
+      case "policy_uncertain" -> "Not settled by your instructor";
+      case "unknown_assignment" -> "No matching assignment";
+      default -> "Needs more detail";
     };
   }
 
@@ -603,47 +960,44 @@ final class AskView extends JPanel implements MainFrame.Refreshable {
     };
   }
 
-  /** A model answer rendered from Markdown, with a quiet provenance line. */
+  /** A model answer: Markdown prose with a quiet action row. */
   private static final class Answer extends Ui.Stack {
     Answer(String markdown, String model, long millis) {
-      super(6);
+      super(4);
       add(Markdown.pane(markdown));
-      var meta = model + (millis >= 0 ? " · " + Ui.seconds(millis) : "") + " · answered within the admitted policy";
-      var line = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-      line.setOpaque(false);
-      line.add(Brand.mark(12));
-      line.add(Ui.label(meta, 11.5f, Font.PLAIN, Theme.p.faint));
-      line.setPreferredSize(new Dimension(10, 16));
-      add(line);
+      var row = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+      row.setOpaque(false);
+      var copy = MainFrame.toolbarIcon("copy", "Copy");
+      copy.addActionListener(event -> Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(markdown), null));
+      row.add(copy);
+      row.add(Ui.label("  " + model + (millis >= 0 ? " · " + Ui.seconds(millis) : ""), 12.5f, Font.PLAIN, Theme.p.faint));
+      row.setPreferredSize(new Dimension(10, 28));
+      add(row);
     }
   }
 
   private static final class Notice extends Ui.Stack {
-    Notice(String title, String detail, Color tone) {
-      super(6);
-      card(Theme.alpha(tone, 14), Theme.alpha(tone, 80));
-      setBorder(Ui.pad(10, 14, 10, 14));
-      add(Ui.wrap(title, 13f, Theme.p.text));
-      if (detail != null && !detail.isBlank()) add(Ui.wrap(detail, 12f, Theme.p.muted));
+    Notice(String title, String detail) {
+      super(4);
+      add(Ui.label(title, 14f, Font.PLAIN, Theme.p.deny));
+      if (detail != null && !detail.isBlank()) add(Ui.wrap(detail, 13.5f, Theme.p.faint));
     }
   }
 
-  /** Spinner row with live elapsed time while the classifier or answer model works. */
+  /** Codex's shimmering status line ("Thinking"), with a live elapsed time. */
   private static final class Working extends JPanel {
-    final JLabel label;
-    private final JLabel clock = Ui.label("0.0s", 11.5f, Font.PLAIN, Theme.p.faint);
+    private final JLabel clock = Ui.label("0s", 14f, Font.PLAIN, Theme.p.faint);
     private final Timer timer;
 
     Working(String text) {
-      super(new FlowLayout(FlowLayout.LEFT, 8, 0));
+      super(new FlowLayout(FlowLayout.LEFT, 0, 0));
       setOpaque(false);
-      add(new Ui.Spinner(14));
-      label = Ui.label(text, 12.5f, Font.PLAIN, Theme.p.muted);
-      add(label);
+      add(new Ui.Shimmer(text, 14f));
+      clock.setBorder(Ui.pad(0, 8, 0, 0));
       add(clock);
       var started = System.nanoTime();
       timer = new Timer(100, event -> clock.setText(Ui.seconds((System.nanoTime() - started) / 1_000_000)));
-      setPreferredSize(new Dimension(10, 22));
+      setPreferredSize(new Dimension(10, 24));
     }
 
     @Override
@@ -659,227 +1013,442 @@ final class AskView extends JPanel implements MainFrame.Refreshable {
     }
   }
 
-  // ------------------------------------------------------------------ empty and setup states
+  /** Codex's round "jump to latest" button, floating above the composer. */
+  private static final class ScrollDown extends JButton {
+    ScrollDown() {
+      setBorderPainted(false);
+      setContentAreaFilled(false);
+      setFocusPainted(false);
+      setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+      setToolTipText("Jump to latest");
+    }
 
-  private JComponent backdrop(Ui.Stack content) {
-    var panel =
-        new JPanel(new BorderLayout()) {
-          @Override
-          protected void paintComponent(Graphics graphics) {
-            var g = Ui.smooth(graphics);
-            Brand.argyle(g, getWidth(), getHeight(), (int) (getHeight() * 0.42));
-            g.dispose();
-          }
-        };
-    panel.setOpaque(false);
-    var holder = new JPanel(new java.awt.GridBagLayout());
+    @Override
+    protected void paintComponent(Graphics graphics) {
+      var g = Ui.smooth(graphics);
+      g.setColor(Theme.p.dark ? Theme.p.sidebar : Color.WHITE);
+      g.fillOval(1, 1, getWidth() - 3, getHeight() - 3);
+      g.setColor(getModel().isRollover() ? Theme.p.borderStrong : Theme.p.border);
+      g.drawOval(1, 1, getWidth() - 3, getHeight() - 3);
+      Ui.icon("arrow-down", 16, Theme.p.text).paintIcon(this, g, (getWidth() - 16) / 2, (getHeight() - 16) / 2);
+      g.dispose();
+    }
+  }
+
+  // ------------------------------------------------------------------ new chat and setup
+
+  /** Centers a column, shrinking it to fit, a little above the middle like Codex's new chat. */
+  private static JComponent centered(Ui.Stack column) {
+    var holder = new JPanel(null) {
+      @Override
+      public void doLayout() {
+        var width = Math.max(200, Math.min(getWidth() - 64, column.maxWidth > 0 ? column.maxWidth : COLUMN));
+        var height = column.heightFor(width);
+        column.setBounds((getWidth() - width) / 2, Math.max(16, (getHeight() - height) / 2 - 20), width, height);
+      }
+    };
     holder.setOpaque(false);
-    holder.setBorder(Ui.pad(0, 28, 0, 28));
-    content.maxWidth = 700;
-    holder.add(content);
-    panel.add(holder, BorderLayout.CENTER);
-    return panel;
+    holder.add(column);
+    return holder;
   }
 
-  private void buildHero() {
-    hero.removeAll();
-    hero.gap = 0;
-    hero.add(Ui.gap(centerOf(Brand.mark(52)), 18));
-    var heading = Ui.label("What are we working on?", 26f, Font.BOLD, Theme.p.text);
-    heading.setHorizontalAlignment(JLabel.CENTER);
-    hero.add(Ui.gap(heading, 8));
-    var scope = state.active.policy().scope(assignment);
-    var subtitle = Ui.label(state.course() + (scope == null ? "" : " · " + scope.title()), 13.5f, Font.PLAIN, Theme.p.muted);
-    subtitle.setHorizontalAlignment(JLabel.CENTER);
-    hero.add(Ui.gap(subtitle, 4));
-    var note = Ui.centered("Every request is checked against your instructor's policy before an answer model sees it.", 12.5f, Theme.p.faint);
-    hero.add(Ui.gap(note, 26));
-    var texts = new ArrayList<javax.swing.JTextArea>();
-    var grid = new Cards(texts);
-    for (var suggestion : suggestions()) grid.add(suggestionCard(suggestion[0], suggestion[1], texts));
-    hero.add(grid);
-    hero.revalidate();
-    hero.repaint();
+  private void buildWelcome() {
+    welcome.removeAll();
+    welcome.maxWidth = COLUMN;
+    welcome.add(Ui.gap(new Argyle(52), 22), Ui.Align.CENTER);
+    welcome.add(new Heading());
+    welcome.revalidate();
+    welcome.repaint();
   }
 
-  private List<String[]> suggestions() {
-    if (state.active != null && state.active.course().courseId().equals("sys301") && assignment.equals("a1"))
-      return List.of(
-          new String[] {"chat", "Explain how fork differs from exec."},
-          new String[] {"terminal", "My pipeline hangs. I think the parent keeps the write end open, so EOF never arrives. How can I confirm that?"},
-          new String[] {"file", "Write the whole mini-shell for me so I can submit it."});
-    return List.of(
-        new String[] {"chat", "Explain the key idea this assignment is practicing."},
-        new String[] {"terminal", "Here's the error I'm getting and what I already tried: "},
-        new String[] {"file", "Write the complete solution for me."});
+  /** "What should we learn in SYS 301?" with the course as a dotted-underline menu, as in Codex. */
+  private final class Heading extends JComponent {
+    private int courseLeft;
+    private int courseRight;
+    private boolean hover;
+
+    Heading() {
+      setFont(Theme.ui(26f));
+      setPreferredSize(new Dimension(10, 40));
+      addMouseMotionListener(new java.awt.event.MouseMotionAdapter() {
+        @Override
+        public void mouseMoved(java.awt.event.MouseEvent event) {
+          var over = event.getX() >= courseLeft && event.getX() <= courseRight;
+          if (over != hover) {
+            hover = over;
+            setCursor(Cursor.getPredefinedCursor(over ? Cursor.HAND_CURSOR : Cursor.DEFAULT_CURSOR));
+            repaint();
+          }
+        }
+      });
+      addMouseListener(new java.awt.event.MouseAdapter() {
+        @Override
+        public void mouseExited(java.awt.event.MouseEvent event) {
+          hover = false;
+          repaint();
+        }
+
+        @Override
+        public void mouseClicked(java.awt.event.MouseEvent event) {
+          if (event.getX() >= courseLeft && event.getX() <= courseRight) courseMenu(Heading.this, courseLeft);
+        }
+      });
+    }
+
+    @Override
+    protected void paintComponent(Graphics graphics) {
+      var g = Ui.smooth(graphics);
+      g.setFont(getFont());
+      var metrics = g.getFontMetrics();
+      var lead = "What should we learn in ";
+      var course = state.course();
+      var tail = "?";
+      var width = metrics.stringWidth(lead + course + tail);
+      var x = (getWidth() - width) / 2;
+      var y = (getHeight() - metrics.getHeight()) / 2 + metrics.getAscent();
+      g.setColor(Theme.p.emphasis);
+      g.drawString(lead, x, y);
+      courseLeft = x + metrics.stringWidth(lead);
+      courseRight = courseLeft + metrics.stringWidth(course);
+      g.setColor(hover ? Theme.unc() : Theme.p.emphasis);
+      g.drawString(course, courseLeft, y);
+      g.setColor(Theme.p.emphasis);
+      g.drawString(tail, courseRight, y);
+      // Codex marks the switchable project name with a dotted underline.
+      g.setColor(hover ? Theme.unc() : Theme.p.faint);
+      g.setStroke(new BasicStroke(1.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1f, new float[] {0.1f, 3.4f}, 0f));
+      g.drawLine(courseLeft + 1, y + 6, courseRight - 1, y + 6);
+      g.dispose();
+    }
   }
 
-  /** Three equal cards whose height follows the longest suggestion at the current width. */
-  private static final class Cards extends JPanel implements Ui.Flow {
-    private final List<javax.swing.JTextArea> texts;
+  /**
+   * The new-chat mark: a line-art argyle diamond (UNC's argyle) stitched with a dashed inner
+   * diamond in Carolina, holding a terminal prompt — the same role as Codex's line-art glyph.
+   */
+  private static final class Argyle extends JComponent {
+    private final int size;
 
-    Cards(List<javax.swing.JTextArea> texts) {
-      super(new GridLayout(1, 3, 10, 0));
-      this.texts = texts;
+    Argyle(int size) {
+      this.size = size;
+      setPreferredSize(new Dimension(size, size));
+    }
+
+    @Override
+    protected void paintComponent(Graphics graphics) {
+      var g = Ui.smooth(graphics);
+      var s = size;
+      var outer = diamond(s / 2.0, s / 2.0, s / 2.0 - 1.5);
+      g.setStroke(new BasicStroke(1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+      g.setColor(Theme.p.muted);
+      g.draw(outer);
+      g.setColor(Theme.unc());
+      g.setStroke(new BasicStroke(1.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 1f, new float[] {2.2f, 3f}, 0f));
+      g.draw(diamond(s / 2.0, s / 2.0, s / 2.0 - 8));
+      g.setStroke(new BasicStroke(1.7f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+      g.setColor(Theme.p.text);
+      var cx = s / 2.0;
+      var cy = s / 2.0;
+      var chevron = new Path2D.Double();
+      chevron.moveTo(cx - 7, cy - 4.5);
+      chevron.lineTo(cx - 2.5, cy);
+      chevron.lineTo(cx - 7, cy + 4.5);
+      g.draw(chevron);
+      g.setColor(Theme.unc());
+      g.draw(new java.awt.geom.Line2D.Double(cx + 0.5, cy + 4.5, cx + 7, cy + 4.5));
+      g.dispose();
+    }
+
+    private static Path2D diamond(double cx, double cy, double r) {
+      var path = new Path2D.Double();
+      path.moveTo(cx, cy - r);
+      path.lineTo(cx + r, cy);
+      path.lineTo(cx, cy + r);
+      path.lineTo(cx - r, cy);
+      path.closePath();
+      return path;
+    }
+  }
+
+  /** Codex's announcement card above the composer, here saying what this assignment allows. */
+  private final class Tip extends JPanel implements Ui.Flow {
+    private final JLabel heading;
+    private final javax.swing.JTextArea body;
+    private final JButton view = Ui.outline("View policy");
+    private final JButton close = MainFrame.toolbarIcon("x", "Dismiss");
+    private final JComponent orb = new JComponent() {
+      @Override
+      protected void paintComponent(Graphics graphics) {
+        // A Carolina-to-Navy orb, lit from the upper left.
+        var g = Ui.smooth(graphics);
+        var w = getWidth();
+        g.setPaint(new RadialGradientPaint(new Point2D.Double(w * 0.34, w * 0.3), w * 0.78f, new float[] {0f, 0.45f, 1f}, new Color[] {new Color(0xCFE8F8), Theme.CAROLINA, Theme.NAVY}));
+        g.fillOval(0, 0, w - 1, w - 1);
+        g.setColor(Theme.alpha(Color.WHITE, 40));
+        g.drawOval(0, 0, w - 1, w - 1);
+        g.dispose();
+      }
+    };
+
+    Tip() {
+      super(null);
       setOpaque(false);
+      var scope = scope();
+      heading = Ui.label("The " + scopeName() + " AI policy is on", 14f, Font.PLAIN, Theme.p.emphasis);
+      body = Ui.wrap(summary(scope), 13.5f, Theme.p.faint);
+      view.addActionListener(event -> {
+        card.open = true;
+        if (!state.settings.inspector) toggleCard();
+        card.update();
+      });
+      close.addActionListener(event -> {
+        state.settings.dismissed = tipKey();
+        state.settings.save();
+        dockItems(true);
+      });
+      add(orb);
+      add(heading);
+      add(body);
+      add(view);
+      add(close);
+    }
+
+    private String summary(Policy.Scope scope) {
+      if (scope == null) return "";
+      var allowed = new ArrayList<String>();
+      var declined = new ArrayList<String>();
+      for (var activity : Policy.ACTIVITIES) {
+        var rule = scope.rules().stream().filter(r -> r.activities().contains(activity)).findFirst().orElse(null);
+        if (rule == null) continue;
+        var name = BRIEF.getOrDefault(activity, activity);
+        if (rule.effect().equals("allow")) allowed.add(name);
+        else if (rule.effect().equals("deny")) declined.add(name);
+      }
+      return "Allowed: " + (allowed.isEmpty() ? "nothing yet" : String.join(", ", allowed)) + ". Declined: " + (declined.isEmpty() ? "nothing" : String.join(", ", declined)) + ".";
+    }
+
+    /** The body runs the card's full width, below the buttons that share the heading's row. */
+    private int textWidth(int width) {
+      return Math.max(120, width - 62 - 22);
     }
 
     @Override
     public int heightFor(int width) {
-      var inner = (width - 20) / 3 - 28;
-      var tallest = 0;
-      for (var text : texts) tallest = Math.max(tallest, Ui.heightFor(text, Math.max(60, inner)));
-      return 12 + 16 + 8 + tallest + 14;
+      return Math.max(64, 39 + Ui.heightFor(body, textWidth(width)) + 14);
     }
-  }
 
-  private JComponent suggestionCard(String icon, String text, List<javax.swing.JTextArea> texts) {
-    var card = new Ui.Card(Theme.p.dark ? Theme.alpha(Theme.p.surface, 230) : Theme.p.surface, Theme.p.border);
-    card.setLayout(new BorderLayout(0, 8));
-    card.setBorder(Ui.pad(12, 14, 12, 14));
-    card.add(Ui.iconLabel(icon, 16, Theme.p.accent), BorderLayout.NORTH);
-    ((JLabel) card.getComponent(0)).setHorizontalAlignment(JLabel.LEFT);
-    var body = Ui.wrap(text, 12.5f, Theme.p.muted);
-    texts.add(body);
-    card.add(body, BorderLayout.CENTER);
-    Ui.hover(card, () -> { card.fill = Theme.p.hover; card.repaint(); }, () -> { card.fill = Theme.p.dark ? Theme.alpha(Theme.p.surface, 230) : Theme.p.surface; card.repaint(); });
-    Ui.click(card, () -> {
-      if (text.endsWith(": ")) composer.prefill(text);
-      else send(text);
-    });
-    for (var child : card.getComponents()) Ui.click((JComponent) child, () -> {
-      if (text.endsWith(": ")) composer.prefill(text);
-      else send(text);
-    });
-    return card;
+    @Override
+    public void doLayout() {
+      var width = getWidth();
+      orb.setBounds(16, 15, 32, 32);
+      var text = textWidth(width);
+      heading.setBounds(62, 14, Math.max(80, width - 62 - 12 - 28 - 6 - view.getPreferredSize().width - 10), 20);
+      body.setBounds(62, 39, text, Ui.heightFor(body, text));
+      close.setBounds(width - 12 - 28, 12, 28, 28);
+      var size = view.getPreferredSize();
+      view.setBounds(width - 12 - 28 - 6 - size.width, 13, size.width, 26);
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+      var width = getWidth() > 0 ? getWidth() : COLUMN;
+      return new Dimension(width, heightFor(width));
+    }
+
+    @Override
+    protected void paintComponent(Graphics graphics) {
+      var g = Ui.smooth(graphics);
+      g.setColor(Theme.p.dark ? new Color(0x191919) : new Color(0xF9F9F9));
+      g.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 32, 32);
+      g.setColor(Theme.p.dark ? Theme.p.border : Theme.p.subtle);
+      g.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 32, 32);
+      g.dispose();
+    }
   }
 
   private void buildSetup() {
     setup.removeAll();
-    setup.add(Ui.gap(centerOf(Brand.mark(52)), 18));
-    var heading = Ui.label(state.workspace == null ? "Open a course workspace" : "This workspace isn't ready", 24f, Font.BOLD, Theme.p.text);
-    heading.setHorizontalAlignment(JLabel.CENTER);
-    setup.add(Ui.gap(heading, 10));
-    var explain = Ui.centered("HeelCode answers inside one course at a time. A workspace holds the instructor's activated policy and your policy-checked threads; nothing reaches an answer model until the policy admits it.", 13.5f, Theme.p.muted);
+    setup.maxWidth = 560;
+    setup.add(Ui.gap(new Argyle(52), 22), Ui.Align.CENTER);
+    setup.add(Ui.gap(MainFrame.centered(state.workspace == null ? "Open a course" : "This course isn't ready", Theme.ui(26f), Theme.p.emphasis), 12));
+    var explain = Ui.centered("HeelCode answers inside one course at a time. A course folder holds the instructor's activated policy and your chats; nothing reaches an answer model until that policy admits it.", 14.5f, Theme.p.muted);
     setup.add(Ui.gap(explain, 18));
-    if (!state.problem.isEmpty()) {
-      var problem = new Notice("Policy unavailable", state.problem, Theme.p.clarify);
-      setup.add(Ui.gap(problem, 18));
-    }
-    var buttons = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
+    if (!state.problem.isEmpty()) setup.add(Ui.gap(Ui.centered(state.problem, 14f, Theme.p.clarify), 18));
+    var buttons = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));
     buttons.setOpaque(false);
     if (State.demoAvailable()) {
-      var demo = Ui.primary("Open SYS 301 demo", "spark");
+      var demo = Ui.primary("Open SYS 301 demo", null);
       demo.addActionListener(event -> frame.createDemo());
       buttons.add(demo);
     }
-    var open = Ui.secondary("Open workspace…", "folder");
+    var open = Ui.secondary("Open course folder…", null);
     open.addActionListener(event -> frame.openWorkspace());
     buttons.add(open);
     if (!state.student) {
-      var generate = Ui.secondary("Generate a policy", "shield");
+      var generate = Ui.secondary("Generate a policy", null);
       generate.addActionListener(event -> frame.show("policies"));
       buttons.add(generate);
     }
-    buttons.setPreferredSize(new Dimension(560, 38));
+    buttons.setPreferredSize(new Dimension(560, 36));
     setup.add(buttons);
-    setup.maxWidth = 600;
     setup.revalidate();
-    setup.repaint();
   }
 
-  private static JComponent centerOf(JComponent component) {
-    var panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-    panel.setOpaque(false);
-    panel.add(component);
-    panel.setPreferredSize(new Dimension(10, component.getPreferredSize().height));
-    return panel;
-  }
+  // ------------------------------------------------------------------ policy card
 
-  // ------------------------------------------------------------------ inspector
+  /**
+   * Codex's floating project card (top right), for the assignment policy: what it allows and
+   * declines (expandable), the answer and check models, and whether admin prompts are custom.
+   */
+  private final class PolicyCard extends Ui.Stack {
+    boolean open;
 
-  /** Right-hand context: what this assignment permits, the thread, and prompt provenance. */
-  private final class Inspector extends JPanel {
-    private final Ui.Stack body = new Ui.Stack(6);
-
-    Inspector() {
-      super(new BorderLayout());
-      setPreferredSize(new Dimension(300, 100));
-      body.setBorder(Ui.pad(16, 16, 16, 16));
-      add(Ui.scroll(body), BorderLayout.CENTER);
-    }
-
-    @Override
-    protected void paintComponent(Graphics g) {
-      g.setColor(Theme.p.dark ? Theme.p.sidebar : Theme.p.raised);
-      g.fillRect(0, 0, getWidth(), getHeight());
-      g.setColor(Theme.p.border);
-      g.fillRect(0, 0, 1, getHeight());
+    PolicyCard() {
+      super(0);
+      card(Theme.p.raised, Theme.p.dark ? Theme.alpha(Color.WHITE, 9) : Theme.p.border);
+      arc = 28;
+      setBorder(Ui.pad(6, 8, 8, 8));
     }
 
     void update() {
-      body.removeAll();
+      removeAll();
       var active = state.active;
-      if (active == null) {
-        body.add(Ui.section("Inspector"));
-        body.add(Ui.wrap("Open a workspace to see its policy.", 12.5f, Theme.p.faint));
-        body.revalidate();
-        return;
-      }
-      var scope = active.policy().scope(assignment);
-      body.add(Ui.gap(Ui.section("Assignment policy"), 8));
+      if (active == null) return;
+      var scope = scope();
+      var head = new JPanel(new BorderLayout());
+      head.setOpaque(false);
+      head.setBorder(Ui.pad(0, 12, 0, 0));
+      head.add(Ui.label(state.course() + (scope == null ? "" : " · " + (scope.id().equals("*") ? "General" : Ui.assignment(scope.id()))), 14f, Font.PLAIN, Theme.p.muted), BorderLayout.CENTER);
+      var more = MainFrame.toolbarIcon("dots", "Policy options");
+      more.addActionListener(event -> moreMenu(more));
+      head.add(more, BorderLayout.EAST);
+      head.setPreferredSize(new Dimension(10, 32));
+      add(head);
+
+      var allowed = 0;
+      var declined = 0;
       if (scope != null) {
-        body.add(Ui.gap(Ui.wrap(scope.title(), 13f, Theme.p.text), 8));
         for (var activity : Policy.ACTIVITIES) {
           var rule = scope.rules().stream().filter(r -> r.activities().contains(activity)).findFirst().orElse(null);
           if (rule == null) continue;
-          var row = new JPanel(new BorderLayout());
-          row.setOpaque(false);
-          row.add(Ui.label(Ui.ACTIVITY.get(activity), 12.5f, Font.PLAIN, Theme.p.muted), BorderLayout.WEST);
-          var effect = rule.effect().equals("allow") ? (rule.requireAttempt() ? "with attempt" : "allowed") : rule.effect().equals("deny") ? "declined" : "ask instructor";
-          row.add(Ui.Chip.of(effect, Theme.effect(rule.effect())), BorderLayout.EAST);
-          row.setPreferredSize(new Dimension(10, 24));
-          body.add(row);
+          if (rule.effect().equals("allow")) allowed++;
+          else if (rule.effect().equals("deny")) declined++;
         }
       }
-      body.add(Ui.gap(Ui.divider(), 4));
-      body.add(Ui.gap(Ui.section("This thread"), 8));
-      body.add(meta("Session", state.thread.isEmpty() ? "new — created on first request" : state.thread.substring(0, 12) + "…"));
-      body.add(meta("Classifier", Models.label(state.settings.classifier)));
-      body.add(meta("Answers", state.settings.answer.equals(Models.ADMISSION_ONLY) ? "none (check only)" : Models.label(state.settings.answer)));
-      body.add(Ui.gap(Ui.divider(), 4));
-      body.add(Ui.gap(Ui.section("Prompts"), 8));
+      add(new Item("shield", "Policy", new String[] {allowed + " allowed", declined + " declined"}, new Color[] {Theme.p.allow, Theme.p.deny}, () -> {
+        open = !open;
+        update();
+      }));
+      if (open && scope != null) {
+        var rules = new Ui.Stack(0);
+        rules.setBorder(Ui.pad(0, 0, 4, 0));
+        for (var activity : Policy.ACTIVITIES) {
+          var rule = scope.rules().stream().filter(r -> r.activities().contains(activity)).findFirst().orElse(null);
+          if (rule == null) continue;
+          var effect = rule.effect().equals("allow") ? (rule.requireAttempt() ? "With attempt" : "Allowed") : rule.effect().equals("deny") ? "Declined" : "Ask instructor";
+          rules.add(new Line(Ui.ACTIVITY.getOrDefault(activity, activity), effect, rule.requireAttempt() && rule.effect().equals("allow") ? Theme.p.clarify : Theme.effect(rule.effect())));
+        }
+        add(rules);
+      }
+      var checkOnly = state.settings.answer.equals(Models.ADMISSION_ONLY);
+      add(new Item("spark", "Answers", new String[] {checkOnly ? "Check only" : Models.label(state.settings.answer)}, new Color[] {Theme.p.muted}, AskView.this::answerMenu));
+      add(new Item("eye", "Checks", new String[] {Models.label(state.settings.classifier)}, new Color[] {Theme.p.muted}, AskView.this::classifierMenu));
+      var custom = false;
+      var sha = "";
       try {
         var store = PromptStore.open();
-        for (var kind : PromptStore.Kind.values())
-          body.add(meta(kind == PromptStore.Kind.CLASSIFIER ? "Classifier" : "System", (store.custom(kind) ? "custom · " : "default · ") + Ui.shortSha(Course.hash(store.text(kind)))));
-      } catch (Exception error) {
-        body.add(Ui.wrap(Ui.message(error), 12f, Theme.p.deny));
+        custom = store.custom(PromptStore.Kind.CLASSIFIER) || store.custom(PromptStore.Kind.SYSTEM);
+        sha = Ui.shortSha(Course.hash(store.text(PromptStore.Kind.SYSTEM)));
+      } catch (Exception ignored) {
+        // Prompt provenance is informational; the Admin view reports read failures.
       }
-      if (!state.student) {
-        var edit = Ui.ghost("Edit prompts in Admin", "sliders");
-        edit.addActionListener(event -> frame.show("admin"));
-        body.add(Ui.row(0, edit));
-      }
-      body.add(Ui.gap(Ui.divider(), 4));
-      body.add(Ui.gap(Ui.section("Workspace"), 8));
-      body.add(meta("Course", active.course().courseId() + " · " + active.course().sources().size() + " sources"));
-      body.add(meta("Policy", Ui.shortSha(active.policyDigest())));
-      body.add(meta("Sources", Ui.shortSha(active.course().digest())));
-      body.add(Ui.wrap(active.policy().version(), 11.5f, Theme.p.faint));
-      body.revalidate();
-      body.repaint();
+      add(new Item("edit", "Prompts", new String[] {custom ? "Custom" : "Default", sha}, new Color[] {custom ? Theme.unc() : Theme.p.muted, Theme.p.faint}, state.student ? null : () -> frame.show("admin")));
+      revalidate();
+      repaint();
+      if (getParent() != null) getParent().doLayout();
     }
 
-    private JComponent meta(String key, String value) {
-      var row = new JPanel(new BorderLayout(10, 0));
-      row.setOpaque(false);
-      row.add(Ui.label(key, 12f, Font.PLAIN, Theme.p.faint), BorderLayout.WEST);
-      var label = Ui.label(value, 12f, Font.PLAIN, Theme.p.muted);
-      label.setHorizontalAlignment(JLabel.RIGHT);
-      row.add(label, BorderLayout.CENTER);
-      row.setPreferredSize(new Dimension(10, 20));
-      return row;
+    /** A 30px card row: icon, label, then right-aligned values in their own colors. */
+    private final class Item extends JComponent {
+      private final String icon;
+      private final String text;
+      private final String[] values;
+      private final Color[] tones;
+      private boolean hover;
+
+      Item(String icon, String text, String[] values, Color[] tones, Runnable action) {
+        this.icon = icon;
+        this.text = text;
+        this.values = values;
+        this.tones = tones;
+        if (action != null) {
+          Ui.hover(this, () -> { hover = true; repaint(); }, () -> { hover = false; repaint(); });
+          Ui.click(this, action);
+        }
+      }
+
+      @Override
+      public Dimension getPreferredSize() {
+        return new Dimension(100, 30);
+      }
+
+      @Override
+      protected void paintComponent(Graphics graphics) {
+        var g = Ui.smooth(graphics);
+        if (hover) {
+          g.setColor(Theme.p.hover);
+          g.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+        }
+        Ui.icon(icon, 15, Theme.p.muted).paintIcon(this, g, 12, (getHeight() - 15) / 2);
+        g.setFont(Theme.ui(14f));
+        var metrics = g.getFontMetrics();
+        g.setColor(Theme.p.text);
+        g.drawString(text, 39, (getHeight() - metrics.getHeight()) / 2 + metrics.getAscent());
+        g.setFont(Theme.ui(13.5f));
+        var small = g.getFontMetrics();
+        var x = getWidth() - 12;
+        for (int i = values.length - 1; i >= 0; i--) {
+          if (values[i].isEmpty()) continue;
+          x -= small.stringWidth(values[i]);
+          g.setColor(tones[i]);
+          g.drawString(values[i], x, (getHeight() - small.getHeight()) / 2 + small.getAscent());
+          x -= 6;
+        }
+        g.dispose();
+      }
+    }
+
+    /** An expanded policy line: the kind of help and what the policy does with it. */
+    private static final class Line extends JComponent {
+      private final String text;
+      private final String effect;
+      private final Color tone;
+
+      Line(String text, String effect, Color tone) {
+        this.text = text;
+        this.effect = effect;
+        this.tone = tone;
+      }
+
+      @Override
+      public Dimension getPreferredSize() {
+        return new Dimension(100, 25);
+      }
+
+      @Override
+      protected void paintComponent(Graphics graphics) {
+        var g = Ui.smooth(graphics);
+        g.setFont(Theme.ui(13f));
+        var metrics = g.getFontMetrics();
+        var y = (getHeight() - metrics.getHeight()) / 2 + metrics.getAscent();
+        g.setColor(tone);
+        g.fillOval(41, getHeight() / 2 - 2, 5, 5);
+        g.setColor(Theme.p.muted);
+        g.drawString(text, 53, y);
+        g.setColor(tone);
+        g.drawString(effect, getWidth() - 12 - metrics.stringWidth(effect), y);
+        g.dispose();
+      }
     }
   }
 }

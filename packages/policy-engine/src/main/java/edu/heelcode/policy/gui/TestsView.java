@@ -41,7 +41,7 @@ final class TestsView extends JPanel implements MainFrame.Refreshable {
   private final JToggleButton jev = segment("Jev");
   private final javax.swing.JButton run = Ui.primary("Run suite", "play");
   private final JLabel status = Ui.label("", 12.5f, Font.PLAIN, Theme.p.muted);
-  private final JLabel suiteTitle = Ui.label("", 19f, Font.BOLD, Theme.p.text);
+  private final JLabel suiteTitle = Ui.label("", 20f, Font.BOLD, Theme.p.emphasis);
   private final javax.swing.JTextArea suiteText = Ui.wrap("", 12.5f, Theme.p.muted);
   private final JPanel summary = new JPanel(new GridLayout(1, 4, 10, 0));
   private final Confusion confusion = new Confusion();
@@ -58,21 +58,20 @@ final class TestsView extends JPanel implements MainFrame.Refreshable {
     var side = new JPanel(new BorderLayout()) {
       @Override
       protected void paintComponent(Graphics g) {
-        g.setColor(Theme.p.dark ? Theme.mix(Theme.p.bg, Theme.p.sidebar, 0.5) : Theme.p.raised);
-        g.fillRect(0, 0, getWidth(), getHeight());
-        g.setColor(Theme.p.border);
+        // The inset panel behind paints the surface (and its rounded corners); only the rule here.
+        g.setColor(Theme.p.subtle);
         g.fillRect(getWidth() - 1, 0, 1, getHeight());
       }
     };
-    side.setPreferredSize(new Dimension(290, 100));
-    suites.setBorder(Ui.pad(54, 12, 12, 12));
+    side.setPreferredSize(new Dimension(280, 100));
+    suites.setBorder(Ui.pad(16, 10, 12, 10));
     side.add(Ui.scroll(suites), BorderLayout.CENTER);
     add(side, BorderLayout.WEST);
 
     var main = new JPanel(new BorderLayout());
     main.setOpaque(false);
     var head = new Ui.Stack(10);
-    head.setBorder(Ui.pad(46, 28, 10, 28));
+    head.setBorder(Ui.pad(22, 32, 10, 32));
     head.add(suiteTitle);
     head.add(suiteText);
     var bar = new JPanel(new BorderLayout(12, 0));
@@ -94,19 +93,19 @@ final class TestsView extends JPanel implements MainFrame.Refreshable {
     main.add(head, BorderLayout.NORTH);
 
     var results = new Ui.Stack(14);
-    results.setBorder(Ui.pad(6, 28, 24, 28));
+    results.setBorder(Ui.pad(6, 32, 24, 32));
     summary.setOpaque(false);
     summary.setPreferredSize(new Dimension(10, 84));
     results.add(summary);
     var middle = new JPanel(new BorderLayout(14, 0));
     middle.setOpaque(false);
-    var confusionCard = new Ui.Stack(8).card(Theme.p.surface, Theme.p.border);
+    var confusionCard = new Ui.Stack(8).card(Theme.p.surface, Theme.p.subtle);
     confusionCard.setBorder(Ui.pad(12, 14, 12, 14));
     confusionCard.add(Ui.section("Expected → actual"));
     confusionCard.add(confusion);
     confusionCard.setPreferredSize(new Dimension(300, 196));
     middle.add(confusionCard, BorderLayout.WEST);
-    detail.card(Theme.p.surface, Theme.p.border);
+    detail.card(Theme.p.surface, Theme.p.subtle);
     detail.setBorder(Ui.pad(12, 14, 12, 14));
     detail.add(Ui.wrap("Select a case to see the request, the extracted features, and the controller's decision.", 12.5f, Theme.p.faint));
     middle.add(detail, BorderLayout.CENTER);
@@ -120,7 +119,7 @@ final class TestsView extends JPanel implements MainFrame.Refreshable {
     tableHead.add(failures, BorderLayout.EAST);
     tableHead.setPreferredSize(new Dimension(10, 28));
     results.add(tableHead);
-    table.setRowHeight(30);
+    table.setRowHeight(34);
     table.setShowVerticalLines(false);
     table.setShowHorizontalLines(true);
     table.setFillsViewportHeight(true);
@@ -146,6 +145,7 @@ final class TestsView extends JPanel implements MainFrame.Refreshable {
 
   @Override
   public void refresh() {
+    if ("tests".equals(frame.view)) frame.title("Policy tests", suite == null ? "" : suite.title());
     updateRunState();
   }
 
@@ -275,11 +275,11 @@ final class TestsView extends JPanel implements MainFrame.Refreshable {
   }
 
   private JComponent metric(String label, String value, String hint, Color tone) {
-    var card = new Ui.Stack(4).card(Theme.p.surface, Theme.p.border);
-    card.setBorder(Ui.pad(12, 14, 12, 14));
-    card.add(Ui.label(label, 11.5f, Font.BOLD, Theme.p.faint));
-    card.add(Ui.label(value, 22f, Font.BOLD, tone));
-    card.add(Ui.label(hint, 11f, Font.PLAIN, Theme.p.faint));
+    var card = new Ui.Stack(4).card(Theme.p.surface, Theme.p.subtle);
+    card.setBorder(Ui.pad(12, 16, 12, 16));
+    card.add(Ui.label(label, 13f, Font.PLAIN, Theme.p.faint));
+    card.add(Ui.label(value, 24f, Font.BOLD, tone));
+    card.add(Ui.label(hint, 12f, Font.PLAIN, Theme.p.faint));
     return card;
   }
 
@@ -325,8 +325,8 @@ final class TestsView extends JPanel implements MainFrame.Refreshable {
         g.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
       }
       Ui.icon(item.id().equals("redteam") ? "shield" : item.id().equals("curriculum") ? "layers" : "flask", 16, selected ? Theme.p.accent : Theme.p.muted).paintIcon(this, g, 10, 10);
-      g.setFont(Theme.ui(13f, selected ? Font.BOLD : Font.PLAIN));
-      g.setColor(Theme.p.text);
+      g.setFont(Theme.ui(14f));
+      g.setColor(selected ? Theme.p.emphasis : Theme.p.text);
       g.drawString(item.title(), 34, 22);
       g.setFont(Theme.ui(11f));
       g.setColor(Theme.p.faint);
@@ -466,10 +466,10 @@ final class TestsView extends JPanel implements MainFrame.Refreshable {
 
   private static JToggleButton segment(String text) {
     var button = new JToggleButton(text);
-    Ui.style(button, "arc: 8; borderWidth: 1; focusWidth: 0; margin: 4,12,4,12; borderColor: " + Theme.hex(Theme.p.border)
-        + "; background: " + Theme.hex(Theme.p.surface) + "; selectedBackground: " + Theme.hex(Theme.mix(Theme.p.surface, Theme.p.accent, 0.22))
-        + "; selectedForeground: " + Theme.hex(Theme.p.text) + "; foreground: " + Theme.hex(Theme.p.muted)
-        + "; hoverBackground: " + Theme.hex(Theme.p.hover));
+    button.setFont(Theme.medium(13f));
+    Ui.style(button, "arc: 999; borderWidth: 0; focusWidth: 0; margin: 5,13,5,13; background: " + Theme.hex(Theme.alpha(Theme.p.bg, 0))
+        + "; selectedBackground: " + Theme.hex(Theme.p.selected) + "; selectedForeground: " + Theme.hex(Theme.p.emphasis)
+        + "; foreground: " + Theme.hex(Theme.p.muted) + "; hoverBackground: " + Theme.hex(Theme.p.hover));
     return button;
   }
 }

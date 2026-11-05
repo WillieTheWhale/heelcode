@@ -93,7 +93,7 @@ final class Ui {
   }
 
   static JLabel muted(String text) {
-    return label(text, 12f, Font.PLAIN, Theme.p.muted);
+    return label(text, 13f, Font.PLAIN, Theme.p.muted);
   }
 
   /** Read-only wrapping text that participates in width-dependent layout. */
@@ -109,6 +109,106 @@ final class Ui {
     area.setBorder(null);
     area.setHighlighter(null);
     return area;
+  }
+
+  /** Body copy with Codex's airy leading (14px text on a ~23px line). */
+  static javax.swing.JTextPane prose(String text, float size, Color color) {
+    var pane = new javax.swing.JTextPane();
+    pane.setFont(Theme.ui(size));
+    pane.setForeground(color);
+    pane.setText(text);
+    leading(pane, 0.36f);
+    pane.setEditable(false);
+    pane.setOpaque(false);
+    pane.setBorder(null);
+    pane.setCaretColor(Theme.p.text);
+    return pane;
+  }
+
+  static void leading(JTextComponent text, float spacing) {
+    if (!(text.getDocument() instanceof javax.swing.text.StyledDocument document)) return;
+    var attributes = new javax.swing.text.SimpleAttributeSet();
+    javax.swing.text.StyleConstants.setLineSpacing(attributes, spacing);
+    document.setParagraphAttributes(0, document.getLength(), attributes, false);
+  }
+
+  /** A scroll pane whose content fades at the top and bottom edges, like Codex's lists. */
+  static JScrollPane fading(Component view, Color background) {
+    var pane =
+        new JScrollPane(view) {
+          @Override
+          public void paint(Graphics graphics) {
+            super.paint(graphics);
+            var bar = getVerticalScrollBar();
+            var g = (Graphics2D) graphics.create();
+            var fade = 18;
+            if (bar.getValue() > 0) {
+              g.setPaint(new java.awt.GradientPaint(0, 0, background, 0, fade, Theme.alpha(background, 0)));
+              g.fillRect(0, 0, getWidth(), fade);
+            }
+            if (bar.getValue() + bar.getVisibleAmount() < bar.getMaximum()) {
+              g.setPaint(new java.awt.GradientPaint(0, getHeight() - fade, Theme.alpha(background, 0), 0, getHeight(), background));
+              g.fillRect(0, getHeight() - fade, getWidth(), fade);
+            }
+            g.dispose();
+          }
+        };
+    pane.setBorder(BorderFactory.createEmptyBorder());
+    pane.setViewportBorder(null);
+    pane.getViewport().setOpaque(false);
+    pane.setOpaque(false);
+    pane.getVerticalScrollBar().setUnitIncrement(18);
+    pane.getVerticalScrollBar().setOpaque(false);
+    pane.getVerticalScrollBar().addAdjustmentListener(event -> pane.repaint());
+    pane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+    return pane;
+  }
+
+  /** Status text with a moving Carolina highlight, like Codex's shimmering "Working" label. */
+  static class Shimmer extends JComponent {
+    String text;
+    private final Font font;
+    private final Timer timer;
+    private final long started = System.currentTimeMillis();
+
+    Shimmer(String text, float size) {
+      this.text = text;
+      this.font = Theme.ui(size);
+      timer = new Timer(33, event -> repaint());
+    }
+
+    @Override
+    public Dimension getPreferredSize() {
+      var metrics = getFontMetrics(font);
+      return new Dimension(metrics.stringWidth(text) + 4, metrics.getHeight() + 2);
+    }
+
+    @Override
+    public void addNotify() {
+      super.addNotify();
+      timer.start();
+    }
+
+    @Override
+    public void removeNotify() {
+      timer.stop();
+      super.removeNotify();
+    }
+
+    @Override
+    protected void paintComponent(Graphics graphics) {
+      var g = smooth(graphics);
+      g.setFont(font);
+      var metrics = g.getFontMetrics();
+      var width = metrics.stringWidth(text);
+      var y = (getHeight() - metrics.getHeight()) / 2 + metrics.getAscent();
+      var phase = ((System.currentTimeMillis() - started) % 1800) / 1800.0;
+      var center = (float) (-80 + phase * (width + 160));
+      var glow = Theme.p.dark ? Theme.CAROLINA_LIGHT : Theme.CAROLINA;
+      g.setPaint(new java.awt.LinearGradientPaint(center - 60, 0, center + 60, 0, new float[] {0f, 0.5f, 1f}, new Color[] {Theme.p.faint, glow, Theme.p.faint}));
+      g.drawString(text, 0, y);
+      g.dispose();
+    }
   }
 
   /** Centered, wrapping, read-only paragraph. */
@@ -139,65 +239,74 @@ final class Ui {
 
   // ---------------------------------------------------------------- buttons
 
+  /** Codex primary action: a solid pill (Carolina Blue in dark mode, UNC Navy in light). */
   static JButton primary(String text, String icon) {
     var button = new JButton(text);
     if (icon != null) button.setIcon(icon(icon, 15, Theme.p.primaryText));
+    button.setFont(Theme.medium(13f));
     style(
         button,
-        "arc: 10; borderWidth: 0; focusWidth: 0; innerFocusWidth: 0; margin: 6,14,6,14; font: bold;"
-            + " background: "
-            + Theme.hex(Theme.p.primary)
-            + "; foreground: "
-            + Theme.hex(Theme.p.primaryText)
-            + "; hoverBackground: "
-            + Theme.hex(Theme.mix(Theme.p.primary, Color.WHITE, Theme.p.dark ? 0.15 : 0.12))
-            + "; pressedBackground: "
-            + Theme.hex(Theme.mix(Theme.p.primary, Color.BLACK, 0.12))
-            + "; disabledBackground: "
-            + Theme.hex(Theme.p.hover)
-            + "; disabledText: "
-            + Theme.hex(Theme.p.faint));
+        "arc: 999; borderWidth: 0; focusWidth: 0; innerFocusWidth: 0; margin: 6,14,6,14;"
+            + " background: " + Theme.hex(Theme.p.primary)
+            + "; foreground: " + Theme.hex(Theme.p.primaryText)
+            + "; hoverBackground: " + Theme.hex(Theme.mix(Theme.p.primary, Theme.p.dark ? Color.WHITE : Color.BLACK, 0.12))
+            + "; pressedBackground: " + Theme.hex(Theme.mix(Theme.p.primary, Theme.p.dark ? Color.BLACK : Color.WHITE, 0.12))
+            + "; disabledBackground: " + Theme.hex(Theme.p.hover)
+            + "; disabledText: " + Theme.hex(Theme.p.faint));
     button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     return button;
   }
 
+  /** Codex secondary action: a soft translucent pill with no border. */
   static JButton secondary(String text, String icon) {
     var button = new JButton(text);
     if (icon != null) button.setIcon(icon(icon, 15, Theme.p.text));
+    button.setFont(Theme.medium(13f));
     style(
         button,
-        "arc: 10; borderWidth: 1; focusWidth: 0; innerFocusWidth: 0; margin: 6,12,6,12;"
-            + " borderColor: "
-            + Theme.hex(Theme.p.borderStrong)
-            + "; background: "
-            + Theme.hex(Theme.p.surface)
-            + "; foreground: "
-            + Theme.hex(Theme.p.text)
-            + "; hoverBackground: "
-            + Theme.hex(Theme.p.hover)
-            + "; pressedBackground: "
-            + Theme.hex(Theme.p.selected));
+        "arc: 999; borderWidth: 0; focusWidth: 0; innerFocusWidth: 0; margin: 6,14,6,14;"
+            + " background: " + Theme.hex(Theme.p.hover)
+            + "; foreground: " + Theme.hex(Theme.p.text)
+            + "; hoverBackground: " + Theme.hex(Theme.p.selected)
+            + "; pressedBackground: " + Theme.hex(Theme.p.borderStrong)
+            + "; disabledText: " + Theme.hex(Theme.p.faint));
     button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     return button;
   }
 
+  /** Codex toolbar button: transparent until hovered. */
   static JButton ghost(String text, String icon) {
     var button = new JButton(text);
-    if (icon != null) button.setIcon(icon(icon, 15, Theme.p.muted));
+    if (icon != null) button.setIcon(icon(icon, 16, Theme.p.muted));
+    button.setFont(Theme.medium(13f));
     button.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
     style(
         button,
-        "arc: 8; margin: 4,8,4,8; foreground: "
-            + Theme.hex(Theme.p.muted)
-            + "; hoverBackground: "
-            + Theme.hex(Theme.p.hover)
-            + "; pressedBackground: "
-            + Theme.hex(Theme.p.selected));
+        "arc: 8; margin: 5,6,5,6; foreground: " + Theme.hex(Theme.p.muted)
+            + "; hoverBackground: " + Theme.hex(Theme.p.hover)
+            + "; pressedBackground: " + Theme.hex(Theme.p.selected));
     button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     return button;
   }
 
-  /** A rounded selector with a trailing chevron, like the Codex composer controls. */
+  /** Codex's bordered small button (e.g. "View changes"): soft fill, hairline, 10px corners. */
+  static JButton outline(String text) {
+    var button = new JButton(text);
+    button.setFont(Theme.ui(13f));
+    style(
+        button,
+        "arc: 10; borderWidth: 1; focusWidth: 0; innerFocusWidth: 0; margin: 3,10,3,10;"
+            + " background: " + Theme.hex(Theme.p.dark ? new Color(0x232323) : Color.WHITE)
+            + "; borderColor: " + Theme.hex(Theme.over(Theme.p.dark ? Theme.p.subtle : Theme.p.border, Theme.p.dark ? new Color(0x232323) : Color.WHITE))
+            + "; hoverBorderColor: " + Theme.hex(Theme.over(Theme.p.border, Theme.p.dark ? new Color(0x232323) : Color.WHITE))
+            + "; foreground: " + Theme.hex(Theme.p.text)
+            + "; hoverBackground: " + Theme.hex(Theme.p.dark ? new Color(0x2B2B2B) : new Color(0xF5F5F5))
+            + "; pressedBackground: " + Theme.hex(Theme.p.dark ? new Color(0x303030) : new Color(0xEDEDED)));
+    button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+    return button;
+  }
+
+  /** A transparent text pill with a trailing chevron, like Codex's composer selectors. */
   static JButton pill(String text, String icon) {
     var button =
         new JButton(text) {
@@ -207,26 +316,24 @@ final class Ui {
             var g = smooth(graphics);
             g.setColor(Theme.p.faint);
             g.setStroke(new BasicStroke(1.4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-            var x = getWidth() - 15;
+            var x = getWidth() - 16;
             var y = getHeight() / 2 - 1;
             g.drawLine(x, y, x + 3, y + 3);
             g.drawLine(x + 3, y + 3, x + 6, y);
             g.dispose();
           }
         };
-    if (icon != null) button.setIcon(icon(icon, 14, Theme.p.muted));
+    if (icon != null) button.setIcon(icon(icon, 15, Theme.p.muted));
     button.setIconTextGap(6);
+    button.setFont(Theme.medium(13f));
     style(
         button,
-        "arc: 999; borderWidth: 0; focusWidth: 0; innerFocusWidth: 0; margin: 3,9,3,22; font: -1;"
-            + " background: "
-            + Theme.hex(Theme.p.dark ? Theme.p.raised : Theme.p.hover)
-            + "; foreground: "
-            + Theme.hex(Theme.p.muted)
-            + "; hoverBackground: "
-            + Theme.hex(Theme.p.dark ? Theme.p.hover : Theme.p.selected)
-            + "; pressedBackground: "
-            + Theme.hex(Theme.p.selected));
+        "arc: 999; borderWidth: 0; focusWidth: 0; innerFocusWidth: 0; margin: 4,9,4,23;"
+            + " background: " + Theme.hex(Theme.alpha(Theme.p.bg, 0))
+            + "; foreground: " + Theme.hex(Theme.p.muted)
+            + "; hoverBackground: " + Theme.hex(Theme.p.hover)
+            + "; pressedBackground: " + Theme.hex(Theme.p.selected));
+    button.setContentAreaFilled(true);
     button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
     return button;
   }
@@ -244,13 +351,14 @@ final class Ui {
     int arc = 14;
 
     Card() {
-      this(Theme.p.surface, Theme.p.border);
+      this(Theme.p.surface, Theme.p.subtle);
     }
 
     Card(Color fill, Color stroke) {
       this.fill = fill;
       this.stroke = stroke;
       setOpaque(false);
+      arc = 16;
       setBorder(new EmptyBorder(14, 16, 14, 16));
     }
 
@@ -451,6 +559,7 @@ final class Ui {
     pane.getViewport().setOpaque(false);
     pane.setOpaque(false);
     pane.getVerticalScrollBar().setUnitIncrement(18);
+    pane.getVerticalScrollBar().setOpaque(false);
     pane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
     return pane;
   }
@@ -466,6 +575,7 @@ final class Ui {
   static class Wrap extends JPanel implements Flow {
     final int hgap;
     final int vgap;
+    boolean center;
 
     Wrap(int hgap, int vgap) {
       super(null);
@@ -485,21 +595,34 @@ final class Ui {
     }
 
     private int place(int width, boolean apply) {
-      var x = 0;
       var y = 0;
+      var row = new java.util.ArrayList<Component>();
+      var rowWidth = 0;
       var line = 0;
       for (var component : getComponents()) {
         var size = component.getPreferredSize();
-        if (x > 0 && x + size.width > width) {
-          x = 0;
+        if (!row.isEmpty() && rowWidth + hgap + size.width > width) {
+          if (apply) placeRow(row, rowWidth, width, y);
           y += line + vgap;
+          row.clear();
+          rowWidth = 0;
           line = 0;
         }
-        if (apply) component.setBounds(x, y, Math.min(size.width, width), size.height);
-        x += size.width + hgap;
+        rowWidth += (row.isEmpty() ? 0 : hgap) + size.width;
+        row.add(component);
         line = Math.max(line, size.height);
       }
+      if (apply && !row.isEmpty()) placeRow(row, rowWidth, width, y);
       return getComponentCount() == 0 ? 0 : y + line;
+    }
+
+    private void placeRow(java.util.List<Component> row, int rowWidth, int width, int y) {
+      var x = center ? Math.max(0, (width - rowWidth) / 2) : 0;
+      for (var component : row) {
+        var size = component.getPreferredSize();
+        component.setBounds(x, y, Math.min(size.width, width), size.height);
+        x += size.width + hgap;
+      }
     }
 
     @Override
@@ -554,22 +677,22 @@ final class Ui {
       this.foreground = foreground;
       this.background = background;
       this.icon = icon;
-      setFont(Theme.ui(11.5f, Font.PLAIN));
+      setFont(Theme.medium(12f));
     }
 
     static Chip of(String text, Color tone) {
-      return new Chip(text, tone, Theme.alpha(tone, Theme.p.dark ? 34 : 26), null);
+      return new Chip(text, tone, Theme.alpha(tone, Theme.p.dark ? 30 : 24), null);
     }
 
     static Chip neutral(String text) {
-      return new Chip(text, Theme.p.muted, Theme.p.dark ? Theme.p.raised : Theme.p.hover, null);
+      return new Chip(text, Theme.p.muted, Theme.p.hover, null);
     }
 
     @Override
     public Dimension getPreferredSize() {
       var metrics = getFontMetrics(getFont());
       var width = metrics.stringWidth(text) + 18 + (icon == null ? 0 : icon.getIconWidth() + 5);
-      return new Dimension(width, 22);
+      return new Dimension(width, 24);
     }
 
     @Override
@@ -640,9 +763,9 @@ final class Ui {
       var g = smooth(graphics);
       var size = Math.min(getWidth(), getHeight()) - 3;
       g.setStroke(new BasicStroke(1.8f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-      g.setColor(Theme.alpha(Theme.p.accent, 60));
+      g.setColor(Theme.p.border);
       g.drawOval(1, 1, size, size);
-      g.setColor(Theme.p.accent);
+      g.setColor(Theme.p.muted);
       g.drawArc(1, 1, size, size, -angle, 100);
       g.dispose();
     }
@@ -653,7 +776,7 @@ final class Ui {
         new JComponent() {
           @Override
           protected void paintComponent(Graphics g) {
-            g.setColor(Theme.p.border);
+            g.setColor(Theme.p.subtle);
             g.fillRect(0, getHeight() / 2, getWidth(), 1);
           }
         };
@@ -695,8 +818,9 @@ final class Ui {
         });
   }
 
+  /** Codex section label: sentence case, tertiary gray, regular weight. */
   static JLabel section(String text) {
-    var label = label(text.toUpperCase(), 10.5f, Font.BOLD, Theme.p.faint);
+    var label = label(text, 13f, Font.PLAIN, Theme.p.faint);
     label.setBorder(new EmptyBorder(0, 2, 0, 0));
     return label;
   }
@@ -741,6 +865,11 @@ final class Ui {
 
   static String seconds(long millis) {
     return String.format("%.1fs", millis / 1000.0);
+  }
+
+  /** Short assignment IDs ("a1", "p3") display in capitals, as instructors write them. */
+  static String assignment(String id) {
+    return id != null && id.matches("[a-z]{1,4}\\d{1,3}[a-z]?") ? id.toUpperCase(java.util.Locale.ROOT) : id;
   }
 
   static String shortSha(String sha) {
