@@ -8,8 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 
-final class Json {
-  static final ObjectMapper MAPPER =
+public final class Json {
+  public static final ObjectMapper MAPPER =
       new ObjectMapper()
           .enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION)
           .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
@@ -17,11 +17,11 @@ final class Json {
           .enable(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
           .enable(DeserializationFeature.FAIL_ON_NULL_CREATOR_PROPERTIES);
 
-  static <T> T read(Path path, Class<T> type) throws IOException {
+  public static <T> T read(Path path, Class<T> type) throws IOException {
     return MAPPER.readValue(Files.readString(path), type);
   }
 
-  static void write(Path path, Object value) throws IOException {
+  public static void write(Path path, Object value) throws IOException {
     Files.createDirectories(path.toAbsolutePath().getParent());
     var temp = Files.createTempFile(path.toAbsolutePath().getParent(), ".policy-", ".tmp");
     try {

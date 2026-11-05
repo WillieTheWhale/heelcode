@@ -170,8 +170,16 @@ public final class Workspace {
     }
   }
 
-  static Extractor model(Path workspace, String model) {
+  public static Extractor model(Path workspace, String model) {
     if (model.equals(JevModel.MODEL) || model.equals("jev")) return JevModel.model(workspace);
+    return codex(
+        workspace.resolve(".heelcode-policy/runs"),
+        model,
+        () -> PromptStore.open().text(PromptStore.Kind.CLASSIFIER));
+  }
+
+  /** A Luna/Terra extractor; instructions are read per call so saved admin edits apply at once. */
+  public static Extractor codex(Path runs, String model, PromptStore.Source instructions) {
     var client = new CodexModel(model);
     return (id, prompt, assignment, history) -> {
       var inputs =
@@ -189,13 +197,9 @@ public final class Workspace {
                       .toList()));
       var result =
           client.generate(
-              Prompts.classification(inputs),
+              Prompts.classification(instructions.text(), inputs),
               Prompts.featuresSchema(),
-              workspace.resolve(
-                  ".heelcode-policy/runs/"
-                      + Instant.now().toEpochMilli()
-                      + "-"
-                      + UUID.randomUUID()));
+              runs.resolve(Instant.now().toEpochMilli() + "-" + UUID.randomUUID()));
       var batch = Json.MAPPER.treeToValue(result, Classifier.Batch.class);
       if (batch.items().size() != 1)
         throw new IllegalArgumentException("Classifier must return exactly one result");

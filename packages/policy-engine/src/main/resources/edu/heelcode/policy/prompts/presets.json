@@ -1,0 +1,60 @@
+{
+  "presets": [
+    {
+      "id": "heelcode-default",
+      "kind": "system",
+      "title": "HeelCode bridge default",
+      "file": "",
+      "description": "The text-only bridge instructions used in the September 18 live Luna runs.",
+      "source": "packages/policy-engine Bridge (2026-09-18)"
+    },
+    {
+      "id": "classifier-revised",
+      "kind": "classifier",
+      "title": "Revised extractor (Sept 18)",
+      "file": "",
+      "description": "Current default. Adds the conversation-bookkeeping clarification; used for the 68/68 Luna result.",
+      "source": "docs/research/experiments/2026-09-18/luna-features-02/prompt.txt"
+    },
+    {
+      "id": "classifier-first-pass",
+      "kind": "classifier",
+      "title": "First-pass extractor (Sept 18)",
+      "file": "presets/classifier-first-pass.txt",
+      "description": "The original extraction prompt, before the bookkeeping regression fix. Useful for ablations.",
+      "source": "docs/research/experiments/2026-09-18/luna-features-01/prompt.txt"
+    },
+    {
+      "id": "system-clear-boundary",
+      "kind": "system",
+      "title": "Handout 1: Clear boundary with a permitted next step",
+      "file": "presets/system-clear-boundary.txt",
+      "description": "Name the boundary and its learning purpose, then offer one permitted next step (Shute 2008; Jang et al. 2010; CodeHelp).",
+      "source": "docs/research/education-policy-review/system-prompt-handout.tex"
+    },
+    {
+      "id": "system-adaptive-coaching",
+      "kind": "system",
+      "title": "Handout 2: Adaptive coaching within the same boundary",
+      "file": "presets/system-adaptive-coaching.txt",
+      "description": "Choose help from the student's work; focused why-questions and fading support (Corbett & Anderson 2001; Atkinson et al. 2003; Bisra et al. 2018).",
+      "source": "docs/research/education-policy-review/system-prompt-handout.tex"
+    },
+    {
+      "id": "system-repeat-requests",
+      "kind": "system",
+      "title": "Handout 3: Repeated requests without punitive escalation",
+      "file": "presets/system-repeat-requests.txt",
+      "description": "Keep the boundary stable across repeats without inferring misconduct from request counts (Roll et al. 2011; Shih et al. 2008; Okonofua et al. 2016).",
+      "source": "docs/research/education-policy-review/system-prompt-handout.tex"
+    },
+    {
+      "id": "system-learning-objective",
+      "kind": "system",
+      "title": "Handout 4: Preserve the learning objective across tool use",
+      "file": "presets/system-learning-objective.txt",
+      "description": "Apply the policy to replies and tools; small requests can jointly disclose a full solution (Bastani et al. 2025; ACM task force 2026).",
+      "source": "docs/research/education-policy-review/system-prompt-handout.tex"
+    }
+  ]
+}

@@ -137,14 +137,21 @@ final class JevModel {
     };
   }
 
-  private static String requireKey() {
-    var key = System.getenv("TYPESAFE_API_KEY");
+  /** True when a TypeSafe credential is present in the environment or this process only. */
+  static boolean available() {
+    var key = System.getProperty("heelcode.typesafe.key", System.getenv("TYPESAFE_API_KEY"));
+    return key != null && !key.isBlank();
+  }
+
+  static String requireKey() {
+    // A GUI may hold a session-only key in memory; it is never written to disk or inherited.
+    var key = System.getProperty("heelcode.typesafe.key", System.getenv("TYPESAFE_API_KEY"));
     if (key == null || key.isBlank())
       throw new IllegalArgumentException("Set TYPESAFE_API_KEY in the process environment");
     return key;
   }
 
-  private static HttpClient client() {
+  static HttpClient client() {
     return HttpClient.newBuilder()
         .connectTimeout(Duration.ofSeconds(15))
         .followRedirects(HttpClient.Redirect.NEVER)
@@ -229,7 +236,7 @@ final class JevModel {
     Json.write(run.resolve("features.json"), new Classifier.Batch(items));
   }
 
-  private static Classifier.Features classify(
+  static Classifier.Features classify(
       HttpClient client, String key, String id, Map<String, Object> payload, Path directory)
       throws Exception {
     Json.write(directory.resolve("request.json"), payload);

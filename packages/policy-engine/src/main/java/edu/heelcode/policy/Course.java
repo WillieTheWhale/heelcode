@@ -43,7 +43,7 @@ public record Course(String courseId, String digest, List<Source> sources) {
         List.copyOf(sources));
   }
 
-  static String hash(String text) {
+  public static String hash(String text) {
     try {
       return HexFormat.of()
           .formatHex(
