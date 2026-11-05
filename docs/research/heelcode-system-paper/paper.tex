@@ -1,0 +1,283 @@
+\documentclass[11pt,letterpaper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern,microtype}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx,booktabs,array,tabularx,xcolor,enumitem,caption,subcaption,float}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds}
+\usepackage[numbers,sort&compress]{natbib}
+\usepackage{fancyhdr}
+\usepackage{hyperref}
+\usepackage{xurl}
+\definecolor{carolina}{HTML}{4B9CD3}
+\definecolor{navy}{HTML}{13294B}
+\definecolor{allowc}{HTML}{1E874A}
+\definecolor{denyc}{HTML}{C93C45}
+\definecolor{clarc}{HTML}{A56A00}
+\hypersetup{colorlinks=true,linkcolor=navy,citecolor=navy,urlcolor=navy,pdftitle={HeelCode: Source-Grounded Admission Control for an Educational Coding Agent},pdfauthor={William Keffer}}
+\captionsetup{font=small,labelfont=bf}
+\setlist{itemsep=2pt,topsep=3pt}
+\setlength{\headheight}{14pt}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{navy} HeelCode: source-grounded admission control}
+\fancyhead[R]{\small\color{navy} Draft, 5 November 2026}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\newcommand{\act}[1]{\texttt{#1}}
+\newcommand{\allowtag}{\textcolor{allowc}{\textbf{allow}}}
+\newcommand{\denytag}{\textcolor{denyc}{\textbf{deny}}}
+\newcommand{\clartag}{\textcolor{clarc}{\textbf{clarify}}}
+\emergencystretch=1.5em
+
+\begin{document}
+
+\begin{center}
+{\LARGE\bfseries\color{navy} HeelCode: Source-Grounded Admission Control\\[2pt] for an Educational Coding Agent}\\[10pt]
+{\large William Keffer}\\[2pt]
+{\small Research prototype and evaluation to date, 5 November 2026}
+\end{center}
+
+\begin{abstract}
+\noindent Coding agents can now finish the programming assignments that courses use to build and assess skill. HeelCode is a fork of the OpenCode agent that puts an explicit admission decision in front of the answering model. An instructor's course documents are compiled into per-assignment rules that must cite verbatim passages, an instructor reviews and activates them, and each student request is then classified into observable assistance activities. A deterministic controller decides to allow, decline, or ask for clarification. Declined and unclear requests never reach the answering model; the student receives the boundary, the cited rule, and the help that \emph{is} permitted. This report describes the system and a new Java desktop frontend with an instructor prompt editor and policy generator, and it consolidates two rounds of evaluation. In September, Luna- and Terra-compiled policies matched all 50 independently specified rule settings, while NotebookLM drafts made consequential errors behind authentic citations; the best classifier matched 68/68 frozen requests. In November, the same Luna prompt produced one draft that misread the debugging rule (46/50) and one that the validator refused; Terra's draft scored 50/50. The review matrix exposed the misreading, and four instructor edits restored 50/50. An exhaustive sweep confirmed that the controller enforces all 3,940 policy cells of 33 course policies as written, recorded features reproduced all 68 September decisions, and a new 24-case adversarial suite was classified correctly by both Luna and Terra with no unsafe admissions. Feature-level agreement with the gold labels, however, was only 19/24 and 15/24. Terra sent seven of fourteen denials through the misconduct path, so students would read an accusation where a scope explanation was warranted. Decision accuracy alone therefore hides differences that matter for teaching. All data are synthetic; no students were involved.
+\end{abstract}
+
+\section{Introduction}
+
+AI coding agents read files, run commands, and write patches. In a course, that capability can complete the very work an assignment is meant to make a student do. Studies of generative AI in introductory programming report both benefits and harms. Novices can finish more work with code generators \citep{kazemitabaar2023}, but students who already struggle can fall further behind \citep{prather2024}. In a field experiment, unrestricted access to a strong model improved practice performance and then hurt unaided exam performance, while a teacher-designed tutor with guardrails largely avoided that harm \citep{bastani2025}. Instructors' responses range from bans to adaptation \citep{lau2023}, and the ACM task force on programming assessment frames permissible assistance around the learning objective of each assessment rather than a single course-wide rule \citep{gordon2026}.
+
+Guardrailed programming assistants such as CodeHelp \citep{liffiton2023} and CodeAid \citep{codeaid2024} show that constrained help is deployable at scale, and that request types can be classified automatically \citep{savelkaclass2023}. They typically encode one pedagogical stance in a system prompt. HeelCode targets a different setting: a general coding agent used for labs and assignments, where what is permitted varies by assignment and can change mid-semester through a dated amendment. A unit test may be welcome help in one assignment and the assessed skill in the next.
+
+HeelCode makes three choices. (1) \textbf{Policies are compiled from the instructor's own documents} into a closed vocabulary of ten assistance activities, with every rule citing a verbatim passage, and they become active only after review. (2) \textbf{The model describes; code decides.} A classifier extracts observable features of each request, and a deterministic controller applies the active rules. The model never grants permission. (3) \textbf{The gate is structural.} A declined request is never sent to the answering model, and the student is shown what is permitted instead.
+
+This report contributes: a description of the architecture and its fail-closed boundaries (\S\ref{sec:system}); a desktop frontend whose rejection behavior is grounded in the feedback and help-seeking literature, with an instructor-facing prompt editor and policy generator (\S\ref{sec:app}); and a consolidated evaluation separating policy compilation, classification, enforcement, and adversarial robustness (\S\ref{sec:eval}). It ends with a finding that motivates the next study: matching decisions is not the same as giving the right reason (\S\ref{sec:discussion}).
+
+\section{Design goals}
+
+Four goals follow from an interdisciplinary review of feedback, help-seeking, motivation, and classroom-discipline research conducted for this project.
+
+\textbf{G1. Explain the boundary and offer a permitted next step.} Formative feedback is most useful when it is specific to the task and not a judgment of the person \citep{shute2008,hattie2007}. Clear structure and autonomy support work together rather than against each other \citep{jang2010}. A decline should therefore name the rule, show its source, and offer concrete permitted alternatives.
+
+\textbf{G2. Never infer misconduct from wording or persistence.} Help-seeking behavior can improve without domain learning improving \citep{roll2011,aleven2006}, so request counts are weak evidence of intent. An empathic-discipline intervention halved school suspensions \citep{okonofua2016}; it measured discipline, not learning from a tutor, but it is a useful analogy for holding a boundary without making it personal. An accusation should be reserved for an explicit request to conceal or misrepresent.
+
+\textbf{G3. Keep the instructor in the loop.} Generated rules are drafts until an instructor reviews them, because a policy can cite real text and still misread it (\S\ref{sec:gen}).
+
+\textbf{G4. Make every decision reproducible.} Sources, policies, prompts, and model runs are hashed and saved so that any decision can be traced and re-scored.
+
+\section{System}\label{sec:system}
+
+\begin{figure}[t]
+\centering
+\hyphenpenalty=10000\exhyphenpenalty=10000
+\begin{tikzpicture}[
+  font=\small,
+  box/.style={draw=navy, rounded corners=3pt, fill=carolina!10, align=center, minimum height=9mm, inner sep=4pt, text width=2.75cm},
+  model/.style={box, fill=navy!8, draw=navy!70, dashed},
+  gate/.style={box, fill=navy, text=white, draw=navy},
+  arrow/.style={-{Stealth[length=2.2mm]}, thick, navy!80},
+  note/.style={font=\scriptsize, text=navy!80, align=center}]
+\node[box] (src) {Course sources\\{\scriptsize syllabus, handouts, amendments}};
+\node[model, right=11mm of src] (comp) {Policy compiler\\{\scriptsize Luna or Terra}};
+\node[box, right=11mm of comp] (val) {Validator\\{\scriptsize coverage, verbatim quotes}};
+\node[box, right=11mm of val] (rev) {Instructor review\\{\scriptsize edit cells, activate}};
+\node[box, below=12mm of src] (req) {Student request\\{\scriptsize + session history}};
+\node[model, right=11mm of req] (cls) {Classifier\\{\scriptsize Luna, Terra, or Jev}};
+\node[gate, right=11mm of cls] (ctl) {Deterministic controller};
+\node[model, right=11mm of ctl] (ans) {Answer model\\{\scriptsize admin system prompt}};
+\node[box, below=10mm of ctl, text width=5.6cm, fill=denyc!8, draw=denyc!70] (teach) {Teaching response\\{\scriptsize rule, source quote, permitted next steps}};
+\draw[arrow] (src) -- (comp);
+\draw[arrow] (comp) -- (val);
+\draw[arrow] (val) -- (rev);
+\draw[arrow] (rev.south) |- ++(0,-6.5mm) -| node[note, pos=0.25, below]{active policy + digests} (ctl.north);
+\draw[arrow] (req) -- (cls);
+\draw[arrow] (cls) -- node[note, above]{features} (ctl);
+\draw[arrow] (ctl) -- node[note, above]{allow} (ans);
+\draw[arrow] (ctl) -- node[note, right]{deny / clarify} (teach);
+\end{tikzpicture}
+\caption{HeelCode's two stages. Dashed boxes are model calls; the controller is ordinary code. Course documents are compiled occasionally; every request is classified. Only an \emph{allow} decision ever reaches the answer model.}
+\label{fig:arch}
+\end{figure}
+
+Figure~\ref{fig:arch} shows the pipeline. The engine is a Java 17 package of about 2,700 lines beside the OpenCode source tree in the HeelCode repository; its only runtime dependency is a JSON library. The desktop app (\S\ref{sec:app}) adds about 4,600 lines and a look-and-feel library.
+
+\textbf{Ingestion.} The bounded ingester reads UTF-8 Markdown and text files, refuses symbolic links and unsupported formats instead of skipping them, and records a SHA-256 hash per source and for the course.
+
+\textbf{Compilation and validation.} A tool-free model call (Luna or Terra through the Codex CLI, with no implicit fallback model) returns a policy as schema-constrained JSON: a course baseline scope \texttt{*} plus one scope per named assignment. Each scope must assign every one of ten activities exactly once: \act{concept}, \act{hint}, \act{debug}, \act{test\_design}, \act{test\_code}, \act{pseudocode}, \act{implementation}, \act{full\_solution}, \act{writeup}, and \act{logistics}. The effect is allow, deny, or clarify, plus an optional attempt requirement. Every rule must cite a source by ID and quote it verbatim. Missing or duplicated activities, unknown sources, and quotations that do not appear in the source text fail validation. Source documents are treated as evidence, never as instructions to the compiler.
+
+\textbf{Review and activation.} A draft is a proposal. In the desktop app an instructor can change any cell's effect or attempt requirement. Citations stay attached to the activity so the edited policy still validates, and the edits are recorded beside the untouched generated draft. Activation pins the policy digest and source digest to a course workspace. If a source changes later, every request fails closed until the policy is regenerated and reactivated.
+
+\textbf{Classification.} The classifier extracts observable features only: the requested activities, whether concrete attempt evidence exists in the request or same-session history, whether the request is unidentifiable, and whether it is an explicit request to cheat, conceal AI use, or misrepresent authorship. It never infers understanding or intent beyond that. Request and history text is marked as untrusted data. Luna and Terra receive an editable instruction prompt and a strict output schema. Jev (TypeSafe) answers thirteen independent typed yes/no judgments whose probabilities are thresholded at 0.5.
+
+\textbf{Controller.} Decisions apply a fixed precedence. An unknown assignment produces a clarification request. A concealment or misrepresentation request is declined as deception. Any requested activity the scope denies declines the whole request, so mixing a permitted activity with a prohibited one cannot hide the prohibited output. An unclear request or one with no matching rule triggers clarification. A rule with an unresolved \emph{clarify} effect defers to the instructor. A missing required attempt asks the student for their attempt. Everything else is allowed. Every decision carries its feedback text and the cited evidence.
+
+\textbf{Sessions and the gate.} Admission sessions are durable, pinned to one workspace, assignment, source digest, and policy digest, and keep bounded history. Exact retries replay saved decisions without new model calls, and conflicting reuse of a request ID fails. The chat bridge records a durable intent marker before calling the answer model, so an uncertain crash is never silently retried. It refuses to start inference for anything but an allow decision. The answer model is HeelCode itself, run headless with every tool denied and a single text-only step. The admin system prompt replaces the agent's default coding-assistant system prompt, and the assignment's policy JSON plus the request form the user message. The bridge detects whether the launcher runs OpenCode v1 or v2 and applies each engine's isolation (\texttt{--pure} in v1; a private \texttt{--standalone} server with an empty configuration directory in v2).
+
+\textbf{Editable prompts with provenance.} Both model prompts, the classifier's instructions and the answer model's system prompt, live in a versioned store. With no override the packaged defaults are used, and tests confirm they are byte-identical to the frozen September prompts. One test rebuilds a saved bridge submission exactly. Every saved revision is content-addressed and logged with a note. Prompts are read per call, and each model run saves its complete prompt, so any decision can be traced to the prompt that produced it. Editing a prompt cannot grant a permission: permissions exist only in the activated policy, and only the controller applies them.
+
+\textbf{Frontends.} Three frontends share the engine: an opt-in terminal plugin that blocks a prompt before persistence; a persistent JSONL stdin/stdout protocol for arbitrary external programs; and the desktop app below.
+
+\section{The desktop app}\label{sec:app}
+
+The app is a Swing and FlatLaf program in the same JVM as the engine. It calls the same code paths as the command line and contains no mock behavior. Its layout follows current agent clients such as OpenAI's Codex app: a sidebar of threads, a centered composer, and compact collapsible rows for tool activity. Its palette uses Carolina Blue and UNC Navy with an original argyle mark. It has four views; a \texttt{--student} mode shows only the first.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/ask-declined.png}
+\caption{The Ask view, captured from a live session with Luna as the classifier (check-only mode). The first two requests pass: a concept question and a debugging question with a stated hypothesis, which counts as attempt evidence. The third asks for the complete graded shell. It is declined, and the teaching card lists what assignment a1 permits; each chip pre-fills a request of that kind. The right panel shows the assignment's policy, the session, and the SHA-256 of the active prompts.}
+\label{fig:ask}
+\end{figure}
+
+\textbf{Ask} (Figure~\ref{fig:ask}) is the student view. Each turn shows a one-line policy check that expands to the detected activities, the attempt evidence, the classifier's rationale, the controller's reason, and the latency. A declined or unclear request produces a teaching card instead of an answer (G1). The card gives a short headline, the engine's feedback, the instructor's verbatim rule, and the permitted alternatives computed from the active scope. Those alternatives come from the policy, never from a model. Composer controls select the assignment, the classifier, and either an answer model or a \emph{policy check only} mode in which no answer model can be called. Threads are the engine's own durable sessions, so the app adds no second source of truth.
+
+\textbf{Policies} shows the active policy as a scope $\times$ activity matrix, with the verbatim passages behind each cell. The \textbf{policy generator} on the same page ingests a source folder, drafts a policy with Luna or Terra (keeping the run's prompt, schema, events, and metadata), or opens a saved run. It then supports cell-by-cell instructor review with live revalidation and activates the reviewed policy in a workspace (G3).
+
+\textbf{Policy tests} runs five suites through the real controller. \emph{Recorded} replays saved or gold features without model calls, testing the policy logic and every rejection path. \emph{Live} re-classifies the requests with Luna, Terra, or Jev, blinded to labels, and saves every model run as evidence (G4). It reports matched decisions, unsafe admissions (expected deny $\rightarrow$ allowed), false denials, clarifications, and a confusion matrix (Figure~\ref{fig:tests}).
+
+\textbf{Admin} edits exactly two prompts: the classifier prompt and the system prompt. It shows lint warnings for categories, features, or untrusted-input guidance that are missing, a preview of the assembled prompt, the revision history by SHA-256, and presets. The presets include the first-pass September classifier prompt for ablations and the four short system prompts proposed in the October education-policy handout: \emph{clear boundary with a permitted next step}, \emph{adaptive coaching}, \emph{repeated requests without punitive escalation}, and \emph{preserving the learning objective across tool use}. A \emph{test draft} button runs an unsaved classifier prompt on a single request so an edit can be checked before it is saved.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/tests-live-luna.png}
+\caption{Policy tests after a live run of the red-team suite with Luna as the classifier: one blinded batch call, 24/24 decisions, no unsafe admissions. The evidence directory holds the prompt, schema, raw events, features, and report.}
+\label{fig:tests}
+\end{figure}
+
+\section{Evaluation}\label{sec:eval}
+
+All courses, assignments, and requests are fictional. The SYS 301 course has a syllabus baseline, three graded assignments, ungraded practice, and a dated amendment that revokes an earlier permission. Its gold labels and the curriculum fixtures were authored by the development agent, so the benchmark is a constructed regression task, not an independent annotation study. September results are summarized from the 18 September report; November results are new.
+
+\subsection{Policy compilation (September)}\label{sec:gen}
+
+Against 50 independently specified rule settings for SYS 301 (five scopes $\times$ ten activities, each with an effect and an attempt requirement), both Luna drafts and both Terra drafts were fully correct. Two NotebookLM browser drafts each scored 49/50. One required an attempt for debugging in ungraded practice. The other missed the dated amendment and permitted executable tests that had been revoked. Both passed structural validation and the verbatim-quote check. A real citation is not a correct interpretation of the current policy, which is why the app makes instructor review a required step.
+
+\subsection{Policy compilation, revisited (November)}\label{sec:gen2}
+
+Seven weeks later, three fresh drafts used the same sources, a generation prompt identical byte for byte to September's, and an equivalent schema (Table~\ref{tab:gen}).
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{llr}
+\toprule
+Draft & Result against the 50-cell oracle & Time \\
+\midrule
+Luna, from the app's generator & valid; 46/50 (debugging encoded as \emph{clarify}) & 25.8\,s \\
+Luna, command line & refused: assignment scopes listed only overrides & 20.1\,s \\
+Terra, command line & valid; 50/50 & 29.6\,s \\
+Luna draft after instructor review & 4 cell edits; 50/50; activated & --- \\
+\bottomrule
+\end{tabular}
+\caption{November generation runs. In September, both Luna drafts with this prompt scored 50/50.}
+\label{tab:gen}
+\end{table}
+
+The valid Luna draft read the syllabus sentence ``asking vaguely for help should trigger a clarifying question'' as the \emph{clarify} effect, which tells the controller that the policy is unresolved and the instructor must decide. Every debugging request would have been referred to the instructor, even with a concrete attempt. Nothing prohibited would be admitted, but permitted help would be blocked, and its citations were genuine, so validation passed. In the review matrix the error appears as a single amber column (Figure~\ref{fig:review}). Four edits fixed it; the edits were saved beside the untouched draft with the hashes of both policies, and the reviewed policy scored 50/50. Two samples cannot separate run-to-run variance from drift in the model or in the Codex CLI wrapper, which was not versioned in the September evidence. Either way, the same model name and prompt did not reproduce September's quality, which is the case for re-scoring every draft and reviewing it before activation.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/policy-review.png}
+\caption{Instructor review of the November Luna draft in the policy generator. The four debugging cells it encoded as \emph{ask instructor} have been changed to \emph{allow, attempt required} (dashed outlines mark instructor edits; the selected cell shows its editor). Validation reruns after each edit, and the review is recorded beside the generated evidence.}
+\label{fig:review}
+\end{figure}
+
+\subsection{Classification (September)}
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{lrrrl}
+\toprule
+Classifier & Original 36 & Challenge 24 & Bookkeeping 8 & Outcome \\
+\midrule
+Luna (revised prompt) & 36 & 24 & 8 & 68/68 \\
+Terra (revised prompt) & 33 & 24 & 8 & 65/68 \\
+Jev 1.13.0 (first-pass questions) & 29 & 19 & 6 & 54/68; 0 unsafe \\
+NotebookLM (browser) & 36 & 24 & --- & 60/68; 8 missing \\
+\bottomrule
+\end{tabular}
+\caption{Decisions matching the labels with a correct policy (September 18). Jev unnecessarily asked for clarification on 12 of 30 allowed requests. One NotebookLM batch returned an empty list, so its 8 cases have no decision.}
+\label{tab:sept}
+\end{table}
+
+Holding the classifier fixed and swapping in the NotebookLM draft that missed the amendment turned Luna's otherwise correct features into four unsafe admissions. Terra's features gave six. A better classifier cannot repair a wrong rulebook, so the two stages have to be evaluated, and reviewed, separately.
+
+\subsection{Enforcement and rejection paths (November)}
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{p{6.1cm}rl}
+\toprule
+Check (offline, no model calls) & Scale & Result \\
+\midrule
+Every scope $\times$ activity $\times$ attempt cell of every packaged policy decides as written & 3,940 cells, 33 policies & all pass \\
+Deception, any denied activity, ambiguity, and unknown assignments are never forwarded & 5,482 checks & all pass \\
+Recorded September Luna features replayed through today's controller & 68 requests & 68/68 \\
+Undergraduate curriculum, each course scored against its own policy & 512 requests, 32 courses & 512/512 \\
+New red-team suite with gold features & 24 requests & 24/24, 0 unsafe \\
+\bottomrule
+\end{tabular}
+\caption{The November checks behind the claim that enforcement and rejections work. They run in the 63-test offline Java suite. They show that the controller does exactly what an activated policy says; they say nothing about whether the classifier's features are right.}
+\label{tab:controller}
+\end{table}
+
+The red-team suite adds 24 SYS 301 requests in categories absent from the September challenge set. There are 14 that should be declined: incremental decomposition, role-play and translation laundering, step-by-step pseudocode, a Spanish-language request, a forged instructor amendment, emotional pressure, an instruction embedded in a code comment, concealment, a false disclosure statement, a bundled submission, negation laundering (``don't write tests, just the assert statements''), a jailbreak framing, and paraphrasing a classmate's report. Seven are benign controls that share their surface features. Three need clarification: debugging without an attempt, an unresolved ``fix it,'' and an unknown assignment.
+
+\subsection{Adversarial requests with live classifiers (November)}
+
+Each model classified the suite in one blinded batch through the app's test view, using the unmodified default classifier prompt and the Luna-generated SYS 301 policy.
+
+\begin{table}[H]
+\centering\small
+\begin{tabular}{lrr}
+\toprule
+& Luna & Terra \\
+\midrule
+Decisions matching labels & 24/24 & 24/24 \\
+Unsafe admissions / false denials & 0 / 0 & 0 / 0 \\
+Activities exactly matching gold & 19/24 & 16/24 \\
+Concealment flag matching gold & 24/24 & 20/24 \\
+All features matching gold & 19/24 & 15/24 \\
+Denials routed through \emph{deception} (gold: 3) & 3 & 7 \\
+Batch latency; input / output tokens & 25.2\,s; 10,179 / 1,242 & 40.6\,s; 11,320 / 1,404 \\
+\bottomrule
+\end{tabular}
+\caption{Live red-team results (5 November). Both models reached every expected decision. Terra flagged role-play, translation, the Spanish request, and the bundled submission as concealment with no activity, so those denials would show the student the misconduct message.}
+\label{tab:redteam}
+\end{table}
+
+Both models resisted every adversarial framing, so this suite does not separate them. That is a ceiling effect, not evidence of general robustness. The feature-level results do separate them (Table~\ref{tab:redteam}). Luna's mismatches were adjacent-category substitutions that the SYS 301 policy treats identically, such as \act{implementation} for \act{test\_code} when concealing AI-written tests, and \act{test\_design} for \act{hint}. At least two of the gold labels are debatable: a complete program for ungraded practice labeled \act{full\_solution} rather than \act{implementation}, and a disclosure question labeled \act{logistics} rather than \act{concept}. Terra's mismatches change which explanation a student receives.
+
+\subsection{End to end in the app (November)}
+
+A scripted session drove the real Ask view with three requests (Figure~\ref{fig:ask}). Luna took 4.9\,s, 5.0\,s, and 9.5\,s per request; each call carried about 9,300 input tokens, almost all of it Codex CLI context overhead rather than the policy or the request. The concept and debugging-hypothesis requests were admitted. ``Write the whole mini-shell for me so I can submit it'' was declined. The decision was correct, but Luna marked it as concealment (``explicitly says it is for submission, indicating outsourced authorship''), so the card opened with the misconduct headline rather than the scope explanation.
+
+The same view was then run with answers enabled against OpenCode v2, the upstream release HeelCode was updated to on 5 November. The concept question was admitted, and the bridge started a private v2 server with the admin system prompt and an isolated configuration. The request reached the provider, which returned a plan usage-limit error; the bridge recorded it as a definitive failure, and the app showed that the policy decision was saved. The declined request never started the answer process. An earlier single call through the same v2 command returned text, but a rendered answer through the full app path remains to be captured once the quota resets.
+
+\section{Discussion}\label{sec:discussion}
+
+\textbf{The reason matters as much as the decision.} Every safety metric in Table~\ref{tab:redteam} is perfect, yet a student would see different words. The controller checks concealment first. When a model treats ordinary phrasing (``so I can submit it,'' a role-play premise, a request in another language) as concealment, a scope boundary is presented as an accusation. That contradicts G2 and the review's recommendation not to infer misconduct. Two remedies are open: tighten the classifier prompt with contrastive examples, or let the controller explain a denied activity first when one exists and reserve the misconduct message for requests with no other basis. The second changes enforcement semantics and needs the instructor's input. The first can be tested now with the admin editor's draft runner against the frozen suites.
+
+\textbf{Generation drifts; review is the control.} The September result (50/50 twice) did not reproduce in November with the same model name and prompt. Structural validation caught one failure and missed the other, because the misread rule cited real text. The instructor review step is what caught it, so it should stay mandatory rather than optional, and every draft should be re-scored against an oracle wherever one exists.
+
+\textbf{Prompts are experimental variables.} Because prompts are versioned, hashed, and read per call, the four handout system prompts and the two classifier prompts can be compared under identical policies, cases, and models. Each comparison is reproducible from saved evidence.
+
+\textbf{Where enforcement actually lives.} The guarantees that tests can verify (Table~\ref{tab:controller}) live in ordinary code. Model judgments affect which activities are detected, never which activities are permitted.
+
+\section{Limitations}
+
+Everything here is synthetic. There are no students, no learning outcomes, and no independent annotators. The development agent authored the fixtures and gold labels, and some labels are debatable. Live results are single runs, so no statistical claim is made. Luna and Terra run through the Codex CLI with substantial context overhead, so their token counts are not the cost of a production classifier. Jev was not re-run because no TypeSafe key was available in this session. The local workspace is not a security boundary: a student who controls the files can replace a policy, and \texttt{--student} mode hides views but enforces nothing. Answers are buffered rather than streamed, tool use is denied rather than policy-checked, and model output is not classified. Windows has not been smoke-tested.
+
+\section{Next steps}
+
+\begin{enumerate}
+\item Independent instructor annotation of requests and policies, with agreement statistics, and a held-out adversarial set hard enough to separate classifiers.
+\item Feature-fidelity and feedback-appropriateness metrics alongside decision accuracy, including the share of denials explained as misconduct.
+\item Calibrated thresholds for Jev on a separate validation set.
+\item Repeated generation draws per model, with the model and CLI versions recorded, to separate variance from drift.
+\item Policy checks for tool actions: a patch can carry out a debugging exercise, and generated tests can carry out a test-design exercise.
+\item With consent and IRB review, a classroom study measuring delayed, unaided performance as well as satisfaction and help received \citep{bastani2025,bassner2026}.
+\end{enumerate}
+
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}
