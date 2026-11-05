@@ -13,7 +13,8 @@ public final class Main {
     try {
       run(args);
     } catch (Exception error) {
-      System.err.println(error.getMessage());
+      if (System.getenv("HEELCODE_DEBUG") != null) error.printStackTrace();
+      System.err.println(error.getMessage() == null ? error.toString() : error.getMessage());
       System.exit(1);
     }
   }
@@ -34,6 +35,11 @@ public final class Main {
           evaluate BUNDLE POLICY CASES FEATURES REPORT   offline decisions and confusion matrix
           score-policy BUNDLE POLICY ORACLE REPORT       independent rule-cell comparison
           schema policy|features                        print model output schema
+          gui [WORKSPACE] [--student]                    open the HeelCode desktop app
+          demo [WORKSPACE]                               activate the fictional SYS 301 demo workspace
+          prompts show|history|presets classifier|system   inspect admin-editable prompts
+          prompts set classifier|system FILE [NOTE]       save a prompt revision (FILE - = stdin)
+          prompts reset classifier|system                restore the packaged default
           Models: gpt-5.6-luna or gpt-5.6-terra. No implicit fallback.
           Classifier only: jev or jev-1.13.0 (requires TYPESAFE_API_KEY).
           Request: {"requestId":"r1","sessionId":"","assignment":"a1","prompt":"Explain fork"}
@@ -42,6 +48,16 @@ public final class Main {
       return;
     }
     switch (args[0]) {
+      case "gui" -> edu.heelcode.policy.gui.App.launch(java.util.Arrays.copyOfRange(args, 1, args.length));
+      case "prompts" -> prompts(args);
+      case "demo" -> {
+        if (args.length > 2) throw new IllegalArgumentException("Usage: demo [WORKSPACE]");
+        var target =
+            args.length == 2
+                ? Path.of(args[1])
+                : PromptStore.home().resolve("workspaces/sys301-demo");
+        emit(Map.of("status", "active", "workspace", Fixtures.createDemo(target).toString()));
+      }
       case "validate" -> {
         require(args, 4);
         var course = Course.ingest(args[1], Path.of(args[2]));
@@ -172,6 +188,51 @@ public final class Main {
         emit(args[1].equals("policy") ? Prompts.policySchema() : Prompts.featuresSchema());
       }
       default -> throw new IllegalArgumentException("Unknown command; use --help");
+    }
+  }
+
+  private static void prompts(String[] args) throws Exception {
+    if (args.length < 3) throw new IllegalArgumentException("Usage: prompts ACTION classifier|system");
+    var store = PromptStore.open();
+    var kind = PromptStore.Kind.of(args[2]);
+    switch (args[1]) {
+      case "show" -> {
+        require(args, 3);
+        System.out.print(store.text(kind));
+      }
+      case "history" -> {
+        require(args, 3);
+        emit(
+            Map.of(
+                "prompt",
+                kind.id,
+                "custom",
+                store.custom(kind),
+                "sha256",
+                Course.hash(store.text(kind)),
+                "store",
+                store.root().toString(),
+                "revisions",
+                store.history(kind)));
+      }
+      case "presets" -> {
+        require(args, 3);
+        emit(PromptStore.presets(kind));
+      }
+      case "set" -> {
+        if (args.length < 4) throw new IllegalArgumentException("Usage: prompts set KIND FILE [NOTE]");
+        var text =
+            args[3].equals("-")
+                ? new String(System.in.readAllBytes(), StandardCharsets.UTF_8)
+                : java.nio.file.Files.readString(Path.of(args[3]));
+        var note = String.join(" ", java.util.Arrays.copyOfRange(args, 4, args.length));
+        emit(store.save(kind, text, note));
+      }
+      case "reset" -> {
+        require(args, 3);
+        emit(store.restoreDefault(kind));
+      }
+      default -> throw new IllegalArgumentException("Unknown prompts action; use --help");
     }
   }
 

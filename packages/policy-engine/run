@@ -1,14 +1,19 @@
 #!/bin/sh
 set -eu
 root=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-if [ ! -f "$root/target/policy-engine-0.1.0-SNAPSHOT.jar" ]; then
+jar="$root/target/policy-engine-0.1.0-SNAPSHOT.jar"
+if [ ! -f "$jar" ]; then
   printf '%s\n' "Build first: cd $root && mvn package" >&2
   exit 1
 fi
+# Homebrew Java first on macOS: the system default may still be Java 8.
+java=java
 if [ -n "${HEELCODE_JAVA:-}" ]; then
-  exec "$HEELCODE_JAVA" -jar "$root/target/policy-engine-0.1.0-SNAPSHOT.jar" "$@"
+  java=$HEELCODE_JAVA
+elif [ -x /opt/homebrew/opt/openjdk/bin/java ]; then
+  java=/opt/homebrew/opt/openjdk/bin/java
 fi
-if [ -x /opt/homebrew/opt/openjdk/bin/java ]; then
-  exec /opt/homebrew/opt/openjdk/bin/java -jar "$root/target/policy-engine-0.1.0-SNAPSHOT.jar" "$@"
+if [ "${1:-}" = gui ] && [ "$(uname -s)" = Darwin ]; then
+  exec "$java" -Xdock:name=HeelCode -jar "$jar" "$@"
 fi
-exec java -jar "$root/target/policy-engine-0.1.0-SNAPSHOT.jar" "$@"
+exec "$java" -jar "$jar" "$@"
